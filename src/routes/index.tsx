@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowDown, ArrowRight, Shield, Swords, Zap } from "lucide-react";
+import { ArrowDown, ArrowRight, Crown, KeyRound, Shield, Swords, Users, Zap } from "lucide-react";
 import { useState } from "react";
 import bastionFortress from "@/assets/bastion-fortress.jpg";
 import { ExplorationGame } from "@/components/ExplorationGame";
@@ -26,6 +26,12 @@ const races = [
   { name: "Oiseau", mark: "O", trait: "Mobilité", detail: "Une mobilité exceptionnelle au prix d’une défense plus faible. Frappe puis disparaît.", stats: [100, 60, 35] },
 ];
 
+const salonSteps = [
+  { icon: <Users size={28} />, title: "01 · Monte ton salon", text: "Choisis un nom, le nombre de joueurs (3 à 5) et le scénario. Un mot de passe optionnel protège l’entrée, et le salon peut rester en attente jusqu’à la partie." },
+  { icon: <KeyRound size={28} />, title: "02 · Invite la table", text: "Partage le code à six caractères ou le lien d’invitation. Chaque aventurier rejoint en un clic, depuis son téléphone ou son ordinateur." },
+  { icon: <Crown size={28} />, title: "03 · Incarne le narrateur", text: "Le créateur devient narrateur de son salon : il place ennemis, trésors et ambiance sonore, lance la partie — et peut transmettre sa couronne." },
+];
+
 const phases = [
   { number: "01", title: "Préparation", text: "Choisissez votre rôle, votre peuple et vos compétences. Composez une équipe capable de survivre au scénario." },
   { number: "02", title: "Affrontement", text: "Déclarez vos actions, lancez les dés et résolvez les effets. Chaque décision laisse une trace sur le plateau." },
@@ -47,6 +53,7 @@ function Index() {
           <a href="#top" className="font-display text-base font-black uppercase tracking-normal">Bastion<span className="text-primary">.</span></a>
           <div className="hidden items-center gap-8 text-xs font-bold uppercase md:flex">
             <a href="#concept" className="transition-colors hover:text-primary">Le jeu</a>
+            <a href="#salons" className="transition-colors hover:text-primary">Salons</a>
             <a href="#peuples" className="transition-colors hover:text-primary">Peuples</a>
             <a href="#partie" className="transition-colors hover:text-primary">Une partie</a>
             <a href="#exploration" className="transition-colors hover:text-primary">Exploration 2D</a>
@@ -57,7 +64,10 @@ function Index() {
           <p className="mb-4 flex items-center gap-3 text-xs font-black uppercase text-primary"><span className="h-px w-10 bg-primary" /> Dungeon crawler asymétrique</p>
           <h1 className="font-display text-[clamp(2.2rem,11vw,9rem)] font-black uppercase leading-[1.1] drop-shadow-[4px_4px_0_var(--color-secondary)] tracking-normal">Bastion</h1>
           <div className="mt-8 grid gap-8 border-t border-foreground/40 pt-6 md:grid-cols-[1fr_auto] md:items-end">
-            <p className="max-w-xl text-lg font-medium leading-relaxed md:text-xl">Les aventuriers avancent. Le narrateur prépare l’inconnu. <span className="text-primary">La forteresse ne pardonne rien.</span></p>
+            <div>
+              <p className="max-w-xl text-lg font-medium leading-relaxed md:text-xl">Les aventuriers avancent. Le narrateur prépare l’inconnu. <span className="text-primary">La forteresse ne pardonne rien.</span></p>
+              <a href="/salons" className="mt-6 inline-flex min-h-12 items-center gap-3 border-4 border-primary bg-primary px-6 font-display text-sm font-black uppercase text-primary-foreground transition-transform hover:translate-x-1 hover:translate-y-1">Crée ta propre partie →</a>
+            </div>
             <a href="#concept" aria-label="Découvrir le jeu" className="flex h-14 w-14 items-center justify-center border-2 border-foreground transition-colors hover:border-primary hover:bg-primary"><ArrowDown size={24} /></a>
           </div>
         </div>
@@ -74,6 +84,28 @@ function Index() {
             <Stat icon={<Zap />} title="Vitesse" />
             <Stat icon={<Swords />} title="Force" />
             <Stat icon={<Shield />} title="Endurance" />
+          </div>
+        </div>
+      </section>
+
+      <section id="salons" className="border-b border-border bg-secondary px-5 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div><p className="section-label">Salons privés</p><h2 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Conçois tes propres<br /><span className="text-primary">parties.</span></h2></div>
+            <p className="max-w-sm text-sm text-muted-foreground">Un salon, un code à six caractères et la table est montée. Toi ou un ami incarne le narrateur, les autres incarnent les peuples — en ligne, sur téléphone ou ordinateur.</p>
+          </div>
+          <div className="grid border border-border bg-background md:grid-cols-3">
+            {salonSteps.map((step) => (
+              <article key={step.title} className="border-b border-border p-7 last:border-b-0 md:border-b-0 md:border-r md:p-9 md:last:border-r-0">
+                <span className="text-primary">{step.icon}</span>
+                <h3 className="mt-5 font-display text-base font-black uppercase tracking-normal">{step.title}</h3>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-10 flex flex-col gap-4 md:flex-row md:items-center">
+            <a href="/salons" className="inline-flex min-h-12 items-center justify-center gap-3 border-4 border-primary bg-primary px-6 font-display text-sm font-black uppercase text-primary-foreground transition-transform hover:translate-x-1 hover:translate-y-1">Créer ou rejoindre un salon →</a>
+            <p className="text-xs font-bold uppercase text-muted-foreground">Gratuit · 3 à 5 joueurs · Le créateur devient narrateur</p>
           </div>
         </div>
       </section>
