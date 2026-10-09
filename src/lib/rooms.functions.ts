@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { RACES, RACE_NAMES, hpFor, SCENARIOS, type RaceName } from "./races";
+import { startDungeonIfAny, openDungeon } from "./operations.functions";
 
 const CODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -283,10 +284,13 @@ export const narratorAction = createServerFn({ method: "POST" })
         await logEvent(data.gameId, context.userId, "systeme", data.action === "lock" ? "Le salon est verrouillé." : "Le salon est déverrouillé.");
         break;
       case "start":
+        await startDungeonIfAny(data.gameId);
         await db.from("games").update({ status: "playing", started_at: new Date().toISOString(), locked: true }).eq("id", data.gameId).eq("status", "waiting");
         await logEvent(data.gameId, context.userId, "systeme", "La partie commence. Tour 1.", { turn: 1 }, true);
+        await openDungeon(data.gameId);
         break;
       case "finish":
+        await db.from("game_dungeons").update({ status: "termine" }).eq("game_id", data.gameId);
         await db.from("games").update({ status: "finished", ended_at: new Date().toISOString(), result: data.result ?? "defaite" }).eq("id", data.gameId);
         await logEvent(data.gameId, context.userId, "fin", `Fin de partie : ${data.result === "victoire" ? "victoire des aventuriers" : "défaite des aventuriers"}.`, { result: data.result }, true);
         break;
