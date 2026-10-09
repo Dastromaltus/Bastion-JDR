@@ -6,11 +6,11 @@ import { TRACK_KEYS, SFX_KEYS } from "./ambience-tracks";
 
 type Ctx = { userId: string; supabase: any };
 
-async function admin() {
+export async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin as any;
 }
-function rollDie(sides = 6) {
+export function rollDie(sides = 6) {
   const buf = crypto.getRandomValues(new Uint32Array(1));
   return ((buf[0] ?? 0) % sides) + 1;
 }
@@ -26,7 +26,7 @@ async function requireNarrator(ctx: Ctx, gameId: string) {
   if (m.role !== "narrator") throw new Error("Seul le narrateur de ce salon peut faire ça.");
   return m;
 }
-async function log(gameId: string, actorId: string | null, kind: string, message: string, payload: Record<string, unknown> = {}, important = false, secret = false) {
+export async function log(gameId: string, actorId: string | null, kind: string, message: string, payload: Record<string, unknown> = {}, important = false, secret = false) {
   const db = await admin();
   await db.from("game_events").insert({ game_id: gameId, actor_id: actorId, kind, message, payload, important, secret });
 }
@@ -202,7 +202,7 @@ export const enemyAction = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-async function revealEnemies(gameId: string, enemies: any[], trigger: { by: string; zone: string } | null) {
+export async function revealEnemies(gameId: string, enemies: any[], trigger: { by: string; zone: string } | null, label: (k: string) => string = zoneLabel) {
   const db = await admin();
   if (trigger) {
     await log(gameId, null, "declencheur", `Déclencheur : ${trigger.by} active ${enemies.map((e) => e.name).join(", ")} dans ${zoneLabel(trigger.zone)}.`, { zone: trigger.zone }, true, true);
@@ -213,7 +213,7 @@ async function revealEnemies(gameId: string, enemies: any[], trigger: { by: stri
   await db.from("game_enemies").update({ status: "revele", revealed_at: new Date().toISOString() }).in("id", ids);
   const { data: players } = await db.from("game_players").select("display_name, speed, current_zone").eq("game_id", gameId).eq("role", "adventurer");
   for (const e of enemies) {
-    await log(gameId, null, "revelation", `${e.icon} ${e.name} surgit dans ${zoneLabel(e.zone)} ! (Vit ${e.speed} · For ${e.strength} · End ${e.endurance} · ${e.hp} PV — ${e.ability})`, { enemy: e.name }, true);
+    await log(gameId, null, "revelation", `${e.icon} ${e.name} surgit dans ${label(e.zone)} ! (Vit ${e.speed} · For ${e.strength} · End ${e.endurance} · ${e.hp} PV — ${e.ability})`, { enemy: e.name }, true);
     const fighters = (players ?? []).filter((p: any) => p.current_zone === e.zone);
     const order = [
       ...(fighters.length ? fighters : players ?? []).map((p: any) => { const r = rollDie(); return { name: p.display_name, roll: r, bonus: Math.floor(p.speed / 20), total: r + Math.floor(p.speed / 20) }; }),
@@ -223,7 +223,7 @@ async function revealEnemies(gameId: string, enemies: any[], trigger: { by: stri
   }
 }
 
-async function defeatEnemy(gameId: string, enemy: any, winner: { user_id: string; display_name: string } | null) {
+export async function defeatEnemy(gameId: string, enemy: any, winner: { user_id: string; display_name: string } | null) {
   const db = await admin();
   await db.from("game_enemies").update({ status: "vaincu", hp: 0 }).eq("id", enemy.id);
   await log(gameId, winner?.user_id ?? null, "defaite-ennemi", `${enemy.name} est vaincu${winner ? ` par ${winner.display_name}` : ""} !`, {}, true);
@@ -236,9 +236,18 @@ async function defeatEnemy(gameId: string, enemy: any, winner: { user_id: string
     }
     if (to) for (const t of loot) await discover(gameId, t, to, `sur ${enemy.name}`);
   }
+  // Operation hook: defeating the boss of a "vaincre un boss" Operation ends the game.
+  if (enemy.category === "boss") {
+    const { data: dg } = await db.from("game_dungeons").select("id, status, dungeon_templates(objective_type)").eq("game_id", gameId).maybeSingle();
+    if (dg && dg.status === "en_cours" && dg.dungeon_templates?.objective_type === "boss") {
+      await db.from("game_dungeons").update({ status: "termine" }).eq("id", dg.id);
+      await db.from("games").update({ status: "finished", ended_at: new Date().toISOString(), result: "victoire" }).eq("id", gameId);
+      await log(gameId, null, "fin", "Objectif atteint : le boss est vaincu. Victoire des aventuriers !", { result: "victoire" }, true);
+    }
+  }
 }
 
-async function discover(gameId: string, t: any, to: { user_id: string; display_name: string }, where: string) {
+export async function discover(gameId: string, t: any, to: { user_id: string; display_name: string }, where: string) {
   const db = await admin();
   await db.from("game_inventory").insert({ game_id: gameId, owner_id: to.user_id, name: t.name, category: inventoryCategory(t.type), effect: t.effect, rarity: t.rarity });
   await db.from("game_treasures").update({ status: "decouvert", found_by: to.user_id, found_at: new Date().toISOString() }).eq("id", t.id);
@@ -306,12 +315,22 @@ async function requireAdventurer(ctx: Ctx, gameId: string) {
   return me;
 }
 
+/** Boss rule: under 50 % HP it overheats (+1 Speed, takes +1 damage). */
+export async function checkOverheat(gameId: string, e: any) {
+  if (e.category !== "boss" || e.overheated || e.hp * 2 >= e.max_hp) return;
+  const db = await admin();
+  await db.from("game_enemies").update({ overheated: true, speed: Math.min(5, e.speed + 1) }).eq("id", e.id);
+  await log(gameId, null, "revelation", `🔥 ${e.name} passe en SURCHAUFFE : +1 Vitesse, mais subit +1 dégât !`, { enemy: e.name }, true);
+}
+
 export const exploreAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ gameId: uuid, action: z.enum(["enter", "door", "chest"]), zone: zone.optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const me = await requireAdventurer(context, data.gameId);
     const db = await admin();
+    const { data: dg } = await db.from("game_dungeons").select("status").eq("game_id", data.gameId).maybeSingle();
+    if (dg?.status === "en_cours") throw new Error("Une Opération est en cours : c'est le narrateur qui fait avancer la table de salle en salle.");
     let where = me.current_zone as string;
     if (data.action === "enter") {
       if (!data.zone) throw new Error("Choisis une zone.");
@@ -354,11 +373,12 @@ export const attackEnemy = createServerFn({ method: "POST" })
     const r = rollDie(), bonus = Math.floor(me.strength / 20), total = r + bonus, difficulty = 3 + e.speed;
     const hit = total >= difficulty;
     const shield = /bouclier/i.test(e.ability) ? 1 : 0;
-    const dmg = hit ? Math.max(1, 1 + Math.floor(me.strength / 25) + rollDie(3) - shield) : 0;
+    const dmg = hit ? Math.max(1, 1 + Math.floor(me.strength / 25) + rollDie(3) - shield + (e.overheated ? 1 : 0)) : 0;
     await log(data.gameId, context.userId, "jet", `${me.display_name} attaque ${e.name} : 1d6 ${r}+${bonus}=${total} vs ${difficulty} → ${hit ? `touché, ${dmg} dégâts` : "raté"}.`, { stat: "force", dice: 1, rolls: [r], bonus, total, difficulty, success: hit }, true);
     const hp = e.hp - dmg;
     if (hp <= 0) { await defeatEnemy(data.gameId, e, me); return { hit, dmg, defeated: true }; }
     await db.from("game_enemies").update({ hp }).eq("id", e.id);
+    await checkOverheat(data.gameId, { ...e, hp });
     // Riposte
     const er = rollDie(), etotal = er + e.strength, edef = 3 + Math.floor(me.endurance / 25);
     const ehit = etotal >= edef;
