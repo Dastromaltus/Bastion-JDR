@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { BookOpen, Save, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Crosshair, DoorClosed, Radio, Skull, Sparkles, TriangleAlert } from "lucide-react";
+import { BookOpen, Download, Save, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Crosshair, DoorClosed, Radio, Skull, Sparkles, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import sectorMap from "@/data/sector-01.json";
@@ -44,6 +44,39 @@ export function ExplorationGame() {
   const [sceneReady, setSceneReady] = useState(false);
 
   const refresh = async () => setState(await getState());
+
+  const exportJournal = () => {
+    if (!state) return;
+    const events = [...state.events].reverse();
+    const lines = [
+      `# BASTION — Rapport de partie`,
+      ``,
+      `- Secteur : ${state.session.name}`,
+      `- Objectif : ${state.session.objective}`,
+      `- Statut : ${state.session.status}`,
+      `- Exporté le : ${new Date().toLocaleString("fr-FR")}`,
+      ``,
+      `## Aventuriers`,
+      ``,
+      ...(state.players.length ? state.players.map((p) => `- ${p.name} (${p.race}) — PV ${p.hp}, position (${p.tile_x}, ${p.tile_y})`) : ["- Aucun aventurier enregistré."]),
+      ``,
+      `## Entités actives`,
+      ``,
+      ...(state.entities.length ? state.entities.map((e) => `- ${e.label} [${e.kind}] en (${e.tile_x}, ${e.tile_y})${e.hp != null ? ` — PV ${e.hp}` : ""}${e.locked ? " — verrouillé" : ""}`) : ["- Aucune entité active."]),
+      ``,
+      `## Journal chronologique`,
+      ``,
+      ...(events.length ? events.map((e) => `- [${new Date(e.created_at).toLocaleString("fr-FR")}] **${e.event_type.toUpperCase()}** — ${e.message}`) : ["- Aucun événement."]),
+      ``,
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `bastion-journal-${new Date().toISOString().slice(0, 10)}.md`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     clientKeyRef.current = getClientKey();
@@ -175,7 +208,7 @@ export function ExplorationGame() {
         <div className="border-b border-game-line p-5"><p className="font-pixel text-[10px] text-game-muted">SAUVEGARDES</p><Button variant="game" className="mt-3 w-full rounded-none font-pixel text-[9px]" onClick={() => void save({ data: { label: `Partie ${new Date().toLocaleString("fr-FR")}` } }).then(() => { setMessage("Partie enregistrée."); void refresh(); })}><Save /> Enregistrer</Button><div className="mt-3 space-y-1">{state?.saves.slice(0, 4).map((s) => <button key={s.id} className="block w-full border border-game-line p-2 text-left text-[10px] hover:border-primary" onClick={() => { if (window.confirm(`Reprendre « ${s.label} » ? L'état actuel sera remplacé.`)) void load({ data: { saveId: s.id } }).then(() => { setEncounter(null); setMessage("Partie reprise."); void refresh(); }); }}>↺ {s.label}</button>)}</div></div>
         <div className="flex-1 p-5"><div className="flex items-center justify-between"><p className="font-pixel text-[10px] text-game-muted">JOURNAL</p><Button variant="game" size="sm" className="rounded-none text-[10px]" onClick={() => setJournalOpen(true)}><BookOpen /> Tout voir</Button></div><div className="mt-4 space-y-3">{state?.events.slice(0, 4).map((event) => <p key={event.id} className="border-l-2 border-primary pl-3 text-[10px] leading-relaxed">{event.message}</p>)}</div></div>
       </aside>
-      {journalOpen && <div className="absolute inset-0 z-50 flex items-center justify-center bg-game-overlay p-4"><div className="flex max-h-full w-full max-w-2xl flex-col border-4 border-foreground bg-background shadow-game"><div className="flex items-center justify-between border-b-2 border-game-line p-4"><p className="font-pixel text-xs text-primary">JOURNAL DE PARTIE</p><Button variant="game" size="sm" className="rounded-none" onClick={() => setJournalOpen(false)}>Fermer</Button></div><div className="flex flex-wrap gap-1 border-b border-game-line p-3">{([["all", "Tout"], ["move", "Déplacements"], ["combat", "Combats"], ["dice", "Dés"], ["narration", "Narrateur"], ["objective", "Objectif"], ["save", "Sauvegardes"]] as const).map(([key, label]) => <Button key={key} size="sm" variant={journalFilter === key ? "default" : "game"} className="rounded-none text-[10px]" onClick={() => setJournalFilter(key)}>{label}</Button>)}</div><ol className="flex-1 space-y-2 overflow-y-auto p-4">{[...(state?.events ?? [])].reverse().filter((e) => journalFilter === "all" || e.event_type === journalFilter || (journalFilter === "save" && e.event_type === "load") || (journalFilter === "narration" && e.event_type === "ability")).map((e) => <li key={e.id} className="grid grid-cols-[64px_80px_1fr] gap-2 border-l-2 border-primary pl-3 text-[11px]"><span className="text-game-muted">{new Date(e.created_at).toLocaleTimeString("fr-FR")}</span><span className="font-bold uppercase text-primary">{e.event_type}</span><span>{e.message}</span></li>)}</ol></div></div>}
+      {journalOpen && <div className="absolute inset-0 z-50 flex items-center justify-center bg-game-overlay p-4"><div className="flex max-h-full w-full max-w-2xl flex-col border-4 border-foreground bg-background shadow-game"><div className="flex items-center justify-between border-b-2 border-game-line p-4"><p className="font-pixel text-xs text-primary">JOURNAL DE PARTIE</p><div className="flex gap-2"><Button variant="game" size="sm" className="rounded-none" onClick={exportJournal}><Download /> Exporter</Button><Button variant="game" size="sm" className="rounded-none" onClick={() => setJournalOpen(false)}>Fermer</Button></div></div><div className="flex flex-wrap gap-1 border-b border-game-line p-3">{([["all", "Tout"], ["move", "Déplacements"], ["combat", "Combats"], ["dice", "Dés"], ["narration", "Narrateur"], ["objective", "Objectif"], ["save", "Sauvegardes"]] as const).map(([key, label]) => <Button key={key} size="sm" variant={journalFilter === key ? "default" : "game"} className="rounded-none text-[10px]" onClick={() => setJournalFilter(key)}>{label}</Button>)}</div><ol className="flex-1 space-y-2 overflow-y-auto p-4">{[...(state?.events ?? [])].reverse().filter((e) => journalFilter === "all" || e.event_type === journalFilter || (journalFilter === "save" && e.event_type === "load") || (journalFilter === "narration" && e.event_type === "ability")).map((e) => <li key={e.id} className="grid grid-cols-[64px_80px_1fr] gap-2 border-l-2 border-primary pl-3 text-[11px]"><span className="text-game-muted">{new Date(e.created_at).toLocaleTimeString("fr-FR")}</span><span className="font-bold uppercase text-primary">{e.event_type}</span><span>{e.message}</span></li>)}</ol></div></div>}
       {encounter && <div className="absolute inset-0 z-40 flex items-center justify-center bg-game-overlay p-4"><div className="w-full max-w-xl border-4 border-foreground bg-background p-2 shadow-game"><div className="border-2 border-game-line p-5"><div className="flex items-start justify-between"><div><p className="font-pixel text-[10px] text-primary">COMBAT</p><h4 className="mt-3 font-pixel text-xl uppercase">{encounter.label}</h4></div><div className="w-32"><div className="flex justify-between text-[9px] font-bold"><span>PV</span><span>{enemyHp}</span></div><div className="mt-2 h-3 border border-foreground p-0.5"><div className="h-full bg-primary transition-all" style={{ width: `${Math.max(0, Math.min(100, enemyHp / 12 * 100))}%` }} /></div></div></div><p className="my-7 border-y border-game-line py-4 text-sm">Initiative calculée par la Vitesse. Les dés sont lancés hors du plateau.</p><div className="grid grid-cols-2 gap-2">{(["Attaquer", "Compétence", "Objet", "Fuir"] as const).map((action) => <Button key={action} variant="game" className="rounded-none font-pixel text-[10px]" onClick={() => void handleCombat(action)}>{action}</Button>)}</div></div></div></div>}
     </div>
   );
