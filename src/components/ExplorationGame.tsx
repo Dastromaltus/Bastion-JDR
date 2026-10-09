@@ -45,6 +45,39 @@ export function ExplorationGame() {
 
   const refresh = async () => setState(await getState());
 
+  const exportJournal = () => {
+    if (!state) return;
+    const events = [...state.events].reverse();
+    const lines = [
+      `# BASTION — Rapport de partie`,
+      ``,
+      `- Secteur : ${state.session.name}`,
+      `- Objectif : ${state.session.objective}`,
+      `- Statut : ${state.session.status}`,
+      `- Exporté le : ${new Date().toLocaleString("fr-FR")}`,
+      ``,
+      `## Aventuriers`,
+      ``,
+      ...(state.players.length ? state.players.map((p) => `- ${p.name} (${p.race}) — PV ${p.hp}, position (${p.tile_x}, ${p.tile_y})`) : ["- Aucun aventurier enregistré."]),
+      ``,
+      `## Entités actives`,
+      ``,
+      ...(state.entities.length ? state.entities.map((e) => `- ${e.label} [${e.kind}] en (${e.tile_x}, ${e.tile_y})${e.hp != null ? ` — PV ${e.hp}` : ""}${e.locked ? " — verrouillé" : ""}`) : ["- Aucune entité active."]),
+      ``,
+      `## Journal chronologique`,
+      ``,
+      ...(events.length ? events.map((e) => `- [${new Date(e.created_at).toLocaleString("fr-FR")}] **${e.event_type.toUpperCase()}** — ${e.message}`) : ["- Aucun événement."]),
+      ``,
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `bastion-journal-${new Date().toISOString().slice(0, 10)}.md`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
     clientKeyRef.current = getClientKey();
     void refresh();
