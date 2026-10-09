@@ -33,3 +33,27 @@ export const ROLE_LABEL: Record<string, string> = {
   narrator: "Narrateur",
   adventurer: "Aventurier",
 };
+
+/** Zones of the parcours, shared by every scenario. `door` zones expose "Ouvrir la porte". */
+export const ZONES = [
+  { key: "entree", label: "Entrée du Bastion", door: false },
+  { key: "couloir-a", label: "Couloir A", door: false },
+  { key: "salle-machines", label: "Salle des machines", door: false },
+  { key: "porte-scellee", label: "Porte scellée", door: true },
+  { key: "laboratoire", label: "Laboratoire abandonné", door: true },
+  { key: "coeur", label: "Cœur du Bastion", door: false },
+] as const;
+export const ZONE_KEYS = ZONES.map((z) => z.key) as [string, ...string[]];
+export function zoneLabel(key: string | null | undefined) {
+  return ZONES.find((z) => z.key === key)?.label ?? key ?? "—";
+}
+
+export const TRIGGER_LABEL: Record<string, string> = { entree: "À l'entrée dans la zone", porte: "À l'ouverture d'une porte", manuel: "Manuel" };
+export const ENEMY_STATUS_LABEL: Record<string, string> = { cache: "Caché", revele: "Révélé", vaincu: "Vaincu" };
+export const THREAT_PER_PLAYER = 3;
+/** Treasure type → inventory category. */
+export function inventoryCategory(type: string): "arme" | "consommable" | "cle" {
+  if (type === "arme" || type === "equipement") return "arme";
+  if (type === "consommable") return "consommable";
+  return "cle";
+}
