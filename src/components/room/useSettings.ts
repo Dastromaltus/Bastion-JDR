@@ -11,10 +11,11 @@ export type GameSettings = {
   reducedMotion: boolean;
   leftHanded: boolean;
   vibrations: boolean;
+  muteMusic: boolean;
 };
 
 export const DEFAULT_SETTINGS: GameSettings = {
-  volume: 80, music: 60, effects: 80, textSize: "normal", highContrast: false, colorblind: false, reducedMotion: false, leftHanded: false, vibrations: true,
+  volume: 80, music: 60, effects: 80, textSize: "normal", highContrast: false, colorblind: false, reducedMotion: false, leftHanded: false, vibrations: true, muteMusic: false,
 };
 
 export function useSettings(userId: string | undefined) {
