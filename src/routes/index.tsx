@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowDown, ArrowRight, Shield, Swords, Zap } from "lucide-react";
+import { ArrowDown, ArrowRight, Crown, KeyRound, Shield, Swords, Users, Zap } from "lucide-react";
 import { useState } from "react";
 import bastionFortress from "@/assets/bastion-fortress.jpg";
 import { ExplorationGame } from "@/components/ExplorationGame";
@@ -78,6 +78,28 @@ function Index() {
             <Stat icon={<Zap />} title="Vitesse" />
             <Stat icon={<Swords />} title="Force" />
             <Stat icon={<Shield />} title="Endurance" />
+          </div>
+        </div>
+      </section>
+
+      <section id="salons" className="border-b border-border bg-secondary px-5 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div><p className="section-label">Salons privés</p><h2 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Conçois tes propres<br /><span className="text-primary">parties.</span></h2></div>
+            <p className="max-w-sm text-sm text-muted-foreground">Un salon, un code à six caractères et la table est montée. Toi ou un ami incarne le narrateur, les autres incarnent les peuples — en ligne, sur téléphone ou ordinateur.</p>
+          </div>
+          <div className="grid border border-border bg-background md:grid-cols-3">
+            {salonSteps.map((step) => (
+              <article key={step.title} className="border-b border-border p-7 last:border-b-0 md:border-b-0 md:border-r md:p-9 md:last:border-r-0">
+                <span className="text-primary">{step.icon}</span>
+                <h3 className="mt-5 font-display text-base font-black uppercase tracking-normal">{step.title}</h3>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-10 flex flex-col gap-4 md:flex-row md:items-center">
+            <a href="/salons" className="inline-flex min-h-12 items-center justify-center gap-3 border-4 border-primary bg-primary px-6 font-display text-sm font-black uppercase text-primary-foreground transition-transform hover:translate-x-1 hover:translate-y-1">Créer ou rejoindre un salon →</a>
+            <p className="text-xs font-bold uppercase text-muted-foreground">Gratuit · 3 à 5 joueurs · Le créateur devient narrateur</p>
           </div>
         </div>
       </section>
