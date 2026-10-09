@@ -171,7 +171,19 @@ export function ExplorationGame() {
   });
 
   async function handleMove(direction: Direction) {
+    const directions: Record<Direction, [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+    const me = state?.players.find((p) => p.client_key === clientKeyRef.current);
+    const [dx, dy] = directions[direction];
     const result = await move({ data: { clientKey: clientKeyRef.current, race, direction } });
+    if (me && gameRef.current && sceneReady) {
+      const optimistic = { ...me, tile_x: me.tile_x + dx, tile_y: me.tile_y + dy };
+      const scene = gameRef.current.scene.getScene("SectorScene");
+      scene?.events.emit("sync", {
+        players: [...(state?.players.filter((p) => p.client_key !== clientKeyRef.current) ?? []), optimistic],
+        entities: state?.entities ?? [],
+        clientKey: clientKeyRef.current,
+      });
+    }
     setMessage(result.message);
     if (result.encounter) { setEncounter(result.encounter); setEnemyHp(result.encounter.kind === "enemy" ? 12 : 1); }
     await refresh();
