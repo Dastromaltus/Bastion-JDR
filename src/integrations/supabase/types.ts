@@ -14,6 +14,244 @@ export type Database = {
   }
   public: {
     Tables: {
+      dungeon_events: {
+        Row: {
+          effect: string
+          id: string
+          template_id: string
+          text: string
+          threshold: number
+        }
+        Insert: {
+          effect: string
+          id?: string
+          template_id: string
+          text: string
+          threshold: number
+        }
+        Update: {
+          effect?: string
+          id?: string
+          template_id?: string
+          text?: string
+          threshold?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dungeon_events_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "dungeon_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dungeon_room_enemies: {
+        Row: {
+          enemy_catalog_id: string
+          hidden: boolean
+          id: string
+          room_id: string
+          trigger: string
+        }
+        Insert: {
+          enemy_catalog_id: string
+          hidden?: boolean
+          id?: string
+          room_id: string
+          trigger?: string
+        }
+        Update: {
+          enemy_catalog_id?: string
+          hidden?: boolean
+          id?: string
+          room_id?: string
+          trigger?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dungeon_room_enemies_enemy_catalog_id_fkey"
+            columns: ["enemy_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "enemy_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dungeon_room_enemies_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "dungeon_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dungeon_room_treasures: {
+        Row: {
+          container: string
+          id: string
+          per_player: boolean
+          room_id: string
+          treasure_catalog_id: string
+        }
+        Insert: {
+          container?: string
+          id?: string
+          per_player?: boolean
+          room_id: string
+          treasure_catalog_id: string
+        }
+        Update: {
+          container?: string
+          id?: string
+          per_player?: boolean
+          room_id?: string
+          treasure_catalog_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dungeon_room_treasures_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "dungeon_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dungeon_room_treasures_treasure_catalog_id_fkey"
+            columns: ["treasure_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "treasure_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dungeon_rooms: {
+        Row: {
+          connections: string[]
+          description: string
+          features: Json
+          grid_x: number
+          grid_y: number
+          hazard: string | null
+          hazard_kind: string | null
+          id: string
+          is_rest: boolean
+          key: string
+          lore: string
+          name: string
+          position: number
+          template_id: string
+        }
+        Insert: {
+          connections?: string[]
+          description?: string
+          features?: Json
+          grid_x?: number
+          grid_y?: number
+          hazard?: string | null
+          hazard_kind?: string | null
+          id?: string
+          is_rest?: boolean
+          key: string
+          lore?: string
+          name: string
+          position: number
+          template_id: string
+        }
+        Update: {
+          connections?: string[]
+          description?: string
+          features?: Json
+          grid_x?: number
+          grid_y?: number
+          hazard?: string | null
+          hazard_kind?: string | null
+          id?: string
+          is_rest?: boolean
+          key?: string
+          lore?: string
+          name?: string
+          position?: number
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dungeon_rooms_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "dungeon_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dungeon_templates: {
+        Row: {
+          created_at: string
+          difficulty: string
+          difficulty_label: string
+          duration: number
+          fixed_treasure: string
+          id: string
+          map_key: string
+          map_type: string
+          mechanic: string
+          name: string
+          objective_text: string
+          objective_type: string
+          position: number
+          random_treasure: string
+          slug: string
+          solo: boolean
+          story: string
+          summary: string
+          target_turns: number
+          tension_thresholds: number[]
+        }
+        Insert: {
+          created_at?: string
+          difficulty: string
+          difficulty_label?: string
+          duration: number
+          fixed_treasure?: string
+          id?: string
+          map_key: string
+          map_type: string
+          mechanic?: string
+          name: string
+          objective_text: string
+          objective_type: string
+          position?: number
+          random_treasure?: string
+          slug: string
+          solo?: boolean
+          story: string
+          summary: string
+          target_turns?: number
+          tension_thresholds?: number[]
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          difficulty_label?: string
+          duration?: number
+          fixed_treasure?: string
+          id?: string
+          map_key?: string
+          map_type?: string
+          mechanic?: string
+          name?: string
+          objective_text?: string
+          objective_type?: string
+          position?: number
+          random_treasure?: string
+          slug?: string
+          solo?: boolean
+          story?: string
+          summary?: string
+          target_turns?: number
+          tension_thresholds?: number[]
+        }
+        Relationships: []
+      }
       enemy_catalog: {
         Row: {
           ability: string
@@ -305,6 +543,101 @@ export type Database = {
           },
         ]
       }
+      game_dungeon_events: {
+        Row: {
+          effect: string
+          game_id: string
+          id: string
+          status: string
+          text: string
+          threshold: number
+          triggered_at: string | null
+        }
+        Insert: {
+          effect: string
+          game_id: string
+          id?: string
+          status?: string
+          text: string
+          threshold: number
+          triggered_at?: string | null
+        }
+        Update: {
+          effect?: string
+          game_id?: string
+          id?: string
+          status?: string
+          text?: string
+          threshold?: number
+          triggered_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_dungeon_events_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_dungeons: {
+        Row: {
+          core_taken: boolean
+          current_room: string
+          current_turn: number
+          door_locked: boolean
+          explored: string[]
+          game_id: string
+          id: string
+          status: string
+          template_id: string
+          tension: number
+          updated_at: string
+        }
+        Insert: {
+          core_taken?: boolean
+          current_room: string
+          current_turn?: number
+          door_locked?: boolean
+          explored?: string[]
+          game_id: string
+          id?: string
+          status?: string
+          template_id: string
+          tension?: number
+          updated_at?: string
+        }
+        Update: {
+          core_taken?: boolean
+          current_room?: string
+          current_turn?: number
+          door_locked?: boolean
+          explored?: string[]
+          game_id?: string
+          id?: string
+          status?: string
+          template_id?: string
+          tension?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_dungeons_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: true
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_dungeons_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "dungeon_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_enemies: {
         Row: {
           ability: string
@@ -318,6 +651,7 @@ export type Database = {
           id: string
           max_hp: number
           name: string
+          overheated: boolean
           revealed_at: string | null
           speed: number
           status: string
@@ -338,6 +672,7 @@ export type Database = {
           id?: string
           max_hp: number
           name: string
+          overheated?: boolean
           revealed_at?: string | null
           speed: number
           status?: string
@@ -358,6 +693,7 @@ export type Database = {
           id?: string
           max_hp?: number
           name?: string
+          overheated?: boolean
           revealed_at?: string | null
           speed?: number
           status?: string
@@ -718,6 +1054,7 @@ export type Database = {
           name: string
           result: string | null
           scenario: string
+          solo: boolean
           started_at: string | null
           status: string
         }
@@ -733,6 +1070,7 @@ export type Database = {
           name: string
           result?: string | null
           scenario: string
+          solo?: boolean
           started_at?: string | null
           status?: string
         }
@@ -748,6 +1086,7 @@ export type Database = {
           name?: string
           result?: string | null
           scenario?: string
+          solo?: boolean
           started_at?: string | null
           status?: string
         }
