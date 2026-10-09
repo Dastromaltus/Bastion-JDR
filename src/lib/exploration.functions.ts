@@ -61,8 +61,10 @@ export const moveExplorer = createServerFn({ method: "POST" })
     if (current.id) await supabaseAdmin.from("exploration_players").update(playerData).eq("id", current.id);
     else await supabaseAdmin.from("exploration_players").insert({ ...playerData, name: "Éclaireur" });
     const encounter = blocking?.find((entity) => entity.kind === "enemy" || (entity.kind === "trap" && data.race !== "Oiseau"));
+    const objective = blocking?.find((entity) => entity.kind === "objective");
     if (encounter) await supabaseAdmin.from("exploration_events").insert({ session_id: session.id, event_type: "combat", message: `${encounter.label} déclenche un affrontement !`, payload: { entityId: encounter.id } });
-    return { moved: true, x: nextX, y: nextY, encounter: encounter ? { id: encounter.id, label: encounter.label, kind: encounter.kind } : null, message: encounter ? `${encounter.label} vous barre la route.` : "Progression validée." };
+    if (objective && data.race === "Humain") await supabaseAdmin.from("exploration_events").insert({ session_id: session.id, event_type: "ability", message: "L’Humain décrypte le relais et obtient un bonus d’interaction." });
+    return { moved: true, x: nextX, y: nextY, encounter: encounter ? { id: encounter.id, label: encounter.label, kind: encounter.kind } : null, message: encounter ? `${encounter.label} vous barre la route.` : objective && data.race === "Humain" ? "Interaction réussie : bonus humain obtenu." : "Progression validée." };
   });
 
 export const resolveCombatTurn = createServerFn({ method: "POST" })

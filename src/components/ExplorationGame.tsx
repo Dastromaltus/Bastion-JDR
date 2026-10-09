@@ -37,6 +37,7 @@ export function ExplorationGame() {
   const [enemyHp, setEnemyHp] = useState(12);
   const [narratorMode, setNarratorMode] = useState(false);
   const [placing, setPlacing] = useState<"enemy" | "trap" | "door" | "event">("enemy");
+  const [sceneReady, setSceneReady] = useState(false);
 
   const refresh = async () => setState(await getState());
 
@@ -58,6 +59,7 @@ export function ExplorationGame() {
         create() {
           this.graphics = this.add.graphics();
           this.events.on("sync", (payload: { players: Player[]; entities: Entity[]; clientKey: string }) => this.draw(payload));
+          window.dispatchEvent(new Event("bastion-scene-ready"));
           this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
             const x = Math.floor(pointer.x / 32);
             const y = Math.floor(pointer.y / 32);
@@ -100,10 +102,16 @@ export function ExplorationGame() {
   }, []);
 
   useEffect(() => {
-    if (!state || !gameRef.current) return;
+    const ready = () => setSceneReady(true);
+    window.addEventListener("bastion-scene-ready", ready);
+    return () => window.removeEventListener("bastion-scene-ready", ready);
+  }, []);
+
+  useEffect(() => {
+    if (!state || !gameRef.current || !sceneReady) return;
     const scene = gameRef.current.scene.getScene("SectorScene");
     scene?.events.emit("sync", { players: state.players, entities: state.entities, clientKey: clientKeyRef.current });
-  }, [state]);
+  }, [state, sceneReady]);
 
   useEffect(() => {
     const handleClick = (event: Event) => {
@@ -142,7 +150,7 @@ export function ExplorationGame() {
   }
 
   return (
-    <div className="grid border-2 border-primary bg-game lg:grid-cols-[minmax(0,1fr)_290px]">
+    <div className="relative grid border-2 border-primary bg-game lg:grid-cols-[minmax(0,1fr)_290px]">
       <div className="min-w-0 border-b-2 border-primary lg:border-b-0 lg:border-r-2">
         <div className="flex items-center justify-between border-b border-game-line bg-card px-4 py-3"><div><p className="font-pixel text-[10px] uppercase text-primary">Secteur 01</p><h3 className="mt-1 font-pixel text-sm uppercase">Porte Rouge</h3></div><div className="flex items-center gap-2 text-[10px] font-bold uppercase text-game-muted"><Radio size={14} className="text-primary" /> Direct</div></div>
         <div className="game-viewport"><div ref={mountRef} className="game-canvas" /></div>
