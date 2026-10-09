@@ -55,7 +55,7 @@ function Index() {
         </nav>
         <div id="top" className="relative z-10 flex min-h-[calc(92vh-65px)] max-w-7xl flex-col justify-end px-5 pb-12 pt-32 md:px-10 md:pb-16">
           <p className="mb-4 flex items-center gap-3 text-xs font-black uppercase text-primary"><span className="h-px w-10 bg-primary" /> Dungeon crawler asymétrique</p>
-          <h1 className="font-display text-[clamp(5rem,19vw,15rem)] font-black uppercase leading-[0.7] tracking-normal">Bastion</h1>
+          <h1 className="font-display text-[clamp(2.2rem,11vw,9rem)] font-black uppercase leading-[1.1] drop-shadow-[4px_4px_0_var(--color-secondary)] tracking-normal">Bastion</h1>
           <div className="mt-8 grid gap-8 border-t border-foreground/40 pt-6 md:grid-cols-[1fr_auto] md:items-end">
             <p className="max-w-xl text-lg font-medium leading-relaxed md:text-xl">Les aventuriers avancent. Le narrateur prépare l’inconnu. <span className="text-primary">La forteresse ne pardonne rien.</span></p>
             <a href="#concept" aria-label="Découvrir le jeu" className="flex h-14 w-14 items-center justify-center border-2 border-foreground transition-colors hover:border-primary hover:bg-primary"><ArrowDown size={24} /></a>
