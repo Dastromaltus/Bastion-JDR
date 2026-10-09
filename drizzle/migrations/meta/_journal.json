@@ -8,6 +8,13 @@
       "when": 1791562393603,
       "tag": "0000_create_bastion_exploration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791583213120,
+      "tag": "0001_exploration_saves",
+      "breakpoints": true
     }
   ]
 }
