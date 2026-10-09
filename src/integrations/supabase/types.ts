@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      enemy_catalog: {
+        Row: {
+          ability: string
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string
+          endurance: number
+          game_id: string | null
+          hp: number | null
+          icon: string
+          id: string
+          name: string
+          speed: number
+          strength: number
+          threat_cost: number
+        }
+        Insert: {
+          ability?: string
+          category: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          endurance: number
+          game_id?: string | null
+          hp?: number | null
+          icon?: string
+          id?: string
+          name: string
+          speed: number
+          strength: number
+          threat_cost: number
+        }
+        Update: {
+          ability?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          endurance?: number
+          game_id?: string | null
+          hp?: number | null
+          icon?: string
+          id?: string
+          name?: string
+          speed?: number
+          strength?: number
+          threat_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enemy_catalog_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exploration_entities: {
         Row: {
           active: boolean
@@ -202,6 +261,128 @@ export type Database = {
         }
         Relationships: []
       }
+      game_ambience: {
+        Row: {
+          game_id: string
+          loop: boolean
+          sfx: string | null
+          sfx_at: string | null
+          state: string
+          track: string
+          updated_at: string
+          updated_by: string | null
+          volume: number
+        }
+        Insert: {
+          game_id: string
+          loop?: boolean
+          sfx?: string | null
+          sfx_at?: string | null
+          state?: string
+          track?: string
+          updated_at?: string
+          updated_by?: string | null
+          volume?: number
+        }
+        Update: {
+          game_id?: string
+          loop?: boolean
+          sfx?: string | null
+          sfx_at?: string | null
+          state?: string
+          track?: string
+          updated_at?: string
+          updated_by?: string | null
+          volume?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_ambience_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: true
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_enemies: {
+        Row: {
+          ability: string
+          catalog_id: string | null
+          category: string
+          created_at: string
+          endurance: number
+          game_id: string
+          hp: number
+          icon: string
+          id: string
+          max_hp: number
+          name: string
+          revealed_at: string | null
+          speed: number
+          status: string
+          strength: number
+          threat_cost: number
+          trigger: string
+          zone: string
+        }
+        Insert: {
+          ability?: string
+          catalog_id?: string | null
+          category: string
+          created_at?: string
+          endurance: number
+          game_id: string
+          hp: number
+          icon?: string
+          id?: string
+          max_hp: number
+          name: string
+          revealed_at?: string | null
+          speed: number
+          status?: string
+          strength: number
+          threat_cost: number
+          trigger?: string
+          zone: string
+        }
+        Update: {
+          ability?: string
+          catalog_id?: string | null
+          category?: string
+          created_at?: string
+          endurance?: number
+          game_id?: string
+          hp?: number
+          icon?: string
+          id?: string
+          max_hp?: number
+          name?: string
+          revealed_at?: string | null
+          speed?: number
+          status?: string
+          strength?: number
+          threat_cost?: number
+          trigger?: string
+          zone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_enemies_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "enemy_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_enemies_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_events: {
         Row: {
           actor_id: string | null
@@ -212,6 +393,7 @@ export type Database = {
           kind: string
           message: string
           payload: Json
+          secret: boolean
         }
         Insert: {
           actor_id?: string | null
@@ -222,6 +404,7 @@ export type Database = {
           kind: string
           message: string
           payload?: Json
+          secret?: boolean
         }
         Update: {
           actor_id?: string | null
@@ -232,6 +415,7 @@ export type Database = {
           kind?: string
           message?: string
           payload?: Json
+          secret?: boolean
         }
         Relationships: [
           {
@@ -368,6 +552,7 @@ export type Database = {
       }
       game_players: {
         Row: {
+          current_zone: string
           display_name: string
           endurance: number
           game_id: string
@@ -382,6 +567,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          current_zone?: string
           display_name: string
           endurance?: number
           game_id: string
@@ -396,6 +582,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          current_zone?: string
           display_name?: string
           endurance?: number
           game_id?: string
@@ -437,6 +624,82 @@ export type Database = {
             foreignKeyName: "game_secrets_game_id_fkey"
             columns: ["game_id"]
             isOneToOne: true
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_treasures: {
+        Row: {
+          catalog_id: string | null
+          created_at: string
+          effect: string
+          enemy_id: string | null
+          found_at: string | null
+          found_by: string | null
+          game_id: string
+          id: string
+          name: string
+          placement: string
+          rarity: string
+          status: string
+          type: string
+          value: number
+          zone: string | null
+        }
+        Insert: {
+          catalog_id?: string | null
+          created_at?: string
+          effect?: string
+          enemy_id?: string | null
+          found_at?: string | null
+          found_by?: string | null
+          game_id: string
+          id?: string
+          name: string
+          placement: string
+          rarity: string
+          status?: string
+          type: string
+          value?: number
+          zone?: string | null
+        }
+        Update: {
+          catalog_id?: string | null
+          created_at?: string
+          effect?: string
+          enemy_id?: string | null
+          found_at?: string | null
+          found_by?: string | null
+          game_id?: string
+          id?: string
+          name?: string
+          placement?: string
+          rarity?: string
+          status?: string
+          type?: string
+          value?: number
+          zone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_treasures_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "treasure_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_treasures_enemy_id_fkey"
+            columns: ["enemy_id"]
+            isOneToOne: false
+            referencedRelation: "game_enemies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_treasures_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
             referencedRelation: "games"
             referencedColumns: ["id"]
           },
@@ -550,6 +813,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "player_reports_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treasure_catalog: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          effect: string
+          game_id: string | null
+          id: string
+          name: string
+          rarity: string
+          type: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          effect?: string
+          game_id?: string | null
+          id?: string
+          name: string
+          rarity: string
+          type: string
+          value?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          effect?: string
+          game_id?: string | null
+          id?: string
+          name?: string
+          rarity?: string
+          type?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treasure_catalog_game_id_fkey"
             columns: ["game_id"]
             isOneToOne: false
             referencedRelation: "games"
