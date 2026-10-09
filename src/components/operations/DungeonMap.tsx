@@ -6,7 +6,7 @@ const CW = 120, CH = 70, BW = 96, BH = 46;
 export function DungeonMap({
   rooms, current, fog = false, selectable = [], onSelect, label = "Carte des salles", playersHere,
 }: {
-  rooms: MapRoom[]; current?: string; fog?: boolean; selectable?: string[]; onSelect?: (key: string) => void; label?: string; playersHere?: number;
+  rooms: MapRoom[]; current?: string | undefined; fog?: boolean; selectable?: string[] | undefined; onSelect?: ((key: string) => void) | undefined; label?: string; playersHere?: number | undefined;
 }) {
   if (!rooms.length) return <p className="text-sm text-muted-foreground">Aucune salle.</p>;
   const maxX = Math.max(...rooms.map((r) => r.grid_x)), maxY = Math.max(...rooms.map((r) => r.grid_y));
