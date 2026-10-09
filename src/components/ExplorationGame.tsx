@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Crosshair, DoorClosed, Radio, Skull, Sparkles, TriangleAlert } from "lucide-react";
+import { BookOpen, Save, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Crosshair, DoorClosed, Radio, Skull, Sparkles, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import sectorMap from "@/data/sector-01.json";
-import { getExplorationState, moveExplorer, placeNarratorEntity, resolveCombatTurn } from "@/lib/exploration.functions";
+import { getExplorationState, loadGame, moveExplorer, placeNarratorEntity, resolveCombatTurn, saveGame } from "@/lib/exploration.functions";
 
 type Entity = { id: string; kind: string; label: string; tile_x: number; tile_y: number; hp: number | null; locked: boolean; active: boolean };
 type Player = { id: string; client_key: string; name: string; race: string; tile_x: number; tile_y: number; hp: number };
@@ -37,6 +37,10 @@ export function ExplorationGame() {
   const [enemyHp, setEnemyHp] = useState(12);
   const [narratorMode, setNarratorMode] = useState(false);
   const [placing, setPlacing] = useState<"enemy" | "trap" | "door" | "event">("enemy");
+  const save = useServerFn(saveGame);
+  const load = useServerFn(loadGame);
+  const [journalOpen, setJournalOpen] = useState(false);
+  const [journalFilter, setJournalFilter] = useState("all");
   const [sceneReady, setSceneReady] = useState(false);
 
   const refresh = async () => setState(await getState());
@@ -44,7 +48,7 @@ export function ExplorationGame() {
   useEffect(() => {
     clientKeyRef.current = getClientKey();
     void refresh();
-    const channel = supabase.channel("bastion-exploration").on("postgres_changes", { event: "*", schema: "public", table: "exploration_players" }, refresh).on("postgres_changes", { event: "*", schema: "public", table: "exploration_entities" }, refresh).on("postgres_changes", { event: "*", schema: "public", table: "exploration_events" }, refresh).subscribe();
+    const channel = supabase.channel("bastion-exploration").on("postgres_changes", { event: "*", schema: "public", table: "exploration_players" }, refresh).on("postgres_changes", { event: "*", schema: "public", table: "exploration_entities" }, refresh).on("postgres_changes", { event: "*", schema: "public", table: "exploration_events" }, refresh).on("postgres_changes", { event: "*", schema: "public", table: "exploration_saves" }, refresh).subscribe();
     return () => { void supabase.removeChannel(channel); };
   }, []);
 
@@ -168,8 +172,10 @@ export function ExplorationGame() {
         <div className="border-b border-game-line p-5"><p className="font-pixel text-[10px] text-primary">OBJECTIF</p><p className="mt-3 text-sm font-bold uppercase">{state?.session.objective ?? "Chargement…"}</p></div>
         <div className="border-b border-game-line p-5"><label htmlFor="explorer-race" className="font-pixel text-[10px] text-game-muted">PEUPLE</label><select id="explorer-race" value={race} onChange={(event) => setRace(event.target.value as Race)} className="mt-3 w-full border border-game-line bg-background p-3 text-xs font-bold uppercase outline-none focus:border-primary">{Object.keys(raceSpeed).map((name) => <option key={name}>{name}</option>)}</select><div className="mt-4"><div className="mb-2 flex justify-between text-[10px] font-bold"><span>PV</span><span>20/20</span></div><div className="h-3 border border-foreground p-0.5"><div className="h-full w-full bg-primary" /></div></div></div>
         <div className="border-b border-game-line p-5"><Button variant={narratorMode ? "default" : "outline"} className="w-full rounded-none font-pixel text-[9px]" onClick={() => setNarratorMode((value) => !value)}><Crosshair /> {narratorMode ? "Narrateur actif" : "Mode narrateur"}</Button>{narratorMode && <div className="mt-3 grid grid-cols-4 gap-1">{([['enemy', Skull], ['trap', TriangleAlert], ['door', DoorClosed], ['event', Sparkles]] as const).map(([kind, Icon]) => <Button key={kind} aria-label={`Placer ${kind}`} title={`Placer ${kind}`} variant={placing === kind ? "default" : "game"} size="gameIcon" onClick={() => setPlacing(kind)}><Icon /></Button>)}</div>}<p className="mt-3 text-[10px] leading-relaxed text-game-muted">{narratorMode ? "Choisissez un élément puis touchez une case." : "Les intentions sont validées avant chaque mouvement."}</p></div>
-        <div className="flex-1 p-5"><p className="font-pixel text-[10px] text-game-muted">JOURNAL</p><div className="mt-4 space-y-3">{state?.events.slice(0, 4).map((event) => <p key={event.id} className="border-l-2 border-primary pl-3 text-[10px] leading-relaxed">{event.message}</p>)}</div></div>
+        <div className="border-b border-game-line p-5"><p className="font-pixel text-[10px] text-game-muted">SAUVEGARDES</p><Button variant="game" className="mt-3 w-full rounded-none font-pixel text-[9px]" onClick={() => void save({ data: { label: `Partie ${new Date().toLocaleString("fr-FR")}` } }).then(() => { setMessage("Partie enregistrée."); void refresh(); })}><Save /> Enregistrer</Button><div className="mt-3 space-y-1">{state?.saves.slice(0, 4).map((s) => <button key={s.id} className="block w-full border border-game-line p-2 text-left text-[10px] hover:border-primary" onClick={() => { if (window.confirm(`Reprendre « ${s.label} » ? L'état actuel sera remplacé.`)) void load({ data: { saveId: s.id } }).then(() => { setEncounter(null); setMessage("Partie reprise."); void refresh(); }); }}>↺ {s.label}</button>)}</div></div>
+        <div className="flex-1 p-5"><div className="flex items-center justify-between"><p className="font-pixel text-[10px] text-game-muted">JOURNAL</p><Button variant="game" size="sm" className="rounded-none text-[10px]" onClick={() => setJournalOpen(true)}><BookOpen /> Tout voir</Button></div><div className="mt-4 space-y-3">{state?.events.slice(0, 4).map((event) => <p key={event.id} className="border-l-2 border-primary pl-3 text-[10px] leading-relaxed">{event.message}</p>)}</div></div>
       </aside>
+      {journalOpen && <div className="absolute inset-0 z-50 flex items-center justify-center bg-game-overlay p-4"><div className="flex max-h-full w-full max-w-2xl flex-col border-4 border-foreground bg-background shadow-game"><div className="flex items-center justify-between border-b-2 border-game-line p-4"><p className="font-pixel text-xs text-primary">JOURNAL DE PARTIE</p><Button variant="game" size="sm" className="rounded-none" onClick={() => setJournalOpen(false)}>Fermer</Button></div><div className="flex flex-wrap gap-1 border-b border-game-line p-3">{([["all", "Tout"], ["move", "Déplacements"], ["combat", "Combats"], ["dice", "Dés"], ["narration", "Narrateur"], ["objective", "Objectif"], ["save", "Sauvegardes"]] as const).map(([key, label]) => <Button key={key} size="sm" variant={journalFilter === key ? "default" : "game"} className="rounded-none text-[10px]" onClick={() => setJournalFilter(key)}>{label}</Button>)}</div><ol className="flex-1 space-y-2 overflow-y-auto p-4">{[...(state?.events ?? [])].reverse().filter((e) => journalFilter === "all" || e.event_type === journalFilter || (journalFilter === "save" && e.event_type === "load") || (journalFilter === "narration" && e.event_type === "ability")).map((e) => <li key={e.id} className="grid grid-cols-[64px_80px_1fr] gap-2 border-l-2 border-primary pl-3 text-[11px]"><span className="text-game-muted">{new Date(e.created_at).toLocaleTimeString("fr-FR")}</span><span className="font-bold uppercase text-primary">{e.event_type}</span><span>{e.message}</span></li>)}</ol></div></div>}
       {encounter && <div className="absolute inset-0 z-40 flex items-center justify-center bg-game-overlay p-4"><div className="w-full max-w-xl border-4 border-foreground bg-background p-2 shadow-game"><div className="border-2 border-game-line p-5"><div className="flex items-start justify-between"><div><p className="font-pixel text-[10px] text-primary">COMBAT</p><h4 className="mt-3 font-pixel text-xl uppercase">{encounter.label}</h4></div><div className="w-32"><div className="flex justify-between text-[9px] font-bold"><span>PV</span><span>{enemyHp}</span></div><div className="mt-2 h-3 border border-foreground p-0.5"><div className="h-full bg-primary transition-all" style={{ width: `${Math.max(0, Math.min(100, enemyHp / 12 * 100))}%` }} /></div></div></div><p className="my-7 border-y border-game-line py-4 text-sm">Initiative calculée par la Vitesse. Les dés sont lancés hors du plateau.</p><div className="grid grid-cols-2 gap-2">{(["Attaquer", "Compétence", "Objet", "Fuir"] as const).map((action) => <Button key={action} variant="game" className="rounded-none font-pixel text-[10px]" onClick={() => void handleCombat(action)}>{action}</Button>)}</div></div></div></div>}
     </div>
   );
