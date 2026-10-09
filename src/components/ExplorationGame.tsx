@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { BookOpen, Save, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Crosshair, DoorClosed, Radio, Skull, Sparkles, TriangleAlert } from "lucide-react";
+import { BookOpen, Download, Save, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Crosshair, DoorClosed, Radio, Skull, Sparkles, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import sectorMap from "@/data/sector-01.json";
