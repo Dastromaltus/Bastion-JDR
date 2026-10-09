@@ -17,6 +17,8 @@ import {
 import { RACE_NAMES, ROLE_LABEL, STATUS_LABEL, scenarioLabel } from "@/lib/races";
 import { ReportButton } from "@/components/ReportButton";
 import { useSettings, vibrate, type GameSettings } from "@/components/room/useSettings";
+import { useAmbience, SoundGate, PersonalAmbience } from "@/components/room/Ambience";
+import { AmbiencePanel, EnemyPanel, TreasurePanel, ExplorePanel } from "@/components/room/NarratorTools";
 
 export const Route = createFileRoute("/_authenticated/salon/$code")({
   head: ({ params }) => ({
@@ -80,19 +82,25 @@ function RoomPage() {
   const sTurn = useServerFn(nextTurn);
 
   const gameId = room.data?.game.id as string | undefined;
+  const amb = useAmbience(gameId, (room.data as any)?.ambience ?? null, settings);
+  const [loot, setLoot] = useState<string | null>(null);
 
   // Realtime: refresh on any change scoped to this salon (RLS filters what we receive).
   useEffect(() => {
     if (!gameId) return;
     const refetch = () => room.refetch();
     const ch = supabase.channel(`salon-${gameId}`);
-    for (const table of ["game_events", "game_messages", "game_players", "game_inventory"]) {
+    for (const table of ["game_events", "game_messages", "game_players", "game_inventory", "game_enemies", "game_treasures"]) {
       ch.on("postgres_changes", { event: "*", schema: "public", table, filter: `game_id=eq.${gameId}` }, (payload: any) => {
         refetch();
         if (table === "game_events" && payload.new?.kind === "ping" && payload.new?.payload?.target === userId) {
           toast(payload.new.message);
           vibrate(settings, 120);
         }
+        const ev = table === "game_events" ? payload.new : null;
+        if (ev?.kind === "menace") { toast(ev.message, { duration: 4000 }); vibrate(settings, 200); }
+        if (ev?.kind === "declencheur") toast.warning(ev.message);
+        if (ev?.kind === "tresor" && ev.actor_id === userId) { setLoot(ev.payload?.treasure ?? "Trésor"); setTimeout(() => setLoot(null), 2600); }
       });
     }
     ch.on("postgres_changes", { event: "*", schema: "public", table: "games", filter: `id=eq.${gameId}` }, refetch);
@@ -135,6 +143,8 @@ function RoomPage() {
       </header>
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-6">
+        {game.status === "playing" && <SoundGate unlocked={amb.unlocked} onUnlock={() => amb.unlock().catch(() => toast.error("Impossible d'activer le son sur ce navigateur."))} />}
+        {game.status !== "waiting" && <PersonalAmbience row={amb.row} settings={settings} update={update} />}
         {game.status === "finished" && (
           <section className="border-4 border-primary p-5 text-center">
             <p className="section-label">Fin de partie</p>
@@ -178,6 +188,7 @@ function RoomPage() {
           </ul>
         </section>
 
+        {game.status === "playing" && !isNarr && <ExplorePanel d={d} />}
         {game.status === "playing" && <DicePanel gameId={game.id} />}
 
         {isNarr && (
@@ -191,6 +202,14 @@ function RoomPage() {
           </ol>
         </section>
       </main>
+
+      {loot && (
+        <div role="status" className="loot-pop pointer-events-none fixed inset-x-0 top-1/3 z-50 mx-auto w-fit border-4 border-primary bg-background px-8 py-6 text-center shadow-game">
+          <p className="section-label">Trésor découvert</p>
+          <p className="mt-1 font-display text-3xl uppercase">✦ {loot}</p>
+          <p className="text-xs text-muted-foreground">Ajouté à ton inventaire</p>
+        </div>
+      )}
 
       {/* Reaction wheel */}
       <div className={`fixed bottom-24 z-40 ${settings.leftHanded ? "left-4" : "right-4"}`}>
@@ -298,7 +317,6 @@ function DicePanel({ gameId }: { gameId: string }) {
 function NarratorPanel({ d, narr, busy, onTurn, refetch }: { d: any; narr: any; busy: string | null; onTurn: () => void; refetch: () => void }) {
   const { game } = d;
   const [note, setNote] = useState("");
-  const [enemy, setEnemy] = useState("");
   const { busy: b2, run } = useAction();
   return (
     <section className="space-y-4 border-2 border-primary p-4">
@@ -328,16 +346,29 @@ function NarratorPanel({ d, narr, busy, onTurn, refetch }: { d: any; narr: any; 
           </form>
           <ul className="mt-2 space-y-1 text-sm">{d.notes.map((n: any) => <li key={n.id} className="border-l-2 border-primary pl-2">{n.body}</li>)}</ul>
         </div>
-        <div>
-          <p className="text-xs font-black uppercase">Ennemis cachés</p>
-          <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (!enemy.trim()) return; run("enemy", async () => { const { error } = await supabase.from("game_hidden_enemies").insert({ game_id: game.id, label: enemy.trim() }); if (error) throw new Error("Ennemi non enregistré."); setEnemy(""); refetch(); }); }}>
-            <Input className="h-11 rounded-none" maxLength={60} value={enemy} onChange={(e) => setEnemy(e.target.value)} placeholder="Rôdeur des conduits" />
-            <Button disabled={b2 === "enemy"} className="min-h-11 rounded-none">{b2 === "enemy" ? "…" : "Placer"}</Button>
-          </form>
-          <ul className="mt-2 space-y-1 text-sm">{d.hiddenEnemies.map((h: any) => <li key={h.id}>☠ {h.label} — {h.hp} PV</li>)}</ul>
-        </div>
       </div>
+
+      <NarratorTabs d={d} />
     </section>
+  );
+}
+
+function NarratorTabs({ d }: { d: any }) {
+  const [tab, setTab] = useState<"ambiance" | "ennemis" | "tresors">("ambiance");
+  const tabs = [["ambiance", "Ambiance"], ["ennemis", "Ennemis"], ["tresors", "Trésors"]] as const;
+  return (
+    <div className="border-t border-foreground/30 pt-4">
+      <div role="tablist" aria-label="Outils du narrateur" className="grid grid-cols-3 border-2 border-foreground">
+        {tabs.map(([k, l]) => (
+          <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`min-h-11 text-xs font-black uppercase ${tab === k ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>{l}</button>
+        ))}
+      </div>
+      <div role="tabpanel" className="mt-4">
+        {tab === "ambiance" && <AmbiencePanel gameId={d.game.id} row={d.ambience} />}
+        {tab === "ennemis" && <EnemyPanel d={d} />}
+        {tab === "tresors" && <TreasurePanel d={d} />}
+      </div>
+    </div>
   );
 }
 
@@ -559,7 +590,8 @@ function SettingsPanel({ settings, update, saving, error, game, players, me, onL
   return (
     <div className="space-y-6">
       <p className="text-xs text-muted-foreground" aria-live="polite">{saving ? "Enregistrement…" : error ? <span className="font-bold text-primary">{error}</span> : "Préférences enregistrées sur ton compte."}</p>
-      <fieldset className="space-y-4"><legend className="section-label">Audio</legend>{sl("Volume général", "volume")}{sl("Musique", "music")}{sl("Effets", "effects")}</fieldset>
+      <fieldset className="space-y-4"><legend className="section-label">Audio</legend>{sl("Volume général", "volume")}{sl("Musique", "music")}{sl("Effets", "effects")}{sw("Couper la musique", "muteMusic")}
+        <Link to="/credits" className="inline-flex min-h-11 items-center text-sm font-bold underline">Crédits audio</Link></fieldset>
       <fieldset className="space-y-2"><legend className="section-label">Affichage</legend>
         <label className="block text-sm font-bold">Taille du texte
           <select className="mt-1 h-11 w-full border border-input bg-background px-2" value={settings.textSize} onChange={(e) => update({ textSize: e.target.value })}>
