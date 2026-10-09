@@ -219,6 +219,12 @@ export const getRoom = createServerFn({ method: "POST" })
       context.supabase.from("game_messages").select("*").eq("game_id", game.id).order("created_at", { ascending: false }).limit(80),
       context.supabase.from("game_inventory").select("*").eq("game_id", game.id).order("created_at"),
     ]);
+    // RLS: players only receive revealed enemies / discovered treasures.
+    const [{ data: enemies }, { data: treasures }, { data: ambience }] = await Promise.all([
+      context.supabase.from("game_enemies").select("*").eq("game_id", game.id).order("created_at"),
+      context.supabase.from("game_treasures").select("*").eq("game_id", game.id).order("created_at"),
+      context.supabase.from("game_ambience").select("*").eq("game_id", game.id).maybeSingle(),
+    ]);
     const me = (players ?? []).find((p: any) => p.user_id === context.userId);
     let notes: any[] = [];
     let hiddenEnemies: any[] = [];
@@ -239,6 +245,9 @@ export const getRoom = createServerFn({ method: "POST" })
       inventory: inventory ?? [],
       notes,
       hiddenEnemies,
+      enemies: enemies ?? [],
+      treasures: treasures ?? [],
+      ambience: ambience ?? null,
     };
   });
 

@@ -15,3 +15,5 @@
 - Store the narrator role per salon in game_players.role and change memberships/roles only through authenticated server functions, because players must never be able to edit roles with direct database requests.
 - Hash salon passwords (PBKDF2) and verify them inside server functions, because passwords must never be compared in the browser.
 - Generate game reports as PDFs in the browser with a dynamically imported jsPDF, fed by a members-only server function, so narrator-only notes are filtered on the server.
+- Hidden narrator content (game_enemies, game_treasures, secret game_events) is filtered by RLS SELECT policies and written only by narrator-checked server functions in src/lib/narrator.functions.ts, because players must never receive hidden rows over the network or realtime.
+- Salon ambience is one game_ambience row per salon written through the caller's RLS client; each browser plays it locally via a Web Audio engine whose tracks fall back to procedural placeholders when no file URL is set in src/lib/ambience-tracks.ts.

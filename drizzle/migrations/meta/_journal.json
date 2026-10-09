@@ -29,6 +29,13 @@
       "when": 1791584660156,
       "tag": "0003_harden_room_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791585480998,
+      "tag": "0004_narrator_ambience_enemies_treasures",
+      "breakpoints": true
     }
   ]
 }

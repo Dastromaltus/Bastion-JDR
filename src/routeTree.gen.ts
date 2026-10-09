@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as AuthenticatedSalonsRouteImport } from './routes/_authenticated/salons'
 import { Route as AuthenticatedRejoindreCodeRouteImport } from './routes/_authenticated/rejoindre.$code'
 import { Route as AuthenticatedSalonCodeRouteImport } from './routes/_authenticated/salon.$code'
@@ -28,6 +29,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreditsRoute = CreditsRouteImport.update({
+  id: '/credits',
+  path: '/credits',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSalonsRoute = AuthenticatedSalonsRouteImport.update({
@@ -50,6 +56,7 @@ const AuthenticatedSalonCodeRoute = AuthenticatedSalonCodeRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/credits': typeof CreditsRoute
   '/salons': typeof AuthenticatedSalonsRoute
   '/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
   '/salon/$code': typeof AuthenticatedSalonCodeRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/credits': typeof CreditsRoute
   '/salons': typeof AuthenticatedSalonsRoute
   '/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
   '/salon/$code': typeof AuthenticatedSalonCodeRoute
@@ -66,20 +74,24 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/credits': typeof CreditsRoute
   '/_authenticated/salons': typeof AuthenticatedSalonsRoute
   '/_authenticated/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
   '/_authenticated/salon/$code': typeof AuthenticatedSalonCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/salons' | '/rejoindre/$code' | '/salon/$code'
+  fullPaths:
+    '/' | '/auth' | '/credits' | '/salons' | '/rejoindre/$code' | '/salon/$code'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/salons' | '/rejoindre/$code' | '/salon/$code'
+  to:
+    '/' | '/auth' | '/credits' | '/salons' | '/rejoindre/$code' | '/salon/$code'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/credits'
     | '/_authenticated/salons'
     | '/_authenticated/rejoindre/$code'
     | '/_authenticated/salon/$code'
@@ -89,6 +101,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CreditsRoute: typeof CreditsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -112,6 +125,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/credits': {
+      id: '/credits'
+      path: '/credits'
+      fullPath: '/credits'
+      preLoaderRoute: typeof CreditsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/salons': {
@@ -157,6 +177,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CreditsRoute: CreditsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
