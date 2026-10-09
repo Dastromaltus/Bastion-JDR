@@ -46,9 +46,10 @@ export const moveExplorer = createServerFn({ method: "POST" })
     if (!session) throw new Error("Secteur indisponible");
     const { data: existing } = await supabaseAdmin.from("exploration_players").select("id, tile_x, tile_y").eq("session_id", session.id).eq("client_key", data.clientKey).maybeSingle();
     const current = existing ?? { id: null, tile_x: 2, tile_y: 8 };
-    const delta = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[data.direction];
-    const nextX = current.tile_x + delta[0];
-    const nextY = current.tile_y + delta[1];
+    const deltas: Record<z.infer<typeof directionSchema>, readonly [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+    const [deltaX, deltaY] = deltas[data.direction];
+    const nextX = current.tile_x + deltaX;
+    const nextY = current.tile_y + deltaY;
     const tile = tileAt(nextX, nextY);
     const { data: blocking } = await supabaseAdmin.from("exploration_entities").select("id, kind, label, locked").eq("session_id", session.id).eq("tile_x", nextX).eq("tile_y", nextY).eq("active", true);
     const door = blocking?.find((entity) => entity.kind === "door" && entity.locked);
@@ -68,8 +69,9 @@ export const resolveCombatTurn = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ entityId: z.string().uuid(), action: z.enum(["Attaquer", "Compétence", "Objet", "Fuir"]), speed: z.number().int().min(1).max(100) }).parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const playerRoll = crypto.getRandomValues(new Uint32Array(1))[0] % 6 + 1;
-    const enemyRoll = crypto.getRandomValues(new Uint32Array(1))[0] % 6 + 1;
+    const randomValues = crypto.getRandomValues(new Uint32Array(2));
+    const playerRoll = (randomValues[0] ?? 0) % 6 + 1;
+    const enemyRoll = (randomValues[1] ?? 0) % 6 + 1;
     const initiative = data.speed + playerRoll >= 45 + enemyRoll ? "player" : "enemy";
     const damage = data.action === "Attaquer" ? playerRoll + 2 : data.action === "Compétence" ? playerRoll + 4 : 0;
     const { data: enemy } = await supabaseAdmin.from("exploration_entities").select("hp, label").eq("id", data.entityId).single();
