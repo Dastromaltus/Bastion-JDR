@@ -123,8 +123,8 @@ export function EnemyPanel({ d }: { d: any }) {
       {cat.isLoading && <p className="text-sm">Chargement du catalogue…</p>}
       {cat.error && <p role="alert" className="text-sm font-bold text-primary">Catalogue indisponible. <button className="underline" onClick={() => cat.refetch()}>Réessayer</button></p>}
       {cat.data && (
-        <form className="grid gap-2" onSubmit={(e) => { e.preventDefault(); if (!selected || !s) return toast.error("Choisis un ennemi."); if (tooExpensive) return toast.error(`Budget dépassé : il reste ${left} point(s), ${selected.name} en coûte ${selected.threat_cost}.`);
-          run("place", () => place({ data: { gameId, catalogId: selected.id, zone, trigger: trigger as any, ...s } }), `${selected.name} placé en secret`).then((ok) => ok && (setEnemyId(""), setStats(null))); }}>
+        <form className="grid gap-2" onSubmit={(e) => { e.preventDefault(); if (!selected || !s) { toast.error("Choisis un ennemi."); return; } if (tooExpensive) { toast.error(`Budget dépassé : il reste ${left} point(s), ${selected.name} en coûte ${selected.threat_cost}.`); return; }
+          void run("place", () => place({ data: { gameId, catalogId: selected.id, zone, trigger: trigger as any, ...s } }), `${selected.name} placé en secret`).then((ok) => { if (ok) { setEnemyId(""); setStats(null); } }); }}>
           <div className="grid grid-cols-2 gap-2">
             <label className="text-xs font-bold uppercase">Catégorie
               <select className={SEL} value={category} onChange={(e) => { setCategory(e.target.value); setEnemyId(""); setStats(null); }}>
@@ -222,13 +222,13 @@ export function TreasurePanel({ d }: { d: any }) {
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selected) return toast.error("Choisis un trésor.");
+    if (!selected) { toast.error("Choisis un trésor."); return; }
     const [kind, ref] = where.split(":");
     const payload: any = { gameId, catalogId: selected.id, placement: kind };
     if (kind === "zone" || kind === "coffre") payload.zone = ref;
     if (kind === "ennemi") payload.enemyId = ref;
     if (kind === "direct") payload.targetUserId = ref;
-    run("tplace", () => place({ data: payload }), kind === "direct" ? "Trésor remis" : "Trésor caché").then((ok) => ok && setTid(""));
+    void run("tplace", () => place({ data: payload }), kind === "direct" ? "Trésor remis" : "Trésor caché").then((ok) => { if (ok) setTid(""); });
   }
 
   return (

@@ -58,7 +58,7 @@ export const setAmbience = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await requireNarrator(context, data.gameId);
     const { gameId, sfx, ...rest } = data;
-    const patch: Record<string, unknown> = { game_id: gameId, updated_by: context.userId, updated_at: new Date().toISOString(), ...rest };
+    const patch: any = { game_id: gameId, updated_by: context.userId, updated_at: new Date().toISOString(), ...rest };
     if (sfx) { patch["sfx"] = sfx; patch["sfx_at"] = new Date().toISOString(); }
     // Written with the caller's client: RLS re-checks that they narrate this salon.
     const { error } = await context.supabase.from("game_ambience").upsert(patch, { onConflict: "game_id" });

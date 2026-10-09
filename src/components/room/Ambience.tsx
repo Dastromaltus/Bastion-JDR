@@ -83,7 +83,7 @@ export function PersonalAmbience({ row, settings, update }: { row: AmbienceRow; 
     <section className="flex flex-wrap items-center gap-3 border-2 border-foreground p-3">
       <p className="min-w-40 flex-1 text-sm"><span className="section-label">Ambiance</span><br />{playing ? `♪ ${trackLabel(row!.track)}` : row?.state === "pause" ? "En pause" : "Silence"}</p>
       <label className="flex min-w-48 flex-1 items-center gap-3 text-xs font-bold uppercase">Mon volume
-        <Slider aria-label="Mon volume de musique" className="py-3" min={0} max={100} step={5} value={[settings.music]} onValueCommit={(v) => update({ music: v[0] })} onValueChange={() => {}} />
+        <Slider aria-label="Mon volume de musique" className="py-3" min={0} max={100} step={5} value={[settings.music]} onValueCommit={(v) => update({ music: v[0] ?? 0 })} onValueChange={() => {}} />
       </label>
       <Button variant={settings.muteMusic ? "default" : "outline"} className="min-h-11 rounded-none font-bold uppercase" aria-pressed={settings.muteMusic} onClick={() => update({ muteMusic: !settings.muteMusic })}>
         {settings.muteMusic ? <><VolumeX /> Musique coupée</> : <><Volume2 /> Couper la musique</>}
