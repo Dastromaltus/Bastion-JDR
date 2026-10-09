@@ -51,7 +51,7 @@ function Index() {
             <a href="#partie" className="transition-colors hover:text-primary">Une partie</a>
             <a href="#exploration" className="transition-colors hover:text-primary">Exploration 2D</a>
           </div>
-          <span className="border border-foreground/50 px-3 py-2 text-[10px] font-bold uppercase">3—5 joueurs</span>
+          <a href="/salons" className="flex min-h-11 items-center border-2 border-primary bg-primary px-4 text-xs font-black uppercase text-primary-foreground transition-colors hover:bg-background">Mes salons</a>
         </nav>
         <div id="top" className="relative z-10 flex min-h-[calc(92vh-65px)] max-w-7xl flex-col justify-end px-5 pb-12 pt-32 md:px-10 md:pb-16">
           <p className="mb-4 flex items-center gap-3 text-xs font-black uppercase text-primary"><span className="h-px w-10 bg-primary" /> Dungeon crawler asymétrique</p>

@@ -202,12 +202,386 @@ export type Database = {
         }
         Relationships: []
       }
+      game_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          game_id: string
+          id: number
+          important: boolean
+          kind: string
+          message: string
+          payload: Json
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          game_id: string
+          id?: never
+          important?: boolean
+          kind: string
+          message: string
+          payload?: Json
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          game_id?: string
+          id?: never
+          important?: boolean
+          kind?: string
+          message?: string
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_events_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_hidden_enemies: {
+        Row: {
+          created_at: string
+          game_id: string
+          hp: number
+          id: string
+          label: string
+          notes: string
+          revealed: boolean
+        }
+        Insert: {
+          created_at?: string
+          game_id: string
+          hp?: number
+          id?: string
+          label: string
+          notes?: string
+          revealed?: boolean
+        }
+        Update: {
+          created_at?: string
+          game_id?: string
+          hp?: number
+          id?: string
+          label?: string
+          notes?: string
+          revealed?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_hidden_enemies_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_inventory: {
+        Row: {
+          category: string
+          created_at: string
+          effect: string
+          equipped: boolean
+          game_id: string
+          id: string
+          name: string
+          owner_id: string
+          quantity: number
+          rarity: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          effect?: string
+          equipped?: boolean
+          game_id: string
+          id?: string
+          name: string
+          owner_id: string
+          quantity?: number
+          rarity?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          effect?: string
+          equipped?: boolean
+          game_id?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          quantity?: number
+          rarity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_inventory_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_messages: {
+        Row: {
+          author_name: string
+          body: string
+          created_at: string
+          game_id: string
+          id: string
+          recipient_id: string | null
+          user_id: string
+        }
+        Insert: {
+          author_name: string
+          body: string
+          created_at?: string
+          game_id: string
+          id?: string
+          recipient_id?: string | null
+          user_id: string
+        }
+        Update: {
+          author_name?: string
+          body?: string
+          created_at?: string
+          game_id?: string
+          id?: string
+          recipient_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_messages_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_players: {
+        Row: {
+          display_name: string
+          endurance: number
+          game_id: string
+          hp: number
+          id: string
+          joined_at: string
+          max_hp: number
+          race: string
+          role: string
+          speed: number
+          strength: number
+          user_id: string
+        }
+        Insert: {
+          display_name: string
+          endurance?: number
+          game_id: string
+          hp?: number
+          id?: string
+          joined_at?: string
+          max_hp?: number
+          race?: string
+          role?: string
+          speed?: number
+          strength?: number
+          user_id: string
+        }
+        Update: {
+          display_name?: string
+          endurance?: number
+          game_id?: string
+          hp?: number
+          id?: string
+          joined_at?: string
+          max_hp?: number
+          race?: string
+          role?: string
+          speed?: number
+          strength?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_players_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_secrets: {
+        Row: {
+          game_id: string
+          password_hash: string
+        }
+        Insert: {
+          game_id: string
+          password_hash: string
+        }
+        Update: {
+          game_id?: string
+          password_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_secrets_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: true
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          ended_at: string | null
+          has_password: boolean
+          id: string
+          locked: boolean
+          max_players: number
+          name: string
+          result: string | null
+          scenario: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          ended_at?: string | null
+          has_password?: boolean
+          id?: string
+          locked?: boolean
+          max_players: number
+          name: string
+          result?: string | null
+          scenario: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          ended_at?: string | null
+          has_password?: boolean
+          id?: string
+          locked?: boolean
+          max_players?: number
+          name?: string
+          result?: string | null
+          scenario?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      narrator_notes: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          game_id: string
+          id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          game_id: string
+          id?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          game_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "narrator_notes_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_reports: {
+        Row: {
+          created_at: string
+          game_id: string
+          id: string
+          reason: string
+          reported_id: string
+          reporter_id: string
+        }
+        Insert: {
+          created_at?: string
+          game_id: string
+          id?: string
+          reason: string
+          reported_id: string
+          reporter_id: string
+        }
+        Update: {
+          created_at?: string
+          game_id?: string
+          id?: string
+          reason?: string
+          reported_id?: string
+          reporter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_reports_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_settings: {
+        Row: {
+          settings: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          settings?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          settings?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_game_member: { Args: { _game_id: string }; Returns: boolean }
+      is_game_narrator: { Args: { _game_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

@@ -10,33 +10,85 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedSalonsRouteImport } from './routes/_authenticated/salons'
+import { Route as AuthenticatedRejoindreCodeRouteImport } from './routes/_authenticated/rejoindre.$code'
+import { Route as AuthenticatedSalonCodeRouteImport } from './routes/_authenticated/salon.$code'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSalonsRoute = AuthenticatedSalonsRouteImport.update({
+  id: '/salons',
+  path: '/salons',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRejoindreCodeRoute =
+  AuthenticatedRejoindreCodeRouteImport.update({
+    id: '/rejoindre/$code',
+    path: '/rejoindre/$code',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalonCodeRoute = AuthenticatedSalonCodeRouteImport.update({
+  id: '/salon/$code',
+  path: '/salon/$code',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/salons': typeof AuthenticatedSalonsRoute
+  '/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
+  '/salon/$code': typeof AuthenticatedSalonCodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/salons': typeof AuthenticatedSalonsRoute
+  '/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
+  '/salon/$code': typeof AuthenticatedSalonCodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/salons': typeof AuthenticatedSalonsRoute
+  '/_authenticated/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
+  '/_authenticated/salon/$code': typeof AuthenticatedSalonCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/auth' | '/salons' | '/rejoindre/$code' | '/salon/$code'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/auth' | '/salons' | '/rejoindre/$code' | '/salon/$code'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/salons'
+    | '/_authenticated/rejoindre/$code'
+    | '/_authenticated/salon/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +100,63 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/salons': {
+      id: '/_authenticated/salons'
+      path: '/salons'
+      fullPath: '/salons'
+      preLoaderRoute: typeof AuthenticatedSalonsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/rejoindre/$code': {
+      id: '/_authenticated/rejoindre/$code'
+      path: '/rejoindre/$code'
+      fullPath: '/rejoindre/$code'
+      preLoaderRoute: typeof AuthenticatedRejoindreCodeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/salon/$code': {
+      id: '/_authenticated/salon/$code'
+      path: '/salon/$code'
+      fullPath: '/salon/$code'
+      preLoaderRoute: typeof AuthenticatedSalonCodeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedSalonsRoute: typeof AuthenticatedSalonsRoute
+  AuthenticatedRejoindreCodeRoute: typeof AuthenticatedRejoindreCodeRoute
+  AuthenticatedSalonCodeRoute: typeof AuthenticatedSalonCodeRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedSalonsRoute: AuthenticatedSalonsRoute,
+  AuthenticatedRejoindreCodeRoute: AuthenticatedRejoindreCodeRoute,
+  AuthenticatedSalonCodeRoute: AuthenticatedSalonCodeRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
