@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CreditsRouteImport } from './routes/credits'
+import { Route as AuthenticatedOperationsRouteImport } from './routes/_authenticated/operations'
 import { Route as AuthenticatedSalonsRouteImport } from './routes/_authenticated/salons'
 import { Route as AuthenticatedRejoindreCodeRouteImport } from './routes/_authenticated/rejoindre.$code'
 import { Route as AuthenticatedSalonCodeRouteImport } from './routes/_authenticated/salon.$code'
@@ -36,6 +37,11 @@ const CreditsRoute = CreditsRouteImport.update({
   path: '/credits',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedOperationsRoute = AuthenticatedOperationsRouteImport.update({
+  id: '/operations',
+  path: '/operations',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSalonsRoute = AuthenticatedSalonsRouteImport.update({
   id: '/salons',
   path: '/salons',
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/credits': typeof CreditsRoute
+  '/operations': typeof AuthenticatedOperationsRoute
   '/salons': typeof AuthenticatedSalonsRoute
   '/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
   '/salon/$code': typeof AuthenticatedSalonCodeRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/credits': typeof CreditsRoute
+  '/operations': typeof AuthenticatedOperationsRoute
   '/salons': typeof AuthenticatedSalonsRoute
   '/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
   '/salon/$code': typeof AuthenticatedSalonCodeRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/credits': typeof CreditsRoute
+  '/_authenticated/operations': typeof AuthenticatedOperationsRoute
   '/_authenticated/salons': typeof AuthenticatedSalonsRoute
   '/_authenticated/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
   '/_authenticated/salon/$code': typeof AuthenticatedSalonCodeRoute
@@ -82,16 +91,29 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/credits' | '/salons' | '/rejoindre/$code' | '/salon/$code'
+    | '/'
+    | '/auth'
+    | '/credits'
+    | '/operations'
+    | '/salons'
+    | '/rejoindre/$code'
+    | '/salon/$code'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/auth' | '/credits' | '/salons' | '/rejoindre/$code' | '/salon/$code'
+    | '/'
+    | '/auth'
+    | '/credits'
+    | '/operations'
+    | '/salons'
+    | '/rejoindre/$code'
+    | '/salon/$code'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/credits'
+    | '/_authenticated/operations'
     | '/_authenticated/salons'
     | '/_authenticated/rejoindre/$code'
     | '/_authenticated/salon/$code'
@@ -134,6 +156,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreditsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/operations': {
+      id: '/_authenticated/operations'
+      path: '/operations'
+      fullPath: '/operations'
+      preLoaderRoute: typeof AuthenticatedOperationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/salons': {
       id: '/_authenticated/salons'
       path: '/salons'
@@ -159,12 +188,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedOperationsRoute: typeof AuthenticatedOperationsRoute
   AuthenticatedSalonsRoute: typeof AuthenticatedSalonsRoute
   AuthenticatedRejoindreCodeRoute: typeof AuthenticatedRejoindreCodeRoute
   AuthenticatedSalonCodeRoute: typeof AuthenticatedSalonCodeRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedOperationsRoute: AuthenticatedOperationsRoute,
   AuthenticatedSalonsRoute: AuthenticatedSalonsRoute,
   AuthenticatedRejoindreCodeRoute: AuthenticatedRejoindreCodeRoute,
   AuthenticatedSalonCodeRoute: AuthenticatedSalonCodeRoute,

@@ -60,7 +60,10 @@ function SalonsPage() {
         <Button variant="outline" className="min-h-11 rounded-none" onClick={() => supabase.auth.signOut()}>Déconnexion</Button>
       </header>
 
-      <h1 className="mt-8 font-display text-3xl uppercase">Mes salons</h1>
+      <div className="mt-8 flex flex-wrap items-end justify-between gap-3">
+        <h1 className="font-display text-3xl uppercase">Mes salons</h1>
+        <Button asChild className="min-h-11 rounded-none font-black uppercase"><Link to="/operations">Catalogue d'Opérations · solo gratuit</Link></Button>
+      </div>
 
       <section className="mt-6 grid gap-6 lg:grid-cols-2">
         <form onSubmit={submit} className="space-y-3 border-2 border-foreground p-4">
