@@ -33,7 +33,9 @@ const phases = [
 
 function Index() {
   const [activeRace, setActiveRace] = useState(0);
-  const race = races[activeRace];
+  const race = races[activeRace] ?? races[0];
+
+  if (!race) return null;
 
   return (
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
