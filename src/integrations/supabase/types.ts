@@ -14,7 +14,162 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      exploration_entities: {
+        Row: {
+          active: boolean
+          created_at: string
+          hp: number | null
+          id: string
+          kind: string
+          label: string
+          locked: boolean
+          session_id: string
+          tile_x: number
+          tile_y: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          hp?: number | null
+          id?: string
+          kind: string
+          label: string
+          locked?: boolean
+          session_id: string
+          tile_x: number
+          tile_y: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          hp?: number | null
+          id?: string
+          kind?: string
+          label?: string
+          locked?: boolean
+          session_id?: string
+          tile_x?: number
+          tile_y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exploration_entities_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "exploration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exploration_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: number
+          message: string
+          payload: Json
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: number
+          message: string
+          payload?: Json
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: number
+          message?: string
+          payload?: Json
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exploration_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "exploration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exploration_players: {
+        Row: {
+          client_key: string
+          hp: number
+          id: string
+          name: string
+          race: string
+          session_id: string
+          tile_x: number
+          tile_y: number
+          updated_at: string
+        }
+        Insert: {
+          client_key: string
+          hp?: number
+          id?: string
+          name?: string
+          race?: string
+          session_id: string
+          tile_x?: number
+          tile_y?: number
+          updated_at?: string
+        }
+        Update: {
+          client_key?: string
+          hp?: number
+          id?: string
+          name?: string
+          race?: string
+          session_id?: string
+          tile_x?: number
+          tile_y?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exploration_players_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "exploration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exploration_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          map_key: string
+          name: string
+          objective: string
+          slug: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          map_key?: string
+          name: string
+          objective: string
+          slug: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          map_key?: string
+          name?: string
+          objective?: string
+          slug?: string
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
