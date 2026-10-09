@@ -78,8 +78,8 @@ function AuthPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-5 py-10">
       <div className="w-full max-w-sm border-2 border-foreground p-6">
-        <a href="/" className="font-display text-3xl uppercase">Bastion<span className="text-primary">.</span></a>
-        <h1 className="mt-6 font-display text-2xl uppercase">{mode === "in" ? "Connexion" : "Créer un compte"}</h1>
+        <a href="/" className="font-display text-xl uppercase">Bastion<span className="text-primary">.</span></a>
+        <h1 className="mt-6 font-display text-lg uppercase">{mode === "in" ? "Connexion" : "Créer un compte"}</h1>
         <form onSubmit={submit} className="mt-6 space-y-3">
           <Input type="email" required placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 rounded-none" />
           <Input type="password" required minLength={6} placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 rounded-none" />

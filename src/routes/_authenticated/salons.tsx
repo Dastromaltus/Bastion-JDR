@@ -56,11 +56,11 @@ function SalonsPage() {
   return (
     <main className="min-h-screen bg-background px-4 pb-16 pt-6 md:px-10">
       <header className="flex items-center justify-between border-b-2 border-foreground pb-4">
-        <Link to="/" className="font-display text-2xl uppercase">Bastion<span className="text-primary">.</span></Link>
+        <Link to="/" className="font-display text-lg uppercase">Bastion<span className="text-primary">.</span></Link>
         <Button variant="outline" className="min-h-11 rounded-none" onClick={() => supabase.auth.signOut()}>Déconnexion</Button>
       </header>
 
-      <h1 className="mt-8 font-display text-5xl uppercase">Mes salons</h1>
+      <h1 className="mt-8 font-display text-3xl uppercase">Mes salons</h1>
 
       <section className="mt-6 grid gap-6 lg:grid-cols-2">
         <form onSubmit={submit} className="space-y-3 border-2 border-foreground p-4">
@@ -105,7 +105,7 @@ function SalonsPage() {
             <li key={r.id} className="border border-foreground/40 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-display text-2xl uppercase">{r.name}</p>
+                  <p className="font-display text-lg uppercase">{r.name}</p>
                   <p className="text-xs text-muted-foreground">{scenarioLabel(r.scenario)} · code <span className="font-pixel">{r.code}</span>{r.isCreator ? " · créé par toi" : ""}</p>
                 </div>
                 <span className={`px-2 py-1 text-[10px] font-black uppercase ${r.role === "narrator" ? "bg-primary text-primary-foreground" : "border border-foreground"}`}>{ROLE_LABEL[r.role]}</span>

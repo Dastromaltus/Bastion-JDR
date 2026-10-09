@@ -19,9 +19,9 @@
  */
 
 @theme inline {
-  --font-sans: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
-  --font-display: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-  --font-pixel: "Courier New", monospace;
+  --font-sans: "Pixelify Sans", system-ui, sans-serif;
+  --font-display: "Press Start 2P", "Pixelify Sans", monospace;
+  --font-pixel: "VT323", monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -71,25 +71,25 @@
 
 :root {
   --radius: 0rem;
-  --background: oklch(0.085 0.006 25);
-  --foreground: oklch(0.96 0.01 70);
-  --card: oklch(0.12 0.008 25);
-  --card-foreground: oklch(0.96 0.01 70);
-  --popover: oklch(0.12 0.008 25);
-  --popover-foreground: oklch(0.96 0.01 70);
-  --primary: oklch(0.59 0.235 27);
-  --primary-foreground: oklch(0.98 0.01 70);
-  --secondary: oklch(0.16 0.01 25);
-  --secondary-foreground: oklch(0.96 0.01 70);
-  --muted: oklch(0.18 0.01 25);
-  --muted-foreground: oklch(0.68 0.015 70);
-  --accent: oklch(0.59 0.235 27);
-  --accent-foreground: oklch(0.98 0.01 70);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.3 0.015 25);
-  --input: oklch(0.3 0.015 25);
-  --ring: oklch(0.59 0.235 27);
+  --background: oklch(0.96 0.045 120);
+  --foreground: oklch(0.25 0.06 150);
+  --card: oklch(0.99 0.03 110);
+  --card-foreground: oklch(0.25 0.06 150);
+  --popover: oklch(0.99 0.03 110);
+  --popover-foreground: oklch(0.25 0.06 150);
+  --primary: oklch(0.66 0.24 350);
+  --primary-foreground: oklch(0.99 0.02 110);
+  --secondary: oklch(0.88 0.17 95);
+  --secondary-foreground: oklch(0.25 0.06 150);
+  --muted: oklch(0.9 0.06 125);
+  --muted-foreground: oklch(0.42 0.06 150);
+  --accent: oklch(0.72 0.16 230);
+  --accent-foreground: oklch(0.99 0.02 110);
+  --destructive: oklch(0.62 0.23 28);
+  --destructive-foreground: oklch(0.99 0.02 110);
+  --border: oklch(0.25 0.06 150);
+  --input: oklch(0.25 0.06 150);
+  --ring: oklch(0.72 0.16 230);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -103,11 +103,11 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
-  --game: oklch(0.055 0.005 25);
-  --game-surface: oklch(0.12 0.008 25);
-  --game-elevated: oklch(0.19 0.012 25);
-  --game-line: oklch(0.38 0.015 25);
-  --game-muted: oklch(0.64 0.01 70);
+  --game: oklch(0.86 0.12 125);
+  --game-surface: oklch(0.78 0.13 135);
+  --game-elevated: oklch(0.66 0.13 145);
+  --game-line: oklch(0.4 0.09 150);
+  --game-muted: oklch(0.3 0.06 150);
 }
 
 .dark {
@@ -155,7 +155,7 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     letter-spacing: 0;
-    background-image: radial-gradient(oklch(1 0 0 / 0.035) 1px, transparent 1px);
+    background-image: radial-gradient(oklch(0.25 0.06 150 / 0.08) 1px, transparent 1px);
     background-size: 4px 4px;
   }
 
@@ -173,11 +173,11 @@
   letter-spacing: 0;
 }
 @utility bg-hero-overlay {
-  background: linear-gradient(180deg, oklch(0.04 0 0 / 0.2) 15%, oklch(0.04 0 0 / 0.05) 45%, oklch(0.04 0 0 / 0.95) 100%);
+  background: linear-gradient(180deg, oklch(0.96 0.045 120 / 0) 40%, oklch(0.96 0.045 120 / 0.95) 100%);
 }
 
-@utility bg-game-overlay { background: oklch(0.02 0 0 / 0.92); }
-@utility shadow-game { box-shadow: 8px 8px 0 var(--color-primary); }
+@utility bg-game-overlay { background: oklch(0.25 0.06 150 / 0.88); }
+@utility shadow-game { box-shadow: 6px 6px 0 var(--color-foreground); }
 
 @layer components {
   .game-viewport {
@@ -226,3 +226,8 @@
 }
 .loot-pop { animation: loot-pop 2.6s ease-out forwards; }
 .room-reduced-motion .loot-pop { animation: none; }
+
+@layer base {
+  h1, h2, h3, .font-display { line-height: 1.25; letter-spacing: 0; }
+  img { image-rendering: pixelated; }
+}
