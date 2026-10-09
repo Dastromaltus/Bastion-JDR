@@ -19,6 +19,8 @@ import { ReportButton } from "@/components/ReportButton";
 import { useSettings, vibrate, type GameSettings } from "@/components/room/useSettings";
 import { useAmbience, SoundGate, PersonalAmbience } from "@/components/room/Ambience";
 import { AmbiencePanel, EnemyPanel, TreasurePanel, ExplorePanel } from "@/components/room/NarratorTools";
+import { OperationSection } from "@/components/operations/OperationPanel";
+import { getSalonDungeon } from "@/lib/operations.functions";
 
 export const Route = createFileRoute("/_authenticated/salon/$code")({
   head: ({ params }) => ({
@@ -82,6 +84,8 @@ function RoomPage() {
   const sTurn = useServerFn(nextTurn);
 
   const gameId = room.data?.game.id as string | undefined;
+  const fetchDg = useServerFn(getSalonDungeon);
+  const dungeonQ = useQuery({ queryKey: ["dungeon", gameId], queryFn: () => fetchDg({ data: { gameId: gameId! } }), enabled: !!gameId });
   const amb = useAmbience(gameId, (room.data as any)?.ambience ?? null, settings);
   const [loot, setLoot] = useState<string | null>(null);
 
@@ -188,7 +192,8 @@ function RoomPage() {
           </ul>
         </section>
 
-        {game.status === "playing" && !isNarr && <ExplorePanel d={d} />}
+        <OperationSection d={d} onChange={() => room.refetch()} />
+        {game.status === "playing" && !isNarr && !dungeonQ.data && !game.solo && <ExplorePanel d={d} />}
         {game.status === "playing" && <DicePanel gameId={game.id} />}
 
         {isNarr && (

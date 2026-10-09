@@ -80,13 +80,6 @@ function NarratorOperation({ d, v, refresh }: { d: any; v: any; refresh: () => v
           <p className="text-sm"><b>Objectif :</b> {t.objective_text}</p>
           {t.mechanic && <p className="text-xs text-muted-foreground">{t.mechanic}</p>}
         </div>
-        <Button variant="outline" disabled={!!busy} className="min-h-11 rounded-none" onClick={async () => {
-          setPdfBusy(true);
-          try {
-            const { listOperations } = await import("@/lib/operations.functions");
-            void listOperations;
-          } finally { setPdfBusy(false); }
-        }} hidden>PDF</Button>
       </div>
 
       {/* Threat budget */}
@@ -169,7 +162,6 @@ function NarratorOperation({ d, v, refresh }: { d: any; v: any; refresh: () => v
     </section>
   );
 }
-function setPdfBusy(_: boolean) { /* reserved */ }
 
 function TensionGauge({ value, events }: { value: number; events: any[] }) {
   const max = 10;
