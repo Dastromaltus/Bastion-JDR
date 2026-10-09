@@ -22,6 +22,13 @@
       "when": 1791584205017,
       "tag": "0002_bastion_rooms",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791584660156,
+      "tag": "0003_harden_room_grants",
+      "breakpoints": true
     }
   ]
 }
