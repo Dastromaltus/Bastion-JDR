@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -35,6 +35,16 @@ function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const target = safePath(redirect);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        const stored = sessionStorage.getItem("bastion-after-auth");
+        sessionStorage.removeItem("bastion-after-auth");
+        navigate({ to: safePath(stored ?? redirect) });
+      }
+    });
+  }, [navigate, redirect]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
