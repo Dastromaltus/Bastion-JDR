@@ -140,6 +140,38 @@ export type Database = {
           },
         ]
       }
+      exploration_saves: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          session_id: string
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          session_id: string
+          snapshot?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          session_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exploration_saves_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "exploration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exploration_sessions: {
         Row: {
           created_at: string
