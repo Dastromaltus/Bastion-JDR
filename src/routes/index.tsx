@@ -26,6 +26,12 @@ const races = [
   { name: "Oiseau", mark: "O", trait: "Mobilité", detail: "Une mobilité exceptionnelle au prix d’une défense plus faible. Frappe puis disparaît.", stats: [100, 60, 35] },
 ];
 
+const salonSteps = [
+  { icon: <Users size={28} />, title: "01 · Monte ton salon", text: "Choisis un nom, le nombre de joueurs (3 à 5) et le scénario. Un mot de passe optionnel protège l’entrée, et le salon peut rester en attente jusqu’à la partie." },
+  { icon: <KeyRound size={28} />, title: "02 · Invite la table", text: "Partage le code à six caractères ou le lien d’invitation. Chaque aventurier rejoint en un clic, depuis son téléphone ou son ordinateur." },
+  { icon: <Crown size={28} />, title: "03 · Incarne le narrateur", text: "Le créateur devient narrateur de son salon : il place ennemis, trésors et ambiance sonore, lance la partie — et peut transmettre sa couronne." },
+];
+
 const phases = [
   { number: "01", title: "Préparation", text: "Choisissez votre rôle, votre peuple et vos compétences. Composez une équipe capable de survivre au scénario." },
   { number: "02", title: "Affrontement", text: "Déclarez vos actions, lancez les dés et résolvez les effets. Chaque décision laisse une trace sur le plateau." },
