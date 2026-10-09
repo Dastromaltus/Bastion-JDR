@@ -211,3 +211,8 @@
     box-shadow: inset 0 0 0 2px var(--color-game);
   }
 }
+
+/* Salon accessibility preferences */
+.room-contrast { --foreground: oklch(1 0 0); --muted-foreground: oklch(0.92 0 0); --border: oklch(1 0 0); }
+.room-colorblind { --primary: oklch(0.75 0.17 75); --primary-foreground: oklch(0.1 0 0); }
+.room-reduced-motion *, .room-reduced-motion *::before, .room-reduced-motion *::after { animation: none !important; transition: none !important; }

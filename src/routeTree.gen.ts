@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedSalonsRouteImport } from './routes/_authenticated/salons'
 import { Route as AuthenticatedRejoindreCodeRouteImport } from './routes/_authenticated/rejoindre.$code'
+import { Route as AuthenticatedSalonCodeRouteImport } from './routes/_authenticated/salon.$code'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,18 +41,25 @@ const AuthenticatedRejoindreCodeRoute =
     path: '/rejoindre/$code',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSalonCodeRoute = AuthenticatedSalonCodeRouteImport.update({
+  id: '/salon/$code',
+  path: '/salon/$code',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/salons': typeof AuthenticatedSalonsRoute
   '/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
+  '/salon/$code': typeof AuthenticatedSalonCodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/salons': typeof AuthenticatedSalonsRoute
   '/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
+  '/salon/$code': typeof AuthenticatedSalonCodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -60,12 +68,13 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/salons': typeof AuthenticatedSalonsRoute
   '/_authenticated/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
+  '/_authenticated/salon/$code': typeof AuthenticatedSalonCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/salons' | '/rejoindre/$code'
+  fullPaths: '/' | '/auth' | '/salons' | '/rejoindre/$code' | '/salon/$code'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/salons' | '/rejoindre/$code'
+  to: '/' | '/auth' | '/salons' | '/rejoindre/$code' | '/salon/$code'
   id:
     | '__root__'
     | '/'
@@ -73,6 +82,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/salons'
     | '/_authenticated/rejoindre/$code'
+    | '/_authenticated/salon/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,17 +128,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRejoindreCodeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/salon/$code': {
+      id: '/_authenticated/salon/$code'
+      path: '/salon/$code'
+      fullPath: '/salon/$code'
+      preLoaderRoute: typeof AuthenticatedSalonCodeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSalonsRoute: typeof AuthenticatedSalonsRoute
   AuthenticatedRejoindreCodeRoute: typeof AuthenticatedRejoindreCodeRoute
+  AuthenticatedSalonCodeRoute: typeof AuthenticatedSalonCodeRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSalonsRoute: AuthenticatedSalonsRoute,
   AuthenticatedRejoindreCodeRoute: AuthenticatedRejoindreCodeRoute,
+  AuthenticatedSalonCodeRoute: AuthenticatedSalonCodeRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
