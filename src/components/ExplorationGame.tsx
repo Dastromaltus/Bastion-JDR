@@ -171,7 +171,19 @@ export function ExplorationGame() {
   });
 
   async function handleMove(direction: Direction) {
+    const directions: Record<Direction, [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+    const me = state?.players.find((p) => p.client_key === clientKeyRef.current);
+    const [dx, dy] = directions[direction];
     const result = await move({ data: { clientKey: clientKeyRef.current, race, direction } });
+    if (me && gameRef.current && sceneReady) {
+      const optimistic = { ...me, tile_x: me.tile_x + dx, tile_y: me.tile_y + dy };
+      const scene = gameRef.current.scene.getScene("SectorScene");
+      scene?.events.emit("sync", {
+        players: [...(state?.players.filter((p) => p.client_key !== clientKeyRef.current) ?? []), optimistic],
+        entities: state?.entities ?? [],
+        clientKey: clientKeyRef.current,
+      });
+    }
     setMessage(result.message);
     if (result.encounter) { setEncounter(result.encounter); setEnemyHp(result.encounter.kind === "enemy" ? 12 : 1); }
     await refresh();
@@ -204,6 +216,7 @@ export function ExplorationGame() {
       <aside className="flex flex-col bg-card">
         <div className="border-b border-game-line p-5"><p className="font-pixel text-[10px] text-primary">OBJECTIF</p><p className="mt-3 text-sm font-bold uppercase">{state?.session.objective ?? "Chargement…"}</p><p className="mt-2 text-[10px] font-bold uppercase text-primary">{state?.session.status === "objectif-atteint" ? "✔ Objectif atteint" : "En cours"}</p></div>
         <div className="border-b border-game-line p-5"><label htmlFor="explorer-race" className="font-pixel text-[10px] text-game-muted">PEUPLE</label><select id="explorer-race" value={race} onChange={(event) => setRace(event.target.value as Race)} className="mt-3 w-full border border-game-line bg-background p-3 text-xs font-bold uppercase outline-none focus:border-primary">{Object.keys(raceSpeed).map((name) => <option key={name}>{name}</option>)}</select><div className="mt-4"><div className="mb-2 flex justify-between text-[10px] font-bold"><span>PV</span><span>20/20</span></div><div className="h-3 border border-foreground p-0.5"><div className="h-full w-full bg-primary" /></div></div></div>
+        <div className="border-b border-game-line p-5"><p className="font-pixel text-[10px] text-game-muted">AVENTURIERS EN JEU</p><div className="mt-3 space-y-2">{state?.players.length ? state.players.map((p) => <div key={p.id} className={`flex items-center justify-between border p-2 text-[10px] font-bold uppercase ${p.client_key === clientKeyRef.current ? "border-primary" : "border-game-line"}`}><span>{p.client_key === clientKeyRef.current ? "▶ " : ""}{p.name} · {p.race}</span><span className="text-game-muted">({p.tile_x}, {p.tile_y}) · PV {p.hp}</span></div>) : <p className="text-[10px] text-game-muted">Déplacez-vous pour apparaître sur la carte.</p>}</div><p className="mt-2 text-[9px] uppercase text-game-muted">Positions mises à jour en direct pour toute la table.</p></div>
         <div className="border-b border-game-line p-5"><Button variant={narratorMode ? "default" : "outline"} className="w-full rounded-none font-pixel text-[9px]" onClick={() => setNarratorMode((value) => !value)}><Crosshair /> {narratorMode ? "Narrateur actif" : "Mode narrateur"}</Button>{narratorMode && <div className="mt-3 grid grid-cols-4 gap-1">{([['enemy', Skull], ['trap', TriangleAlert], ['door', DoorClosed], ['event', Sparkles]] as const).map(([kind, Icon]) => <Button key={kind} aria-label={`Placer ${kind}`} title={`Placer ${kind}`} variant={placing === kind ? "default" : "game"} size="gameIcon" onClick={() => setPlacing(kind)}><Icon /></Button>)}</div>}<p className="mt-3 text-[10px] leading-relaxed text-game-muted">{narratorMode ? "Choisissez un élément puis touchez une case." : "Les intentions sont validées avant chaque mouvement."}</p></div>
         <div className="border-b border-game-line p-5"><p className="font-pixel text-[10px] text-game-muted">SAUVEGARDES</p><Button variant="game" className="mt-3 w-full rounded-none font-pixel text-[9px]" onClick={() => void save({ data: { label: `Partie ${new Date().toLocaleString("fr-FR")}` } }).then(() => { setMessage("Partie enregistrée."); void refresh(); })}><Save /> Enregistrer</Button><div className="mt-3 space-y-1">{state?.saves.slice(0, 4).map((s) => <button key={s.id} className="block w-full border border-game-line p-2 text-left text-[10px] hover:border-primary" onClick={() => { if (window.confirm(`Reprendre « ${s.label} » ? L'état actuel sera remplacé.`)) void load({ data: { saveId: s.id } }).then(() => { setEncounter(null); setMessage("Partie reprise."); void refresh(); }); }}>↺ {s.label}</button>)}</div></div>
         <div className="flex-1 p-5"><div className="flex items-center justify-between"><p className="font-pixel text-[10px] text-game-muted">JOURNAL</p><Button variant="game" size="sm" className="rounded-none text-[10px]" onClick={() => setJournalOpen(true)}><BookOpen /> Tout voir</Button></div><div className="mt-4 space-y-3">{state?.events.slice(0, 4).map((event) => <p key={event.id} className="border-l-2 border-primary pl-3 text-[10px] leading-relaxed">{event.message}</p>)}</div></div>
