@@ -13,11 +13,11 @@ function randomCode() {
 function toHex(buf: ArrayBuffer | Uint8Array) {
   return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
 }
-function fromHex(hex: string) {
-  return new Uint8Array(hex.match(/.{2}/g)!.map((h) => parseInt(h, 16)));
+function fromHex(hex: string): Uint8Array<ArrayBuffer> {
+  return new Uint8Array((hex.match(/.{2}/g) ?? []).map((h) => parseInt(h, 16)));
 }
 
-async function pbkdf2(password: string, salt: Uint8Array) {
+async function pbkdf2(password: string, salt: Uint8Array<ArrayBuffer>) {
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
   const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations: 100_000, hash: "SHA-256" }, key, 256);
   return toHex(bits);
@@ -29,7 +29,7 @@ async function hashPassword(password: string) {
 }
 
 async function verifyPassword(password: string, stored: string) {
-  const [, saltHex, hash] = stored.split("$");
+  const [, saltHex = "", hash = ""] = stored.split("$");
   const candidate = await pbkdf2(password, fromHex(saltHex));
   if (candidate.length !== hash.length) return false;
   let diff = 0;
@@ -39,7 +39,7 @@ async function verifyPassword(password: string, stored: string) {
 
 function rollDie(sides: number) {
   const buf = crypto.getRandomValues(new Uint32Array(1));
-  return (buf[0] % sides) + 1;
+  return ((buf[0] ?? 0) % sides) + 1;
 }
 
 async function admin() {

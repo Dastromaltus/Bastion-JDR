@@ -120,7 +120,7 @@ function RoomPage() {
   const inviteUrl = typeof window !== "undefined" ? `${window.location.origin}/rejoindre/${game.code}` : "";
   const textClass = settings.textSize === "grand" ? "text-[17px]" : settings.textSize === "tres-grand" ? "text-[19px]" : "text-base";
   const narr = (action: any, extra: Record<string, unknown> = {}, ok?: string) =>
-    run(action + (extra.targetUserId ?? ""), () => sNarr({ data: { gameId: game.id, action, ...extra } as any }), ok);
+    run(action + String(extra["targetUserId"] ?? ""), () => sNarr({ data: { gameId: game.id, action, ...extra } as any }), ok);
 
   return (
     <div
@@ -225,7 +225,7 @@ function RoomPage() {
 
       <Sheet open={panel !== null} onOpenChange={(o) => !o && setPanel(null)}>
         <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-none border-t-2 border-foreground">
-          <SheetHeader><SheetTitle className="font-display text-3xl uppercase">{panel === "parametres" ? "Paramètres" : panel ? panel[0].toUpperCase() + panel.slice(1) : ""}</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle className="font-display text-3xl uppercase">{panel === "parametres" ? "Paramètres" : panel ? panel.charAt(0).toUpperCase() + panel.slice(1) : ""}</SheetTitle></SheetHeader>
           <div className="px-4 pb-6">
             {panel === "inventaire" && <InventoryPanel d={d} settings={settings} />}
             {panel === "fiche" && <SheetPanel d={d} />}
@@ -342,7 +342,7 @@ function NarratorPanel({ d, narr, busy, onTurn, refetch }: { d: any; narr: any; 
 }
 
 function useLongPress(onLong: () => void, onTap: () => void) {
-  const t = useRef<ReturnType<typeof setTimeout>>();
+  const t = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const fired = useRef(false);
   return {
     onPointerDown: () => { fired.current = false; t.current = setTimeout(() => { fired.current = true; onLong(); }, 500); },

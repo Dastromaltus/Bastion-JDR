@@ -98,14 +98,14 @@ export async function downloadReportPdf(data: ReportData) {
   const head = ["Nom", "Race", "Rôle", "Vit / For / End", "PV"];
   doc.setFillColor(...BLACK); doc.rect(M, y, W - 2 * M, 7, "F");
   doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
-  head.forEach((h, i) => doc.text(latin1(h.toUpperCase()), cols[i] + 2, y + 5));
+  head.forEach((h, i) => doc.text(latin1(h.toUpperCase()), (cols[i] ?? M) + 2, y + 5));
   y += 7;
   for (const p of data.players) {
     ensure(8);
     const narr = p.role === "narrator";
     doc.setFont("helvetica", narr ? "bold" : "normal"); doc.setFontSize(10); doc.setTextColor(...(narr ? RED : BLACK));
     const vals = [p.display_name.slice(0, 24), p.race, ROLE_LABEL[p.role] ?? p.role, `${p.speed} / ${p.strength} / ${p.endurance}`, `${p.hp} / ${p.max_hp}`];
-    vals.forEach((v, i) => doc.text(latin1(v), cols[i] + 2, y + 5.5));
+    vals.forEach((v, i) => doc.text(latin1(v), (cols[i] ?? M) + 2, y + 5.5));
     doc.setDrawColor(200, 200, 200); doc.line(M, y + 8, W - M, y + 8);
     y += 8;
   }
