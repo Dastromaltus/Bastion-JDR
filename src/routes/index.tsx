@@ -44,7 +44,7 @@ function Index() {
         <img src={bastionFortress} alt="Cinq aventuriers avancent vers la forteresse de Bastion" width={1536} height={1024} className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-hero-overlay" />
         <nav className="relative z-10 flex items-center justify-between border-b border-foreground/30 px-5 py-4 md:px-10">
-          <a href="#top" className="font-display text-xl font-black uppercase tracking-normal">Bastion<span className="text-primary">.</span></a>
+          <a href="#top" className="font-display text-base font-black uppercase tracking-normal">Bastion<span className="text-primary">.</span></a>
           <div className="hidden items-center gap-8 text-xs font-bold uppercase md:flex">
             <a href="#concept" className="transition-colors hover:text-primary">Le jeu</a>
             <a href="#peuples" className="transition-colors hover:text-primary">Peuples</a>
@@ -66,7 +66,7 @@ function Index() {
       <section id="concept" className="grid border-b border-border lg:grid-cols-2">
         <div className="px-5 py-20 md:px-10 lg:border-r lg:border-border lg:py-28">
           <p className="section-label">Le pacte de jeu</p>
-          <h2 className="mt-6 max-w-2xl font-display text-5xl font-black uppercase leading-[0.9] tracking-normal md:text-7xl">Tous contre<br /><span className="text-primary">le narrateur.</span></h2>
+          <h2 className="mt-6 max-w-2xl font-display text-3xl font-black uppercase leading-[0.9] tracking-normal md:text-5xl">Tous contre<br /><span className="text-primary">le narrateur.</span></h2>
         </div>
         <div className="flex flex-col justify-between gap-14 px-5 py-20 md:px-10 lg:py-28">
           <p className="max-w-2xl text-xl leading-relaxed text-muted-foreground md:text-2xl">Né d’une passion pour les jeux de plateau et les jeux de rôle, Bastion oppose un groupe d’aventuriers à celui qui incarne les lieux, les ennemis et les événements inconnus.</p>
@@ -81,7 +81,7 @@ function Index() {
       <section id="exploration" className="relative border-b border-border px-4 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
           <div className="mb-10 grid gap-6 lg:grid-cols-[1fr_0.8fr] lg:items-end">
-            <div><p className="section-label">Mode jouable</p><h2 className="mt-4 font-display text-5xl font-black uppercase leading-none tracking-normal md:text-7xl">Exploration<br /><span className="text-primary">2D</span></h2></div>
+            <div><p className="section-label">Mode jouable</p><h2 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Exploration<br /><span className="text-primary">2D</span></h2></div>
             <p className="max-w-xl text-base leading-relaxed text-muted-foreground">Progressez case par case dans le premier secteur. Chaque peuple ouvre un chemin différent, pendant que le narrateur transforme la carte en direct.</p>
           </div>
           <ExplorationGame />
@@ -91,19 +91,19 @@ function Index() {
       <section id="peuples" className="px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div><p className="section-label">Choisir son origine</p><h2 className="mt-4 font-display text-5xl font-black uppercase tracking-normal md:text-7xl">Cinq peuples</h2></div>
+            <div><p className="section-label">Choisir son origine</p><h2 className="mt-4 font-display text-3xl font-black uppercase tracking-normal md:text-5xl">Cinq peuples</h2></div>
             <p className="max-w-sm text-sm text-muted-foreground">Chaque peuple modifie votre manière d’explorer, de combattre et de survivre.</p>
           </div>
           <div className="grid border border-border lg:grid-cols-[0.8fr_1.2fr]">
             <div className="divide-y divide-border lg:border-r lg:border-border">
               {races.map((item, index) => (
                 <button key={item.name} onClick={() => setActiveRace(index)} className={`group flex w-full items-center gap-5 px-5 py-5 text-left transition-colors ${activeRace === index ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>
-                  <span className="font-display text-3xl font-black">{item.mark}</span><span className="flex-1 font-bold uppercase">{item.name}</span><ArrowRight size={18} className={activeRace === index ? "opacity-100" : "opacity-30 group-hover:opacity-100"} />
+                  <span className="font-display text-xl font-black">{item.mark}</span><span className="flex-1 font-bold uppercase">{item.name}</span><ArrowRight size={18} className={activeRace === index ? "opacity-100" : "opacity-30 group-hover:opacity-100"} />
                 </button>
               ))}
             </div>
             <div className="flex min-h-[430px] flex-col justify-between bg-card p-7 md:p-12">
-              <div><span className="text-xs font-black uppercase text-primary">Spécialité / {race.trait}</span><h3 className="mt-5 font-display text-6xl font-black uppercase tracking-normal md:text-8xl">{race.name}</h3><p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">{race.detail}</p></div>
+              <div><span className="text-xs font-black uppercase text-primary">Spécialité / {race.trait}</span><h3 className="mt-5 font-display text-4xl font-black uppercase tracking-normal md:text-5xl">{race.name}</h3><p className="mt-6 max-w-xl text-sm leading-relaxed text-muted-foreground">{race.detail}</p></div>
               <div className="mt-12 grid gap-4">
                 {['Vitesse', 'Force', 'Endurance'].map((label, i) => <div key={label} className="grid grid-cols-[90px_1fr] items-center gap-4"><span className="text-[10px] font-bold uppercase">{label}</span><div className="h-2 bg-secondary"><div className="h-full bg-primary transition-all duration-500" style={{ width: `${race.stats[i]}%` }} /></div></div>)}
               </div>
@@ -114,23 +114,23 @@ function Index() {
 
       <section id="partie" className="border-y border-border bg-secondary px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
-          <p className="section-label">Structure de partie</p><h2 className="mt-4 font-display text-5xl font-black uppercase tracking-normal md:text-7xl">Trois temps.<br />Une mission.</h2>
+          <p className="section-label">Structure de partie</p><h2 className="mt-4 font-display text-3xl font-black uppercase tracking-normal md:text-5xl">Trois temps.<br />Une mission.</h2>
           <div className="mt-14 grid border-t border-border md:grid-cols-3">
-            {phases.map((phase) => <article key={phase.number} className="group border-b border-border py-8 md:border-b-0 md:border-r md:px-7 md:first:pl-0 md:last:border-r-0"><span className="font-display text-5xl font-black text-primary">{phase.number}</span><h3 className="mt-10 text-xl font-black uppercase">{phase.title}</h3><p className="mt-4 text-sm leading-relaxed text-muted-foreground">{phase.text}</p></article>)}
+            {phases.map((phase) => <article key={phase.number} className="group border-b border-border py-8 md:border-b-0 md:border-r md:px-7 md:first:pl-0 md:last:border-r-0"><span className="font-display text-3xl font-black text-primary">{phase.number}</span><h3 className="mt-10 text-base font-black uppercase">{phase.title}</h3><p className="mt-4 text-sm leading-relaxed text-muted-foreground">{phase.text}</p></article>)}
           </div>
         </div>
       </section>
 
       <section className="px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.8fr_1.2fr]">
-          <div><p className="section-label">Protocole de test</p><h2 className="mt-5 font-display text-5xl font-black uppercase leading-none tracking-normal md:text-7xl">Jouer.<br /><span className="text-primary">Observer.</span><br />Ajuster.</h2></div>
+          <div><p className="section-label">Protocole de test</p><h2 className="mt-5 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Jouer.<br /><span className="text-primary">Observer.</span><br />Ajuster.</h2></div>
           <ol className="divide-y divide-border border-y border-border">
             {["Lancer une partie courte", "Attribuer un peuple différent à chaque joueur", "Limiter chacun à une compétence forte", "Noter ce qui gagne trop souvent", "Ajuster les coûts, durées et restrictions"].map((step, i) => <li key={step} className="flex items-center gap-5 py-5"><span className="text-xs font-black text-primary">0{i + 1}</span><span className="font-bold">{step}</span></li>)}
           </ol>
         </div>
       </section>
 
-      <footer className="border-t-4 border-primary bg-card px-5 py-10 md:px-10"><div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-end md:justify-between"><div><p className="font-display text-4xl font-black uppercase">Bastion<span className="text-primary">.</span></p><p className="mt-2 text-xs text-muted-foreground">Un jeu de Mathéo Destin · 27/07/2026</p></div><p className="text-xs font-bold uppercase">Financement participatif · Ulule · PIJ</p></div></footer>
+      <footer className="border-t-4 border-primary bg-card px-5 py-10 md:px-10"><div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-end md:justify-between"><div><p className="font-display text-2xl font-black uppercase">Bastion<span className="text-primary">.</span></p><p className="mt-2 text-xs text-muted-foreground">Un jeu de Mathéo Destin · 27/07/2026</p></div><p className="text-xs font-bold uppercase">Financement participatif · Ulule · PIJ</p></div></footer>
     </main>
   );
 }

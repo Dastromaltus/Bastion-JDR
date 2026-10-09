@@ -71,7 +71,7 @@ export function AmbiencePanel({ gameId, row }: { gameId: string; row: AmbienceRo
 /* ======================= Enemies (narrator) ======================= */
 
 function Stat({ label, value }: { label: string; value: number | string }) {
-  return <div className="border border-foreground/60 p-1 text-center"><p className="text-[9px] font-black uppercase">{label}</p><p className="font-display text-lg">{value}</p></div>;
+  return <div className="border border-foreground/60 p-1 text-center"><p className="text-[5.4px] font-black uppercase">{label}</p><p className="font-display text-sm">{value}</p></div>;
 }
 
 export function EnemyPanel({ d }: { d: any }) {

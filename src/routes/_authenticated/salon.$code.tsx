@@ -135,9 +135,9 @@ function RoomPage() {
       className={`min-h-screen bg-background pb-28 ${textClass} ${settings.highContrast ? "room-contrast" : ""} ${settings.colorblind ? "room-colorblind" : ""} ${settings.reducedMotion ? "room-reduced-motion" : ""}`}
     >
       <header className="flex items-center justify-between gap-3 border-b-2 border-foreground px-4 py-3">
-        <Link to="/salons" className="font-display text-xl uppercase">Bastion<span className="text-primary">.</span></Link>
+        <Link to="/salons" className="font-display text-base uppercase">Bastion<span className="text-primary">.</span></Link>
         <div className="text-right">
-          <p className="font-display text-lg uppercase leading-none">{game.name}</p>
+          <p className="font-display text-sm uppercase leading-none">{game.name}</p>
           <p className="text-[11px] uppercase text-muted-foreground">{STATUS_LABEL[game.status]} · {scenarioLabel(game.scenario)} · <span className="font-pixel">{game.code}</span></p>
         </div>
       </header>
@@ -148,7 +148,7 @@ function RoomPage() {
         {game.status === "finished" && (
           <section className="border-4 border-primary p-5 text-center">
             <p className="section-label">Fin de partie</p>
-            <h1 className="mt-2 font-display text-5xl uppercase">{game.result === "victoire" ? "Victoire" : "Défaite"}</h1>
+            <h1 className="mt-2 font-display text-3xl uppercase">{game.result === "victoire" ? "Victoire" : "Défaite"}</h1>
             <p className="mt-2 text-sm text-muted-foreground">Le journal complet est disponible au format PDF.</p>
             <ReportButton gameId={game.id} className="mt-4" />
           </section>
@@ -206,7 +206,7 @@ function RoomPage() {
       {loot && (
         <div role="status" className="loot-pop pointer-events-none fixed inset-x-0 top-1/3 z-50 mx-auto w-fit border-4 border-primary bg-background px-8 py-6 text-center shadow-game">
           <p className="section-label">Trésor découvert</p>
-          <p className="mt-1 font-display text-3xl uppercase">✦ {loot}</p>
+          <p className="mt-1 font-display text-xl uppercase">✦ {loot}</p>
           <p className="text-xs text-muted-foreground">Ajouté à ton inventaire</p>
         </div>
       )}
@@ -244,7 +244,7 @@ function RoomPage() {
 
       <Sheet open={panel !== null} onOpenChange={(o) => !o && setPanel(null)}>
         <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-none border-t-2 border-foreground">
-          <SheetHeader><SheetTitle className="font-display text-3xl uppercase">{panel === "parametres" ? "Paramètres" : panel ? panel.charAt(0).toUpperCase() + panel.slice(1) : ""}</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle className="font-display text-xl uppercase">{panel === "parametres" ? "Paramètres" : panel ? panel.charAt(0).toUpperCase() + panel.slice(1) : ""}</SheetTitle></SheetHeader>
           <div className="px-4 pb-6">
             {panel === "inventaire" && <InventoryPanel d={d} settings={settings} />}
             {panel === "fiche" && <SheetPanel d={d} />}
@@ -261,7 +261,7 @@ function RoomPage() {
       {/* Player interactions */}
       <Sheet open={!!selectedPlayer} onOpenChange={(o) => !o && setSelectedPlayer(null)}>
         <SheetContent side="bottom" className="rounded-none border-t-2 border-foreground">
-          <SheetHeader><SheetTitle className="font-display text-2xl uppercase">{selectedPlayer?.display_name}</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle className="font-display text-lg uppercase">{selectedPlayer?.display_name}</SheetTitle></SheetHeader>
           <div className="grid gap-2 px-4 pb-6">
             <Button variant="outline" className="min-h-11 rounded-none font-bold uppercase" onClick={() => { setSelectedPlayer(null); setPanel("inventaire"); toast("Choisis un objet puis « Donner »."); }}>Donner un objet</Button>
             <Button variant="outline" disabled={busy === "ping"} className="min-h-11 rounded-none font-bold uppercase"
@@ -444,7 +444,7 @@ function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
 
       <Sheet open={!!menu} onOpenChange={(o) => !o && (setMenu(null), setGiveFor(null))}>
         <SheetContent side="bottom" className="rounded-none border-t-2 border-foreground">
-          <SheetHeader><SheetTitle className="font-display text-2xl uppercase">{menu?.name}</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle className="font-display text-lg uppercase">{menu?.name}</SheetTitle></SheetHeader>
           {menu && !giveFor && (
             <div className="grid gap-2 px-4 pb-6">
               <Button variant="outline" disabled={menu.category !== "consommable" || !!busy} className="min-h-11 rounded-none font-bold uppercase" onClick={() => call(menu, "use", undefined, "Objet utilisé")}>{busy === "use" ? "…" : "Utiliser"}</Button>
@@ -509,7 +509,7 @@ function SheetPanel({ d }: { d: any }) {
     <div className="space-y-3">
       <div className="grid grid-cols-4 gap-2 text-center">
         {[["Vitesse", me.speed], ["Force", me.strength], ["Endurance", me.endurance], ["PV", `${me.hp}/${me.max_hp}`]].map(([k, v]) => (
-          <div key={k} className="border-2 border-foreground p-2"><p className="text-[10px] font-black uppercase">{k}</p><p className="font-display text-2xl">{v}</p></div>
+          <div key={k} className="border-2 border-foreground p-2"><p className="text-[6.0px] font-black uppercase">{k}</p><p className="font-display text-lg">{v}</p></div>
         ))}
       </div>
       <p className="text-sm">Rôle dans ce salon : <b>{ROLE_LABEL[me.role]}</b></p>

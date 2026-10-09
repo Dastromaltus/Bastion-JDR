@@ -59,7 +59,7 @@ function JoinPage() {
         {room.data === null && <p role="alert" className="mt-4 font-bold text-primary">Aucun salon ne correspond à ce code.</p>}
         {r && (
           <>
-            <h1 className="mt-3 font-display text-4xl uppercase">{r.name}</h1>
+            <h1 className="mt-3 font-display text-2xl uppercase">{r.name}</h1>
             <p className="text-sm text-muted-foreground">{scenarioLabel(r.scenario)} · {r.players}/{r.maxPlayers} joueurs</p>
             {closed ? (
               <p role="alert" className="mt-6 font-bold text-primary">
