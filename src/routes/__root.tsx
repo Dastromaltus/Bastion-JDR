@@ -78,14 +78,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Bastion — Jeu de rôle brutaliste" },
+      { name: "description", content: "Bastion, un dungeon crawler asymétrique de Mathéo Destin pour 3 à 5 joueurs." },
+      { name: "author", content: "Mathéo Destin" },
+      { property: "og:title", content: "Bastion — Jeu de rôle brutaliste" },
+      { property: "og:description", content: "Aventuriers contre narrateur dans un dungeon crawler de plateau rouge et noir." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
