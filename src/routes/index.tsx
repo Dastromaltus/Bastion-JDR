@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowDown, ArrowRight, Dices, Shield, Swords, Target, Zap } from "lucide-react";
+import { ArrowDown, ArrowRight, Shield, Swords, Zap } from "lucide-react";
 import { useState } from "react";
 import bastionFortress from "@/assets/bastion-fortress.jpg";
+import { ExplorationGame } from "@/components/ExplorationGame";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -48,6 +49,7 @@ function Index() {
             <a href="#concept" className="transition-colors hover:text-primary">Le jeu</a>
             <a href="#peuples" className="transition-colors hover:text-primary">Peuples</a>
             <a href="#partie" className="transition-colors hover:text-primary">Une partie</a>
+            <a href="#exploration" className="transition-colors hover:text-primary">Exploration 2D</a>
           </div>
           <span className="border border-foreground/50 px-3 py-2 text-[10px] font-bold uppercase">3—5 joueurs</span>
         </nav>
@@ -73,6 +75,16 @@ function Index() {
             <Stat icon={<Swords />} title="Force" />
             <Stat icon={<Shield />} title="Endurance" />
           </div>
+        </div>
+      </section>
+
+      <section id="exploration" className="relative border-b border-border px-4 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-10 grid gap-6 lg:grid-cols-[1fr_0.8fr] lg:items-end">
+            <div><p className="section-label">Mode jouable</p><h2 className="mt-4 font-display text-5xl font-black uppercase leading-none tracking-normal md:text-7xl">Exploration<br /><span className="text-primary">2D</span></h2></div>
+            <p className="max-w-xl text-base leading-relaxed text-muted-foreground">Progressez case par case dans le premier secteur. Chaque peuple ouvre un chemin différent, pendant que le narrateur transforme la carte en direct.</p>
+          </div>
+          <ExplorationGame />
         </div>
       </section>
 

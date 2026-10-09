@@ -21,6 +21,7 @@
 @theme inline {
   --font-sans: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
   --font-display: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  --font-pixel: "Courier New", monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -61,6 +62,11 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-game: var(--game);
+  --color-game-surface: var(--game-surface);
+  --color-game-elevated: var(--game-elevated);
+  --color-game-line: var(--game-line);
+  --color-game-muted: var(--game-muted);
 }
 
 :root {
@@ -97,6 +103,11 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+  --game: oklch(0.055 0.005 25);
+  --game-surface: oklch(0.12 0.008 25);
+  --game-elevated: oklch(0.19 0.012 25);
+  --game-line: oklch(0.38 0.015 25);
+  --game-muted: oklch(0.64 0.01 70);
 }
 
 .dark {
@@ -153,6 +164,7 @@
 }
 
 @utility font-display { font-family: var(--font-display); }
+@utility font-pixel { font-family: var(--font-pixel); }
 @utility section-label {
   color: var(--color-primary);
   font-size: 0.7rem;
@@ -162,4 +174,40 @@
 }
 @utility bg-hero-overlay {
   background: linear-gradient(180deg, oklch(0.04 0 0 / 0.2) 15%, oklch(0.04 0 0 / 0.05) 45%, oklch(0.04 0 0 / 0.95) 100%);
+}
+
+@utility bg-game-overlay { background: oklch(0.02 0 0 / 0.92); }
+@utility shadow-game { box-shadow: 8px 8px 0 var(--color-primary); }
+
+@layer components {
+  .game-viewport {
+    width: 100%;
+    overflow: auto;
+    background: var(--color-game);
+    image-rendering: pixelated;
+  }
+
+  .game-canvas {
+    width: 100%;
+    min-width: 608px;
+    aspect-ratio: 19 / 11;
+  }
+
+  .game-canvas canvas {
+    display: block;
+    width: 100% !important;
+    height: auto !important;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  .retro-dialog {
+    min-height: 3.5rem;
+    border: 2px solid var(--color-foreground);
+    padding: 0.75rem 1rem;
+    font-family: var(--font-pixel);
+    font-size: 0.68rem;
+    line-height: 1.6;
+    box-shadow: inset 0 0 0 2px var(--color-game);
+  }
 }
