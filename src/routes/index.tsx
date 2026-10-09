@@ -47,6 +47,7 @@ function Index() {
           <a href="#top" className="font-display text-base font-black uppercase tracking-normal">Bastion<span className="text-primary">.</span></a>
           <div className="hidden items-center gap-8 text-xs font-bold uppercase md:flex">
             <a href="#concept" className="transition-colors hover:text-primary">Le jeu</a>
+            <a href="#salons" className="transition-colors hover:text-primary">Salons</a>
             <a href="#peuples" className="transition-colors hover:text-primary">Peuples</a>
             <a href="#partie" className="transition-colors hover:text-primary">Une partie</a>
             <a href="#exploration" className="transition-colors hover:text-primary">Exploration 2D</a>
@@ -57,7 +58,10 @@ function Index() {
           <p className="mb-4 flex items-center gap-3 text-xs font-black uppercase text-primary"><span className="h-px w-10 bg-primary" /> Dungeon crawler asymétrique</p>
           <h1 className="font-display text-[clamp(2.2rem,11vw,9rem)] font-black uppercase leading-[1.1] drop-shadow-[4px_4px_0_var(--color-secondary)] tracking-normal">Bastion</h1>
           <div className="mt-8 grid gap-8 border-t border-foreground/40 pt-6 md:grid-cols-[1fr_auto] md:items-end">
-            <p className="max-w-xl text-lg font-medium leading-relaxed md:text-xl">Les aventuriers avancent. Le narrateur prépare l’inconnu. <span className="text-primary">La forteresse ne pardonne rien.</span></p>
+            <div>
+              <p className="max-w-xl text-lg font-medium leading-relaxed md:text-xl">Les aventuriers avancent. Le narrateur prépare l’inconnu. <span className="text-primary">La forteresse ne pardonne rien.</span></p>
+              <a href="/salons" className="mt-6 inline-flex min-h-12 items-center gap-3 border-4 border-primary bg-primary px-6 font-display text-sm font-black uppercase text-primary-foreground transition-transform hover:translate-x-1 hover:translate-y-1">Crée ta propre partie →</a>
+            </div>
             <a href="#concept" aria-label="Découvrir le jeu" className="flex h-14 w-14 items-center justify-center border-2 border-foreground transition-colors hover:border-primary hover:bg-primary"><ArrowDown size={24} /></a>
           </div>
         </div>
