@@ -543,6 +543,83 @@ export type Database = {
           },
         ]
       }
+      game_character_archives: {
+        Row: {
+          archived_at: string
+          game_id: string
+          player_id: string
+          sheet: Json
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string
+          game_id: string
+          player_id: string
+          sheet: Json
+          user_id: string
+        }
+        Update: {
+          archived_at?: string
+          game_id?: string
+          player_id?: string
+          sheet?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_character_archives_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_character_archives_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: true
+            referencedRelation: "game_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_combats: {
+        Row: {
+          active: boolean
+          fighters: Json
+          game_id: string
+          revision: number
+          round: number
+          turn_index: number
+          zone: string
+        }
+        Insert: {
+          active?: boolean
+          fighters?: Json
+          game_id: string
+          revision?: number
+          round?: number
+          turn_index?: number
+          zone: string
+        }
+        Update: {
+          active?: boolean
+          fighters?: Json
+          game_id?: string
+          revision?: number
+          round?: number
+          turn_index?: number
+          zone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_combats_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: true
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_dungeon_events: {
         Row: {
           effect: string
@@ -657,6 +734,8 @@ export type Database = {
           status: string
           strength: number
           threat_cost: number
+          tile_x: number
+          tile_y: number
           trigger: string
           zone: string
         }
@@ -678,6 +757,8 @@ export type Database = {
           status?: string
           strength: number
           threat_cost: number
+          tile_x?: number
+          tile_y?: number
           trigger?: string
           zone: string
         }
@@ -699,6 +780,8 @@ export type Database = {
           status?: string
           strength?: number
           threat_cost?: number
+          tile_x?: number
+          tile_y?: number
           trigger?: string
           zone?: string
         }
@@ -922,6 +1005,39 @@ export type Database = {
             foreignKeyName: "game_messages_game_id_fkey"
             columns: ["game_id"]
             isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_mob_control: {
+        Row: {
+          enemy_id: string | null
+          game_id: string
+          revision: number
+        }
+        Insert: {
+          enemy_id?: string | null
+          game_id: string
+          revision?: number
+        }
+        Update: {
+          enemy_id?: string | null
+          game_id?: string
+          revision?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_mob_control_enemy_id_fkey"
+            columns: ["enemy_id"]
+            isOneToOne: false
+            referencedRelation: "game_enemies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_mob_control_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: true
             referencedRelation: "games"
             referencedColumns: ["id"]
           },
@@ -1295,9 +1411,31 @@ export type Database = {
         Args: { p_game_id: string; p_revision: number }
         Returns: Json
       }
+      get_salon_combat: { Args: { p_game_id: string }; Returns: Json }
       is_game_member: { Args: { _game_id: string }; Returns: boolean }
       is_game_narrator: { Args: { _game_id: string }; Returns: boolean }
       purge_inactive_salons: { Args: never; Returns: number }
+      salon_combat_action: {
+        Args: {
+          p_action: string
+          p_effect?: string
+          p_enemy_id?: string
+          p_game_id: string
+          p_revision: number
+          p_target?: string
+          p_x?: number
+          p_y?: number
+        }
+        Returns: Json
+      }
+      start_salon_combat: {
+        Args: { p_game_id: string; p_zone: string }
+        Returns: undefined
+      }
+      transfer_salon_narrator: {
+        Args: { p_game_id: string; p_target: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
