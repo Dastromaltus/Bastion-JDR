@@ -15,3 +15,5 @@
 - [x] Verify 23 focused tests, campaign autosave, real solo-test navigation and Phaser rendering; review hidden-row policies and author permissions. Multi-account combat/transfer and physical-phone checks remain unverified.
 - [x] Give the six salon zones distinct pixel-art scenery; verified all six canvases, live salon rendering, unchanged tile identities and six focused tests.
 - [x] Strengthen site-wide page, title, section and interaction motion; eight tests and three public-page checks passed, with zero active animations under either reduced-motion preference.
+- [ ] Reorganize navigation around salons, campaigns, Operations and the single-page rulebook, inspired by comparable tabletop sites.
+- [ ] Prioritize existing salons, move create/join forms into dialogs, and verify navigation and narrow-screen layout without changing gameplay.
