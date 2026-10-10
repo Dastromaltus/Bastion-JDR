@@ -402,7 +402,7 @@ export async function openDungeon(gameId: string) {
   const tpl = await loadTemplate(dg.template_id, gameId);
   const first = tpl.rooms.find((r) => r.key === dg.current_room);
   if (!first) throw new Error("Salle initiale introuvable.");
-  if (tpl.t.default_track) await db.from("game_ambience").upsert({ game_id: gameId, track: tpl.t.default_track, state: "playing" }, { onConflict: "game_id" });
+  if (tpl.t.default_track) await db.from("game_ambience").upsert({ game_id: gameId, track: tpl.t.default_track, state: "lecture" }, { onConflict: "game_id" });
   await db.from("game_dungeons").update({ status: "en_cours" }).eq("id", dg.id);
   await db.from("game_players").update({ current_zone: first.key }).eq("game_id", gameId).eq("role", "adventurer");
   await log(gameId, null, "salle", `Opération « ${tpl.t.name} » : la table entre dans ${first.name}. ${first.description}`, { room: first.key }, true);

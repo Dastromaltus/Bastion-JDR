@@ -5,7 +5,7 @@ import type { Campaign } from "./campaign-model";
 
 export const getCampaignWorkspace = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { data: narratorRows } = await context.supabase.from("game_players").select("game_id,games(*)").eq("user_id", context.userId).eq("role", "narrator");
-  if (!narratorRows?.length) return { allowed: false, campaigns: [], operations: [], enemies: [], treasures: [], salons: [] };
+  if (!narratorRows?.length) { const { data: myCampaigns } = await context.supabase.from("campaigns").select("id").eq("owner_id", context.userId).limit(1); if (!myCampaigns?.length) return { allowed: false, campaigns: [], operations: [], enemies: [], treasures: [], salons: [] }; }
   const [{ data: campaigns }, { data: templates }, { data: rooms }] = await Promise.all([
     context.supabase.from("campaigns").select("*").order("updated_at", { ascending: false }),
     context.supabase.from("dungeon_templates").select("*").order("position"),

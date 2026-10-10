@@ -16,15 +16,16 @@ export function CampaignEditor({ workspace, refresh }: { workspace: any; refresh
   const fetchOne = useServerFn(getCampaign), save = useServerFn(saveCampaign), remove = useServerFn(deleteCampaign), load = useServerFn(loadCampaignInSalon);
   const [c, setC] = useState<Campaign>(empty);
   const [index, setIndex] = useState(0), [room, setRoom] = useState(""), [kind, setKind] = useState<"mob" | "treasure">("mob"), [catalog, setCatalog] = useState(""), [selected, setSelected] = useState("");
-  const [preview, setPreview] = useState(false), [busy, setBusy] = useState(false), [status, setStatus] = useState(""), [dirty, setDirty] = useState(false), [salon, setSalon] = useState("");
+  const [preview, setPreview] = useState(false), [busy, setBusy] = useState(false), [status, setStatus] = useState(""), [dirty, setDirty] = useState(false), [failed, setFailed] = useState(false), [salon, setSalon] = useState("");
   const [testing, setTesting] = useState(false), [testStage, setTestStage] = useState(0), [testRoom, setTestRoom] = useState("");
   const current = useRef(c); current.current = c;
   const lock = useRef(false);
   const stage = c.stages[index], op = workspace.operations.find((o: any) => o.id === stage?.template_id);
   const issues = campaignIssues(c, workspace.operations, workspace.enemies);
-  function change(next: Campaign) { setC(next); setDirty(true); setStatus("Modifications non enregistrées"); }
+  function change(next: Campaign) { setC(next); setDirty(true); setFailed(false); setStatus("Modifications non enregistrées"); }
   function patchStage(patch: any) { change({ ...c, stages: c.stages.map((s, i) => i === index ? { ...s, ...patch } : s) }); }
   async function persist(publish = false) {
+    if (failed && !publish) return;
     if (lock.current) return;
     lock.current = true; setBusy(true); setStatus("Enregistrement…");
     const snapshot = current.current;
@@ -33,10 +34,10 @@ export function CampaignEditor({ workspace, refresh }: { workspace: any; refresh
       setC((value) => ({ ...value, id: r.id, revision: r.revision, status: r.status }));
       if (current.current === snapshot) setDirty(false);
       setStatus(publish ? "Publiée · privée et prête à charger" : "Brouillon enregistré"); refresh();
-    } catch (e) { setStatus(e instanceof Error ? e.message : "Enregistrement impossible."); }
+    } catch (e) { setStatus(e instanceof Error ? e.message : "Enregistrement impossible."); setFailed(true); }
     finally { lock.current = false; setBusy(false); }
   }
-  useEffect(() => { if (!dirty || busy) return; const timer = setTimeout(() => { void persist(); }, 1200); return () => clearTimeout(timer); }, [c, dirty, busy]);
+  useEffect(() => { if (!dirty || busy || failed) return; const timer = setTimeout(() => { void persist(); }, 1200); return () => clearTimeout(timer); }, [c, dirty, busy, failed]);
   async function open(id: string) {
     if (dirty && !window.confirm("Ouvrir une autre campagne sans conserver les dernières modifications ?")) return;
     setBusy(true);
