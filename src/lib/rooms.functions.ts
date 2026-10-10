@@ -475,6 +475,8 @@ export const narratorAddItem = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await requireNarrator(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId, false);
     const db = await admin();
     const { data: owner } = await db.from("game_players").select("display_name").eq("game_id", data.gameId).eq("user_id", data.ownerId).maybeSingle();
     if (!owner) throw new Error("Ce joueur n'est pas dans le salon.");

@@ -364,6 +364,7 @@ function NarratorPanel({ d, narr, busy, refetch }: { d: any; narr: any; busy: st
 
 function NarratorTabs({ d }: { d: any }) {
   const [tab, setTab] = useState<"ambiance" | "ennemis" | "tresors">("ambiance");
+  const canAct = d.game.status !== "playing" || salonTurn(d.game, d.players, d.me.user_id).isMine;
   const tabs = [["ambiance", "Ambiance"], ["ennemis", "Ennemis"], ["tresors", "Trésors"]] as const;
   return (
     <div className="border-t border-foreground/30 pt-4">
@@ -374,8 +375,8 @@ function NarratorTabs({ d }: { d: any }) {
       </div>
       <div role="tabpanel" className="mt-4">
         {tab === "ambiance" && <AmbiencePanel gameId={d.game.id} row={d.ambience} />}
-        {tab === "ennemis" && <EnemyPanel d={d} />}
-        {tab === "tresors" && <TreasurePanel d={d} />}
+        {tab === "ennemis" && <fieldset disabled={!canAct} className="min-w-0"><EnemyPanel d={d} /></fieldset>}
+        {tab === "tresors" && <fieldset disabled={!canAct} className="min-w-0"><TreasurePanel d={d} /></fieldset>}
       </div>
     </div>
   );
@@ -405,6 +406,7 @@ function ItemCell({ item, onTap, onLong }: { item: any; onTap: () => void; onLon
 
 function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
   const act = useServerFn(inventoryAction);
+  const canAct = d.game.status !== "playing" || salonTurn(d.game, d.players, d.me.user_id).isMine;
   const add = useServerFn(narratorAddItem);
   const isNarr = d.me.role === "narrator";
   const [tab, setTab] = useState<keyof typeof CAT_LABEL>("arme");
@@ -447,7 +449,7 @@ function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
           <select className="h-11 border border-input bg-background px-2" value={newItem.rarity} onChange={(e) => setNewItem({ ...newItem, rarity: e.target.value })}>
             {Object.entries(RARITY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
-          <Button disabled={busy === "add"} className="min-h-11 rounded-none font-bold uppercase">{busy === "add" ? "Ajout…" : "Ajouter l'objet"}</Button>
+          <Button disabled={busy === "add" || !canAct} className="min-h-11 rounded-none font-bold uppercase">{busy === "add" ? "Ajout…" : "Ajouter l'objet"}</Button>
         </form>
       )}
 
@@ -455,12 +457,12 @@ function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
         <SheetContent side="bottom" className="rounded-none border-t-2 border-foreground">
           <SheetHeader><SheetTitle className="font-display text-lg uppercase">{menu?.name}</SheetTitle></SheetHeader>
           {menu && !giveFor && (
-            <div className="grid gap-2 px-4 pb-6">
+            <fieldset disabled={!canAct} className="grid min-w-0 gap-2 px-4 pb-6">
               <Button variant="outline" disabled={menu.category !== "consommable" || !!busy} className="min-h-11 rounded-none font-bold uppercase" onClick={() => call(menu, "use", undefined, "Objet utilisé")}>{busy === "use" ? "…" : "Utiliser"}</Button>
               <Button variant="outline" disabled={menu.category !== "arme" || !!busy} className="min-h-11 rounded-none font-bold uppercase" onClick={() => call(menu, "equip", undefined, menu.equipped ? "Arme rangée" : "Arme équipée")}>{busy === "equip" ? "…" : menu.equipped ? "Déséquiper" : "Équiper"}</Button>
               <Button variant="outline" disabled={!others.length} className="min-h-11 rounded-none font-bold uppercase" onClick={() => setGiveFor(menu)}>Donner à un joueur</Button>
               <Button variant="destructive" className="min-h-11 rounded-none font-bold uppercase" onClick={() => setConfirm({ item: menu, action: "discard" })}>Jeter</Button>
-            </div>
+            </fieldset>
           )}
           {giveFor && (
             <div className="grid gap-2 px-4 pb-6">

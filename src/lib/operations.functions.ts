@@ -443,7 +443,7 @@ export const operationControl = createServerFn({ method: "POST" })
         if (!game) throw new Error("Partie indisponible.");
         const { data: result, error } = await context.supabase.rpc("end_salon_turn", { p_game_id: data.gameId, p_revision: game.turn_revision });
         if (error) throw new Error(error.message);
-        if (result?.wrapped) await advanceTurn(data.gameId, dg, tpl);
+        if ((result as { wrapped?: boolean } | null)?.wrapped) await advanceTurn(data.gameId, dg, tpl);
         break;
       }
       case "reveal": {

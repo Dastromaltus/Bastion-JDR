@@ -16,6 +16,6 @@ describe("salon turns", () => {
     expect(salonTurn({ turn_player_id: "1" }, roster, "2").isMine).toBe(true);
     expect(salonTurn({ turn_player_id: "missing" }, roster, "2").label).toBe("Tour de joueur 2 · 2");
   });
-  it("preserves automatic solo play", () => expect(salonTurn({ solo: true }, [players[2]], "1").isMine).toBe(true));
+  it("preserves automatic solo play", () => expect(salonTurn({ solo: true }, [p("1", "adventurer", "2026-01-02")], "1").isMine).toBe(true));
   it("breaks tied join dates consistently", () => expect(turnOrder([p("b", "adventurer", "same"), p("a", "adventurer", "same")]).map((v) => v.id)).toEqual(["a", "b"]));
 });

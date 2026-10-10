@@ -153,6 +153,8 @@ export const placeEnemy = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await requireNarrator(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId, false);
     const db = await admin();
     const { data: cat } = await db.from("enemy_catalog").select("*").eq("id", data.catalogId).maybeSingle();
     if (!cat || (cat.game_id && cat.game_id !== data.gameId)) throw new Error("Cet ennemi n'est pas dans ton catalogue.");
@@ -178,6 +180,8 @@ export const enemyAction = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await requireNarrator(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId, false);
     const enemy = await loadEnemy(context, data.enemyId);
     if (enemy.game_id !== data.gameId) throw new Error("Ennemi introuvable.");
     const db = await admin();
@@ -267,6 +271,8 @@ export const placeTreasure = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await requireNarrator(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId, false);
     const db = await admin();
     const { data: cat } = await db.from("treasure_catalog").select("*").eq("id", data.catalogId).maybeSingle();
     if (!cat || (cat.game_id && cat.game_id !== data.gameId)) throw new Error("Ce trésor n'est pas dans ton catalogue.");
@@ -299,6 +305,8 @@ export const removeTreasure = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ gameId: uuid, treasureId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
     await requireNarrator(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId, false);
     const db = await admin();
     await db.from("game_treasures").delete().eq("id", data.treasureId).eq("game_id", data.gameId).eq("status", "cache");
     return { ok: true };
