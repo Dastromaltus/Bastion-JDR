@@ -848,6 +848,47 @@ export type Database = {
           },
         ]
       }
+      game_levels: {
+        Row: {
+          entered: boolean
+          game_id: string
+          id: string
+          intro_text: string
+          position: number
+          track: string | null
+          updated_at: string
+          zone: string
+        }
+        Insert: {
+          entered?: boolean
+          game_id: string
+          id?: string
+          intro_text?: string
+          position?: number
+          track?: string | null
+          updated_at?: string
+          zone: string
+        }
+        Update: {
+          entered?: boolean
+          game_id?: string
+          id?: string
+          intro_text?: string
+          position?: number
+          track?: string | null
+          updated_at?: string
+          zone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_levels_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_messages: {
         Row: {
           author_name: string
