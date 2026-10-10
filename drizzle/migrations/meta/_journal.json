@@ -43,6 +43,13 @@
       "when": 1791587233869,
       "tag": "0005_dungeon_operations",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791608821902,
+      "tag": "0006_harden_dungeon_grants",
+      "breakpoints": true
     }
   ]
 }

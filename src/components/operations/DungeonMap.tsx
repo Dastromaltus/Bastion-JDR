@@ -30,7 +30,7 @@ export function DungeonMap({
         const can = selectable.includes(r.key) && !!onSelect;
         return (
           <g key={r.key} onClick={can ? () => onSelect!(r.key) : undefined} style={{ cursor: can ? "pointer" : "default" }}
-            role={can ? "button" : undefined} tabIndex={can ? 0 : undefined} aria-label={can ? `Aller vers ${r.name}` : undefined}
+            role={can ? "button" : undefined} tabIndex={can ? 0 : undefined} aria-label={can ? (hidden ? "Aller vers une salle inexplorée" : `Aller vers ${r.name}`) : undefined}
             onKeyDown={can ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect!(r.key); } } : undefined}>
             <rect x={p.x + 4} y={p.y + 4} width={BW} height={BH} className="fill-foreground" />
             <rect x={p.x} y={p.y} width={BW} height={BH} strokeWidth={3}
