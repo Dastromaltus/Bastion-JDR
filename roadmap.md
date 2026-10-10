@@ -1,0 +1,3 @@
+- [ ] Add a top-down pixel-art environment to salon games and Operations.
+- [ ] Persist and validate individual tile movement with salon-scoped synchronization.
+- [ ] Verify collisions, rendering, movement controls and existing tests.
