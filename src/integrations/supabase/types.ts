@@ -901,6 +901,9 @@ export type Database = {
           speed: number
           strength: number
           user_id: string
+          world_x: number
+          world_y: number
+          world_zone: string | null
         }
         Insert: {
           current_zone?: string
@@ -916,6 +919,9 @@ export type Database = {
           speed?: number
           strength?: number
           user_id: string
+          world_x?: number
+          world_y?: number
+          world_zone?: string | null
         }
         Update: {
           current_zone?: string
@@ -931,6 +937,9 @@ export type Database = {
           speed?: number
           strength?: number
           user_id?: string
+          world_x?: number
+          world_y?: number
+          world_zone?: string | null
         }
         Relationships: [
           {

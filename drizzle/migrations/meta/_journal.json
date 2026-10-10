@@ -50,6 +50,13 @@
       "when": 1791608821902,
       "tag": "0006_harden_dungeon_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791648862676,
+      "tag": "0007_salon_world_positions",
+      "breakpoints": true
     }
   ]
 }

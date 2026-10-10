@@ -108,6 +108,8 @@
   --game-elevated: oklch(0.66 0.13 145);
   --game-line: oklch(0.4 0.09 150);
   --game-muted: oklch(0.3 0.06 150);
+  --world-label: #f5f9de;
+  --world-label-bg: #285447;
 }
 
 .dark {
@@ -225,6 +227,8 @@
   100% { opacity: 0; transform: translateY(-20px); }
 }
 .loot-pop { animation: loot-pop 2.6s ease-out forwards; }
+.salon-world { aspect-ratio: 25 / 17; }
+.salon-world-canvas, .salon-world-canvas canvas { width: 100% !important; height: auto !important; display: block; image-rendering: pixelated; }
 .room-reduced-motion .loot-pop { animation: none; }
 
 @layer base {

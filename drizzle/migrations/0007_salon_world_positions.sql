@@ -1,0 +1,3 @@
+ALTER TABLE public.game_players ADD COLUMN world_x integer NOT NULL DEFAULT 12, ADD COLUMN world_y integer NOT NULL DEFAULT 9, ADD COLUMN world_zone text;
+ALTER TABLE public.game_players ADD CONSTRAINT game_players_world_bounds CHECK (world_x BETWEEN 0 AND 24 AND world_y BETWEEN 0 AND 16);
+COMMENT ON COLUMN public.game_players.world_zone IS 'Room associated with tile position; stale positions reset on room changes. Existing membership RLS and server-only write grants apply.';

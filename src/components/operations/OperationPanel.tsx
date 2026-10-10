@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSalonDungeon, loadOperation, prepareOperation, operationControl, operationPlayerAction, soloAct } from "@/lib/operations.functions";
 import { getNarratorCatalog, attackEnemy } from "@/lib/narrator.functions";
 import { DungeonMap } from "./DungeonMap";
+import { SalonWorld } from "@/components/room/SalonWorld";
 
 const SEL = "h-11 w-full min-w-0 border-2 border-foreground bg-background px-2 text-sm";
 const RARITY: Record<string, string> = { commun: "Commun", rare: "Rare", epique: "Épique", legendaire: "Légendaire" };
@@ -112,6 +113,7 @@ function NarratorOperation({ d, v, refresh }: { d: any; v: any; refresh: () => v
       {dg.status === "en_cours" && (
         <>
           <TensionGauge value={dg.tension} events={events} />
+           <SalonWorld d={d} zone={dg.current_room} name={cur?.name} onChange={refresh} />
           <div className="grid grid-cols-3 gap-2">
             <Button variant="outline" disabled={!!busy} className="min-h-11 rounded-none font-black" onClick={() => ctl("tension_down")} aria-label="Tension moins 1">−1</Button>
             <Button disabled={!!busy} className="min-h-11 rounded-none font-black" onClick={() => ctl("tension_up")} aria-label="Tension plus 1">+1</Button>
@@ -270,6 +272,7 @@ function PlayerOperation({ d, v, refresh }: { d: any; v: any; refresh: () => voi
       <p className="section-label">Opération{solo ? " solo" : ""} · tour {dg.current_turn}</p>
       <h2 className="font-display text-xl uppercase">{t.name}</h2>
       <p className="text-sm"><b>Objectif :</b> {t.objective_text}{dg.core_taken ? " · Noyau en votre possession !" : ""}</p>
+      <SalonWorld d={d} zone={dg.current_room} name={current?.name} onChange={refresh} />
       {current && (
         <div className="border-2 border-primary bg-background p-3">
           <p className="text-xs font-black uppercase text-primary">Salle actuelle</p>
