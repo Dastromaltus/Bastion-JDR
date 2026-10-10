@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  getRoom, narratorAction, leaveRoom, updateCharacter, rollCheck, nextTurn, inventoryAction, narratorAddItem, sendSignal,
+  getRoom, narratorAction, leaveRoom, updateCharacter, rollCheck, inventoryAction, narratorAddItem, sendSignal,
 } from "@/lib/rooms.functions";
 import { RACE_NAMES, ROLE_LABEL, STATUS_LABEL, scenarioLabel } from "@/lib/races";
 import { ReportButton } from "@/components/ReportButton";
