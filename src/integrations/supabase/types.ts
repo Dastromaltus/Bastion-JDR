@@ -1583,6 +1583,10 @@ export type Database = {
     }
     Functions: {
       advance_private_campaign: { Args: { p_game_id: string }; Returns: Json }
+      create_campaign_playtest: {
+        Args: { p_campaign_id: string }
+        Returns: Json
+      }
       end_salon_turn: {
         Args: { p_game_id: string; p_revision: number }
         Returns: Json

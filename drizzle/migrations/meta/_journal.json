@@ -127,6 +127,13 @@
       "when": 1791656025532,
       "tag": "0017_campaign_audio_and_combat_validation",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791656285424,
+      "tag": "0018_isolated_campaign_playtests",
+      "breakpoints": true
     }
   ]
 }
