@@ -18,7 +18,9 @@ export class WorldScene extends Phaser.Scene {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches || !!document.querySelector(".room-reduced-motion");
     for (const actor of actors) {
       let node = this.actors.get(actor.id);
-      const x = actor.x * 16 + 8, y = actor.y * 16 + 8;
+      const sharing = actors.filter((a) => a.x === actor.x && a.y === actor.y);
+      const slot = sharing.findIndex((a) => a.id === actor.id);
+      const x = actor.x * 16 + 8 + (slot - (sharing.length - 1) / 2) * 16, y = actor.y * 16 + 8;
       if (!node) {
         const sprite = this.add.image(0, -2, "world-tiles", actor.frame);
         const label = this.add.text(0, -15, actor.name, { fontFamily: "VT323, monospace", fontSize: "8px", color: getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim(), backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim(), padding: { x: 2, y: 1 } }).setOrigin(0.5, 1);

@@ -9,7 +9,8 @@ describe("salon tile movement", () => {
     expect(worldWalkable(WORLD_SPAWN.x, WORLD_SPAWN.y)).toBe(true);
   });
   it("blocks bounds, trees, cliffs and water", () => {
-    for (const [x, y] of [[-1, 9], [25, 9], [12, -1], [12, 17], [1, 2], [0, 0], [4, 4]]) expect(worldWalkable(x, y)).toBe(false);
+    const obstacles: [number, number][] = [[-1, 9], [25, 9], [12, -1], [12, 17], [1, 2], [0, 0], [4, 4]];
+    for (const [x, y] of obstacles) expect(worldWalkable(x, y)).toBe(false);
   });
   it("supports four one-tile directions", () => {
     for (const [dx, dy] of Object.values(WORLD_DELTAS)) expect(Math.abs(dx) + Math.abs(dy)).toBe(1);
