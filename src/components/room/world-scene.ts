@@ -35,6 +35,7 @@ export class WorldScene extends Phaser.Scene {
         const sprite = this.add.image(0, -2, "world-tiles", actor.frame);
         const label = this.add.text(0, -15, actor.name, { fontFamily: "VT323, monospace", fontSize: "8px", color: getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim(), backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim(), padding: { x: 2, y: 1 } }).setOrigin(0.5, 1).setVisible(false);
         node = this.add.container(x, y, [sprite, label]);
+        if (actor.frame === 12) sprite.setInteractive().on("pointerdown", () => window.dispatchEvent(new CustomEvent("bastion-select-mob", { detail: actor.id })));
         this.actors.set(actor.id, node);
         if (!reduced) this.tweens.add({ targets: sprite, alpha: { from: 0, to: 1 }, scale: { from: 0.88, to: 1 }, duration: actor.frame === 12 ? 200 : 160, ease: "Linear" });
       } else {
