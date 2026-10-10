@@ -47,7 +47,7 @@ export function MotionEffects() {
         if (!(item instanceof HTMLElement) || item.dataset["motionSeen"]) return;
         item.dataset["motionSeen"] = "true";
         item.style.setProperty("--anim-delay", `${Math.min(i, 6) * 40}ms`);
-        playMotion(item, item.hasAttribute("data-motion-reveal") ? "anim-glitch" : item.closest('[data-motion-players]') ? "anim-join" : "anim-enter");
+        playMotion(item, item.hasAttribute("data-motion-reveal") ? "anim-glitch" : item.hasAttribute("data-motion-pop") ? "anim-pop" : item.closest('[data-motion-players]') ? "anim-join" : "anim-enter");
       });
     };
     decorate(document.body);

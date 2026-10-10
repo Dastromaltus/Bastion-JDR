@@ -214,7 +214,7 @@ function PrepEditor({ d, rooms, refresh }: { d: any; rooms: any[]; refresh: () =
             <p className="text-xs text-muted-foreground">{r.description}{r.hazard ? ` · ${r.hazard}` : ""}</p>
             <ul className="mt-2 space-y-2">
               {es.map((e: any) => (
-                <li key={e.id} className="grid grid-cols-[1fr_auto] gap-2">
+                <li key={e.id} data-motion-pop="true" className="grid grid-cols-[1fr_auto] gap-2">
                   <select aria-label={`Changer ${e.name}`} className={SEL} value={e.catalog_id ?? ""} disabled={!!busy}
                     onChange={(ev) => prep("swap" + e.id, { op: "swapEnemy", id: e.id, catalogId: ev.target.value }, "Ennemi remplacé")}>
                     {enemies.map((c: any) => <option key={c.id} value={c.id}>{c.icon} {c.name} · menace {c.threat_cost} · V{c.speed}/F{c.strength}/E{c.endurance}</option>)}
@@ -223,7 +223,7 @@ function PrepEditor({ d, rooms, refresh }: { d: any; rooms: any[]; refresh: () =
                 </li>
               ))}
               {ts.map((t: any) => (
-                <li key={t.id} className="grid grid-cols-[1fr_auto] gap-2">
+                <li key={t.id} data-motion-pop="true" className="grid grid-cols-[1fr_auto] gap-2">
                   <select aria-label={`Changer ${t.name}`} className={SEL} value={t.catalog_id ?? ""} disabled={!!busy}
                     onChange={(ev) => prep("swapt" + t.id, { op: "swapTreasure", id: t.id, catalogId: ev.target.value }, "Trésor remplacé")}>
                     {treasures.map((c: any) => <option key={c.id} value={c.id}>✦ {c.name} · {RARITY[c.rarity]} ({t.placement === "ennemi" ? "sur ennemi" : t.placement === "zone" ? "au sol" : "coffre"})</option>)}
