@@ -52,5 +52,17 @@ export const loadCampaignInSalon = createServerFn({ method: "POST" }).middleware
 export const advanceCampaign = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => z.object({ gameId: z.string().uuid() }).parse(d)).handler(async ({ data, context }) => {
   const { data: result, error } = await context.supabase.rpc("advance_private_campaign", { p_game_id: data.gameId });
   if (error) throw new Error(error.message);
+  const { openDungeon } = await import("./operations.functions");
+  const { data: game } = await context.supabase.from("games").select("status").eq("id", data.gameId).single();
+  if (game?.status === "playing") await openDungeon(data.gameId);
   return result;
+});
+
+export const startCampaignTest = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => z.object({ campaignId: z.string().uuid() }).parse(d)).handler(async ({ data, context }) => {
+  const { data: result, error } = await context.supabase.rpc("create_campaign_playtest", { p_campaign_id: data.campaignId });
+  if (error) throw new Error(error.message);
+  const test = result as { gameId: string; code: string };
+  const { openDungeon } = await import("./operations.functions");
+  await openDungeon(test.gameId);
+  return test;
 });

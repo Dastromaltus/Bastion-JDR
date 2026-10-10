@@ -37,7 +37,7 @@ async function loadTemplate(templateId: string, gameId?: string) {
   if (gameId) {
     const { data: copy } = await db.from("game_campaigns").select("snapshot,stage_index").eq("game_id", gameId).maybeSingle();
     const stage = copy?.snapshot?.stages?.[copy.stage_index];
-    if (stage) return { t: stage.t, rooms: stage.rooms as any[], roomEnemies: [] as any[], roomTreasures: [] as any[], events: stage.events as any[] };
+    if (stage) return { t: { ...stage.t, story: stage.intro_text }, rooms: stage.rooms as any[], roomEnemies: [] as any[], roomTreasures: [] as any[], events: stage.events as any[] };
   }
   const { data: t } = await db.from("dungeon_templates").select("*").eq("id", templateId).maybeSingle();
   if (!t) throw new Error("Opération introuvable.");
@@ -406,6 +406,8 @@ export async function openDungeon(gameId: string) {
   await db.from("game_dungeons").update({ status: "en_cours" }).eq("id", dg.id);
   await db.from("game_players").update({ current_zone: first.key }).eq("game_id", gameId).eq("role", "adventurer");
   await log(gameId, null, "salle", `Opération « ${tpl.t.name} » : la table entre dans ${first.name}. ${first.description}`, { room: first.key }, true);
+  const { data: campaign } = await db.from("game_campaigns").select("game_id").eq("game_id", gameId).maybeSingle();
+  if (campaign && tpl.t.story) await log(gameId, null, "campagne", tpl.t.story, {}, true);
   const { data: hidden } = await db.from("game_enemies").select("*").eq("game_id", gameId).eq("zone", first.key).eq("trigger", "entree").eq("status", "cache");
   if (hidden?.length) await revealEnemies(gameId, hidden, null, (k) => tpl.rooms.find((r) => r.key === k)?.name ?? k);
 }
@@ -646,5 +648,16 @@ export const soloAct = createServerFn({ method: "POST" })
     // 3. End of turn: tension rises every 2 turns in solo to showcase events.
     if (turn % 2 === 0) dg.tension = await setTension(data.gameId, dg, dg.tension + 1);
     await advanceTurn(data.gameId, dg, tpl);
+    const { data: test } = await db.from("game_campaigns").select("snapshot,stage_index,is_test").eq("game_id", data.gameId).maybeSingle();
+    const stage = test?.snapshot?.stages?.[test.stage_index];
+    if (test?.is_test && stage && dg.current_room === stage.exit_room && dg.explored.includes(stage.objective_room)) {
+      const { count } = await db.from("game_enemies").select("id", { count: "exact", head: true }).eq("game_id", data.gameId).eq("zone", stage.objective_room).neq("status", "vaincu");
+      if (!count) {
+        const { error } = await context.supabase.rpc("advance_private_campaign", { p_game_id: data.gameId });
+        if (error) throw new Error(error.message);
+        const { data: next } = await db.from("games").select("status").eq("id", data.gameId).single();
+        if (next?.status === "playing") await openDungeon(data.gameId);
+      }
+    }
     return { over: false };
   });

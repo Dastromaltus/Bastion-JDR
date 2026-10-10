@@ -238,7 +238,8 @@ export async function defeatEnemy(gameId: string, enemy: any, winner: { user_id:
   // Operation hook: defeating the boss of a "vaincre un boss" Operation ends the game.
   if (enemy.category === "boss") {
     const { data: dg } = await db.from("game_dungeons").select("id, status, dungeon_templates(objective_type)").eq("game_id", gameId).maybeSingle();
-    if (dg && dg.status === "en_cours" && dg.dungeon_templates?.objective_type === "boss") {
+    const { data: campaign } = await db.from("game_campaigns").select("game_id").eq("game_id", gameId).maybeSingle();
+    if (!campaign && dg && dg.status === "en_cours" && dg.dungeon_templates?.objective_type === "boss") {
       await db.from("game_dungeons").update({ status: "termine" }).eq("id", dg.id);
       await db.from("games").update({ status: "finished", ended_at: new Date().toISOString(), result: "victoire" }).eq("id", gameId);
       await log(gameId, null, "fin", "Objectif atteint : le boss est vaincu. Victoire des aventuriers !", { result: "victoire" }, true);
