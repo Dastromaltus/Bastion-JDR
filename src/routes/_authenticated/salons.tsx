@@ -11,6 +11,7 @@ import { SCENARIOS, STATUS_LABEL, ROLE_LABEL, scenarioLabel } from "@/lib/races"
 import { ReportButton } from "@/components/ReportButton";
 
 export const Route = createFileRoute("/_authenticated/salons")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Mes salons — Bastion" },

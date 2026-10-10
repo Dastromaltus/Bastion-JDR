@@ -26,6 +26,7 @@ import { TurnBanner } from "@/components/room/TurnBanner";
 import { salonTurn } from "@/lib/turn-order";
 
 export const Route = createFileRoute("/_authenticated/salon/$code")({
+  staticData: { sitemap: false },
   head: ({ params }) => ({
     meta: [
       { title: `Salon ${params.code} — Bastion` },

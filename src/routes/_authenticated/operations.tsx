@@ -10,6 +10,7 @@ import { DungeonMap } from "@/components/operations/DungeonMap";
 import { RACE_NAMES } from "@/lib/races";
 
 export const Route = createFileRoute("/_authenticated/operations")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Catalogue d'Opérations — Bastion" },
