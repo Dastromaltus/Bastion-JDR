@@ -71,6 +71,13 @@
       "when": 1791650357024,
       "tag": "0009_scope_selected_catalogue_and_demo_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791652119638,
+      "tag": "0010_salon_password_encrypted_copy",
+      "breakpoints": true
     }
   ]
 }

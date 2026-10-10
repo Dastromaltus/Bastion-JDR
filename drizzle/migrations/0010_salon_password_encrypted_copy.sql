@@ -1,0 +1,2 @@
+ALTER TABLE public.game_secrets ADD COLUMN IF NOT EXISTS password_encrypted text;
+COMMENT ON COLUMN public.game_secrets.password_encrypted IS 'AES-GCM copy, readable only by the salon creator through a server function.';
