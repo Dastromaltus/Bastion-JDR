@@ -10,7 +10,7 @@ export function MotionEffects() {
     let alive = true;
     let revision = 0;
     const apply = (reduced: boolean) => {
-      document.documentElement.dataset.reducedMotion = String(reduced);
+      document.documentElement.dataset["reducedMotion"] = String(reduced);
       if (reduced) document.getAnimations().forEach((a) => a.cancel());
     };
     const changed = (event: Event) => { revision++; apply((event as CustomEvent<boolean>).detail); };
@@ -43,8 +43,8 @@ export function MotionEffects() {
       if (motionDisabled()) return;
       const lists = root.matches("ul,ol,.anim-list") ? [root] : [...root.querySelectorAll("ul,ol,.anim-list")];
       for (const list of lists) [...list.children].forEach((item, i) => {
-        if (!(item instanceof HTMLElement) || item.dataset.motionSeen) return;
-        item.dataset.motionSeen = "true";
+        if (!(item instanceof HTMLElement) || item.dataset["motionSeen"]) return;
+        item.dataset["motionSeen"] = "true";
         item.style.setProperty("--anim-delay", `${Math.min(i, 6) * 40}ms`);
         playMotion(item, item.closest('[data-motion-players]') ? "anim-join" : "anim-enter");
       });

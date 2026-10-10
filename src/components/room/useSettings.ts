@@ -36,7 +36,7 @@ export function useSettings(userId: string | undefined) {
       if (!userId) return;
       const next = { ...settings, ...patch };
       if (patch.reducedMotion !== undefined) {
-        document.documentElement.dataset.reducedMotion = String(patch.reducedMotion);
+        document.documentElement.dataset["reducedMotion"] = String(patch.reducedMotion);
         window.dispatchEvent(new CustomEvent(MOTION_EVENT, { detail: patch.reducedMotion }));
       }
       setSettings(next);

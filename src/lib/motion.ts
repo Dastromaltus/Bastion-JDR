@@ -2,7 +2,7 @@ export const MOTION_EVENT = "bastion-motion-change";
 export const FEEDBACK_EVENT = "bastion-motion-feedback";
 
 export function motionDisabled() {
-  return typeof document === "undefined" || document.documentElement.dataset.reducedMotion === "true" ||
+  return typeof document === "undefined" || document.documentElement.dataset["reducedMotion"] === "true" ||
     window.matchMedia("(prefers-reduced-motion: reduce)").matches || !!document.querySelector(".room-reduced-motion");
 }
 
