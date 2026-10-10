@@ -17,7 +17,7 @@ export const getCampaignWorkspace = createServerFn({ method: "GET" }).middleware
     supabaseAdmin.from("enemy_catalog").select("*").or(`game_id.is.null,created_by.eq.${context.userId}`),
     supabaseAdmin.from("treasure_catalog").select("*").or(`game_id.is.null,created_by.eq.${context.userId}`),
   ]);
-  return { allowed: true, campaigns: campaigns ?? [], operations: (templates ?? []).map((t) => ({ ...t, rooms: (rooms ?? []).filter((r) => r.template_id === t.id) })), enemies: enemies ?? [], treasures: treasures ?? [], salons: narratorRows.map((r) => r.games).filter((g) => g?.status === "waiting") };
+  return { allowed: true, campaigns: campaigns ?? [], operations: (templates ?? []).map((t) => ({ ...t, rooms: (rooms ?? []).filter((r) => r.template_id === t.id) })), enemies: enemies ?? [], treasures: treasures ?? [], salons: (narratorRows ?? []).map((r) => r.games).filter((g) => g?.status === "waiting") };
 });
 
 export const getCampaign = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d)).handler(async ({ data, context }) => {

@@ -25,7 +25,6 @@ export function CampaignEditor({ workspace, refresh }: { workspace: any; refresh
   function change(next: Campaign) { setC(next); setDirty(true); setFailed(false); setStatus("Modifications non enregistrées"); }
   function patchStage(patch: any) { change({ ...c, stages: c.stages.map((s, i) => i === index ? { ...s, ...patch } : s) }); }
   async function persist(publish = false) {
-    if (failed && !publish) return;
     if (lock.current) return;
     lock.current = true; setBusy(true); setStatus("Enregistrement…");
     const snapshot = current.current;
@@ -41,7 +40,7 @@ export function CampaignEditor({ workspace, refresh }: { workspace: any; refresh
   async function open(id: string) {
     if (dirty && !window.confirm("Ouvrir une autre campagne sans conserver les dernières modifications ?")) return;
     setBusy(true);
-    try { setC(await fetchOne({ data: { id } })); setDirty(false); setIndex(0); setStatus("Campagne ouverte"); }
+    try { setC(await fetchOne({ data: { id } })); setDirty(false); setFailed(false); setIndex(0); setStatus("Campagne ouverte"); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Ouverture impossible."); }
     finally { setBusy(false); }
   }
