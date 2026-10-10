@@ -5,11 +5,12 @@ import type { Campaign } from "./campaign-model";
 
 export const getCampaignWorkspace = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { data: narratorRows } = await context.supabase.from("game_players").select("game_id,games(*)").eq("user_id", context.userId).eq("role", "narrator");
-  if (!narratorRows?.length) return { allowed: false, campaigns: [], operations: [], enemies: [], treasures: [], salons: [] };
-  const [{ data: campaigns }, { data: templates }, { data: rooms }] = await Promise.all([
+  if (!narratorRows?.length) { const { data: myCampaigns } = await context.supabase.from("campaigns").select("id").eq("owner_id", context.userId).limit(1); if (!myCampaigns?.length) return { allowed: false, campaigns: [], operations: [], enemies: [], treasures: [], salons: [] }; }
+  const [{ data: campaigns }, { data: templates }, { data: rooms }, { data: events }] = await Promise.all([
     context.supabase.from("campaigns").select("*").order("updated_at", { ascending: false }),
     context.supabase.from("dungeon_templates").select("*").order("position"),
     context.supabase.from("dungeon_rooms").select("*").order("position"),
+    context.supabase.from("dungeon_events").select("*").order("threshold"),
   ]);
   // Private catalogue access after narrator verification; do not expose other authors' catalogues.
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -17,7 +18,7 @@ export const getCampaignWorkspace = createServerFn({ method: "GET" }).middleware
     supabaseAdmin.from("enemy_catalog").select("*").or(`game_id.is.null,created_by.eq.${context.userId}`),
     supabaseAdmin.from("treasure_catalog").select("*").or(`game_id.is.null,created_by.eq.${context.userId}`),
   ]);
-  return { allowed: true, campaigns: campaigns ?? [], operations: (templates ?? []).map((t) => ({ ...t, rooms: (rooms ?? []).filter((r) => r.template_id === t.id) })), enemies: enemies ?? [], treasures: treasures ?? [], salons: narratorRows.map((r) => r.games).filter((g) => g?.status === "waiting") };
+  return { allowed: true, campaigns: campaigns ?? [], operations: (templates ?? []).map((t) => ({ ...t, rooms: (rooms ?? []).filter((r) => r.template_id === t.id), events: (events ?? []).filter((e) => e.template_id === t.id) })), enemies: enemies ?? [], treasures: treasures ?? [], salons: (narratorRows ?? []).map((r) => r.games).filter((g) => g?.status === "waiting") };
 });
 
 export const getCampaign = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d)).handler(async ({ data, context }) => {
@@ -52,5 +53,17 @@ export const loadCampaignInSalon = createServerFn({ method: "POST" }).middleware
 export const advanceCampaign = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => z.object({ gameId: z.string().uuid() }).parse(d)).handler(async ({ data, context }) => {
   const { data: result, error } = await context.supabase.rpc("advance_private_campaign", { p_game_id: data.gameId });
   if (error) throw new Error(error.message);
+  const { openDungeon } = await import("./operations.functions");
+  const { data: game } = await context.supabase.from("games").select("status").eq("id", data.gameId).single();
+  if (game?.status === "playing") await openDungeon(data.gameId);
   return result;
+});
+
+export const startCampaignTest = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => z.object({ campaignId: z.string().uuid() }).parse(d)).handler(async ({ data, context }) => {
+  const { data: result, error } = await context.supabase.rpc("create_campaign_playtest", { p_campaign_id: data.campaignId });
+  if (error) throw new Error(error.message);
+  const test = result as { gameId: string; code: string };
+  const { openDungeon } = await import("./operations.functions");
+  await openDungeon(test.gameId);
+  return test;
 });

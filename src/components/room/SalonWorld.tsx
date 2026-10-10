@@ -28,7 +28,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const enabled = canMove && !d.combat && turn.isMine;
   const participants = participantActors(d.players, here, d.me.id);
   const actors: WorldActor[] = [...participants];
-  d.enemies.filter((e: any) => e.status === "revele" && e.zone === here).forEach((e: any, i: number) => actors.push({ id: e.id, name: e.name, x: e.tile_x ?? 16 + i % 4, y: e.tile_y ?? 9, frame: 12 }));
+   d.enemies.filter((e: any) => (e.status === "revele" || (d.me.role === "narrator" && e.status === "cache")) && e.zone === here).forEach((e: any, i: number) => actors.push({ id: e.id, name: `${e.id === d.controlledEnemyId ? '▶ ' : ''}${e.status === 'cache' ? '? ' : ''}${e.name}`, x: e.tile_x ?? 16 + i % 4, y: e.tile_y ?? 9, frame: 12 }));
   useEffect(() => {
     let disposed = false;
     import("./world-scene").then(({ createWorldGame }) => {

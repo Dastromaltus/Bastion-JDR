@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Swords, SkipForward } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +14,14 @@ export function MobControl({ d, onChange }: { d: any; onChange: () => void }) {
   const narr = d.me.role === "narrator";
   const mob = d.enemies.find((e: any) => e.id === d.controlledEnemyId);
   const combat = d.combat;
+  useEffect(() => {
+    const select = (event: Event) => {
+      if (!narr || busy || !(event instanceof CustomEvent) || typeof event.detail !== "string") return;
+      if (d.enemies.some((e: any) => e.id === event.detail && e.status !== "vaincu")) void run("control", event.detail);
+    };
+    window.addEventListener("bastion-select-mob", select);
+    return () => window.removeEventListener("bastion-select-mob", select);
+  }, [narr, busy, d.enemies, combat?.revision]);
   async function run(action: "control" | "attack" | "ability" | "move" | "pass", enemyId?: string, x?: number, y?: number) {
     if (busy) return;
     setBusy(true);

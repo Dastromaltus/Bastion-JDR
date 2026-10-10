@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { listOperations, loadOperation, startSolo } from "@/lib/operations.functions";
 import { DungeonMap } from "@/components/operations/DungeonMap";
+import { mapIdentity } from "@/lib/map-identity";
+import { trackLabel } from "@/lib/ambience-tracks";
 import { RACE_NAMES } from "@/lib/races";
 
 export const Route = createFileRoute("/_authenticated/operations")({
@@ -41,6 +43,7 @@ function OperationsPage() {
         <Link to="/" className="font-display text-lg uppercase">Bastion<span className="text-primary">.</span></Link>
         <Button asChild variant="outline" className="min-h-11 rounded-none"><Link to="/salons">Mes salons</Link></Button>
       </header>
+      <Button asChild variant="secondary" className="mt-4 min-h-11"><Link to="/campagnes">Concevoir une campagne</Link></Button>
       <h1 className="mt-8 font-display text-3xl uppercase">Catalogue d'Opérations</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">Des donjons préconstruits, prêts à charger dans ton salon. Ennemis, trésors et événements sont préplacés : tu peux tout ajuster avant de lancer.</p>
 
@@ -62,7 +65,7 @@ function OperationsPage() {
       {q.data && ops.length === 0 && <p className="mt-6 text-muted-foreground">Aucune Opération ne correspond à ces filtres.</p>}
 
       <ul className="mt-6 grid gap-6 lg:grid-cols-2">
-        {ops.map((o: any) => <OperationCard key={o.id} op={o} salons={q.data!.mySalons} />)}
+        {ops.map((o: any) => <OperationCard key={o.id} op={o} salons={q.data?.mySalons ?? []} />)}
       </ul>
     </main>
   );
@@ -111,7 +114,7 @@ function OperationCard({ op, salons }: { op: any; salons: any[] }) {
         </div>
         {op.solo && <span className="border-2 border-foreground bg-secondary px-2 py-1 text-[10px] font-black uppercase">Solo gratuit</span>}
       </div>
-      <p className="mt-2 text-sm">{op.summary}</p>
+      <p className="mt-2 text-sm">{op.summary}</p><p className="mt-2 text-sm text-muted-foreground">{mapIdentity[op.slug]} · {trackLabel(op.default_track)}</p>
       <dl className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
         <div className="border border-foreground p-2"><dt className="uppercase text-muted-foreground">Durée</dt><dd className="font-bold">{op.duration} min</dd></div>
         <div className="border border-foreground p-2"><dt className="uppercase text-muted-foreground">Difficulté</dt><dd className="font-bold">{op.difficulty_label || DIFF[op.difficulty]}</dd></div>

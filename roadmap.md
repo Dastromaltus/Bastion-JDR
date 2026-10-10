@@ -9,7 +9,7 @@
 - [x] Add subtle motion to navigation, lists, panels, dice, combat, inventory and events without changing artwork.
 - [x] Verify reduced motion, static appearance, hidden-content safety and simulated mobile performance; list modified files. Sixfold CPU simulation showed frame gaps; a real entry-level phone remains untested.
 - [x] Extend lightweight entrance animations across all site pages and verify navigation and reduced motion (8 tests passing; public-page browser checks show zero errors and zero animations when reduced motion is enabled).
-- [ ] Step 1: Remove narrator character presence, archive former sheets, count adventurers only, and add secure mob control with combat initiative.
-- [ ] Step 2: Distinguish Operation content, room icons and default ambience without changing artwork.
-- [ ] Step 3: Add private campaign authoring, live placements/player preview, validation, autosave/publication, duplication/templates, salon copies, solo testing and A4 PDF.
-- [ ] Verify permissions, hidden-content isolation, game actions, campaign persistence and touch interactions for each step.
+- [x] Step 1: Remove narrator character presence, archive former sheets, count adventurers only, and add secure mob control with combat initiative.
+- [x] Step 2: Distinguish Operation content, room icons and default ambience without changing artwork.
+- [x] Step 3: Add private campaign authoring, live placements/player preview, validation, autosave/publication, duplication/templates, salon copies, solo testing and A4 PDF.
+- [x] Verify 23 focused tests, campaign autosave, real solo-test navigation and Phaser rendering; review hidden-row policies and author permissions. Multi-account combat/transfer and physical-phone checks remain unverified.

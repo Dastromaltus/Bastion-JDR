@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { roomIcon } from "@/lib/map-identity";
 import { motionDisabled } from "@/lib/motion";
 
 export type MapRoom = { key: string; name: string; grid_x: number; grid_y: number; connections: string[]; explored?: boolean };
@@ -7,9 +8,9 @@ const CW = 120, CH = 70, BW = 96, BH = 46;
 
 /** Pixel-style schema of connected rooms. Unexplored rooms are greyed when `fog` is on. */
 export function DungeonMap({
-  rooms, current, fog = false, selectable = [], onSelect, label = "Carte des salles", playersHere,
+   rooms, current, fog = false, selectable = [], onSelect, label = "Carte des salles", playersHere, placements = [],
 }: {
-  rooms: MapRoom[]; current?: string | undefined; fog?: boolean; selectable?: string[] | undefined; onSelect?: ((key: string) => void) | undefined; label?: string; playersHere?: number | undefined;
+  rooms: MapRoom[]; current?: string | undefined; fog?: boolean; selectable?: string[] | undefined; onSelect?: ((key: string) => void) | undefined; label?: string; playersHere?: number | undefined; placements?: { id: string; room_key: string; kind: string; hidden: boolean }[];
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const explored = useRef(new Set(rooms.filter((r) => r.explored).map((r) => r.key)));
@@ -33,9 +34,10 @@ export function DungeonMap({
   return (
     <svg ref={svg} viewBox={`0 0 ${w} ${h}`} role="img" aria-label={label} className="h-auto w-full max-w-full" style={{ shapeRendering: "crispEdges" }}>
       {[...edges].map((e) => {
-        const [a, b] = e.split("|").map((k) => byKey.get(k!)!);
-        const pa = pos(a!), pb = pos(b!);
-        const dim = fog && (!a!.explored || !b!.explored);
+        const [a, b] = e.split("|").map((k) => byKey.get(k));
+        if (!a || !b) return null;
+        const pa = pos(a), pb = pos(b);
+        const dim = fog && (!a.explored || !b.explored);
         return <line key={e} x1={pa.x + BW / 2} y1={pa.y + BH / 2} x2={pb.x + BW / 2} y2={pb.y + BH / 2} className={dim ? "stroke-muted-foreground/40" : "stroke-foreground"} strokeWidth={4} strokeDasharray={dim ? "6 6" : undefined} />;
       })}
       {rooms.map((r) => {
@@ -43,17 +45,20 @@ export function DungeonMap({
         const isCur = r.key === current;
         const hidden = fog && !r.explored;
         const can = selectable.includes(r.key) && !!onSelect;
+        const Icon = roomIcon(r.key);
         return (
           <g key={r.key} data-room={r.key} onClick={can ? () => onSelect?.(r.key) : undefined} style={{ cursor: can ? "pointer" : "default" }}
             role={can ? "button" : undefined} tabIndex={can ? 0 : undefined} aria-label={can ? (hidden ? "Aller vers une salle inexplorée" : `Aller vers ${r.name}`) : undefined}
-            onKeyDown={can ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect!(r.key); } } : undefined}>
+            onKeyDown={can ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect?.(r.key); } } : undefined}>
             <rect x={p.x + 4} y={p.y + 4} width={BW} height={BH} className="fill-foreground" />
             <rect x={p.x} y={p.y} width={BW} height={BH} strokeWidth={3}
               className={`${isCur ? "fill-primary" : hidden ? "fill-muted" : can ? "fill-secondary" : "fill-card"} stroke-foreground`} />
+            {!hidden && <Icon x={p.x + 3} y={p.y + 3} width={12} height={12} className="stroke-foreground" />}
             <text x={p.x + BW / 2} y={p.y + BH / 2 + 4} textAnchor="middle" fontSize={10}
               className={`font-pixel ${isCur ? "fill-primary-foreground" : hidden ? "fill-muted-foreground" : "fill-foreground"}`}>
               {(hidden ? "???" : r.name).slice(0, 16)}
             </text>
+            {!hidden && placements.some((item) => item.room_key === r.key) && <text x={p.x + BW / 2} y={p.y + BH - 4} textAnchor="middle" fontSize={9} className="font-pixel fill-foreground">{placements.filter((item) => item.room_key === r.key).map((item) => `${item.hidden ? '?' : ''}${item.kind === 'mob' ? '⚔' : '◆'}`).join(' ')}</text>}
             {isCur && (playersHere ?? 0) > 0 && (
               <g>
                 <rect x={p.x + BW - 22} y={p.y - 10} width={24} height={16} className="fill-secondary stroke-foreground" strokeWidth={2} />

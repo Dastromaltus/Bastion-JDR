@@ -120,6 +120,34 @@
       "when": 1791655865148,
       "tag": "0016_campaign_salon_snapshots",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791656025532,
+      "tag": "0017_campaign_audio_and_combat_validation",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791656285424,
+      "tag": "0018_isolated_campaign_playtests",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791656339979,
+      "tag": "0019_enforce_narrator_campaign_authoring",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791656495644,
+      "tag": "0020_preserve_archived_character_memberships",
+      "breakpoints": true
     }
   ]
 }

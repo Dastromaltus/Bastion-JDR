@@ -13,6 +13,8 @@ export const moveWorldPlayer = createServerFn({ method: "POST" })
     if (game?.status !== "playing" || me.hp <= 0) throw new Error("Déplacement indisponible pour le moment.");
     const { requireSalonTurn } = await import("./turns.server");
     await requireSalonTurn(context, data.gameId);
+    const { data: combat } = await context.supabase.rpc("get_salon_combat", { p_game_id: data.gameId });
+    if (combat) throw new Error("Termine le combat avant de poursuivre l’exploration.");
     const zone = me.current_zone ?? "entree";
     const { x, y } = worldPosition(me, zone);
     const [dx, dy] = WORLD_DELTAS[data.direction];

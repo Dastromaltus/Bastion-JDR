@@ -748,13 +748,6 @@ export type Database = {
             referencedRelation: "games"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "game_character_archives_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: true
-            referencedRelation: "game_players"
-            referencedColumns: ["id"]
-          },
         ]
       }
       game_combats: {
@@ -1583,6 +1576,10 @@ export type Database = {
     }
     Functions: {
       advance_private_campaign: { Args: { p_game_id: string }; Returns: Json }
+      create_campaign_playtest: {
+        Args: { p_campaign_id: string }
+        Returns: Json
+      }
       end_salon_turn: {
         Args: { p_game_id: string; p_revision: number }
         Returns: Json
@@ -1612,6 +1609,7 @@ export type Database = {
         }
         Returns: Json
       }
+      salon_d6: { Args: never; Returns: number }
       save_private_campaign: {
         Args: { p_document: Json; p_publish?: boolean }
         Returns: Json
