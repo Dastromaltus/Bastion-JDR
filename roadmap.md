@@ -1,3 +1,5 @@
 - [x] Add a top-down pixel-art environment to salon games and Operations.
 - [x] Persist and validate individual tile movement with salon-scoped synchronization.
 - [x] Verify collisions, rendering, movement controls and existing tests.
+- [x] Enforce salon turns in player order, narrator last, with synchronized turn messages and end-turn controls.
+- [x] Verify turn order, out-of-turn refusals, and the salon display.

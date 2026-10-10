@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  getRoom, narratorAction, leaveRoom, updateCharacter, rollCheck, nextTurn, inventoryAction, narratorAddItem, sendSignal,
+  getRoom, narratorAction, leaveRoom, updateCharacter, rollCheck, inventoryAction, narratorAddItem, sendSignal,
 } from "@/lib/rooms.functions";
 import { RACE_NAMES, ROLE_LABEL, STATUS_LABEL, scenarioLabel } from "@/lib/races";
 import { ReportButton } from "@/components/ReportButton";
@@ -22,6 +22,8 @@ import { AmbiencePanel, EnemyPanel, TreasurePanel, ExplorePanel } from "@/compon
 import { OperationSection } from "@/components/operations/OperationPanel";
 import { getSalonDungeon } from "@/lib/operations.functions";
 import { SalonWorld } from "@/components/room/SalonWorld";
+import { TurnBanner } from "@/components/room/TurnBanner";
+import { salonTurn } from "@/lib/turn-order";
 
 export const Route = createFileRoute("/_authenticated/salon/$code")({
   head: ({ params }) => ({
@@ -82,11 +84,10 @@ function RoomPage() {
   const sNarr = useServerFn(narratorAction);
   const sLeave = useServerFn(leaveRoom);
   const sSignal = useServerFn(sendSignal);
-  const sTurn = useServerFn(nextTurn);
 
   const gameId = room.data?.game.id as string | undefined;
   const fetchDg = useServerFn(getSalonDungeon);
-  const dungeonQ = useQuery({ queryKey: ["dungeon", gameId], queryFn: () => fetchDg({ data: { gameId: gameId! } }), enabled: !!gameId });
+  const dungeonQ = useQuery({ queryKey: ["dungeon", gameId], queryFn: () => { if (!gameId) throw new Error("Salon indisponible."); return fetchDg({ data: { gameId } }); }, enabled: !!gameId });
   const amb = useAmbience(gameId, (room.data as any)?.ambience ?? null, settings);
   const [loot, setLoot] = useState<string | null>(null);
 
@@ -130,6 +131,7 @@ function RoomPage() {
 
   const { game, players, me } = d;
   const isNarr = me.role === "narrator";
+  const turn = salonTurn(game, players, me.user_id);
   const inviteUrl = typeof window !== "undefined" ? `${window.location.origin}/rejoindre/${game.code}` : "";
   const textClass = settings.textSize === "grand" ? "text-[17px]" : settings.textSize === "tres-grand" ? "text-[19px]" : "text-base";
   const narr = (action: any, extra: Record<string, unknown> = {}, ok?: string) =>
@@ -148,6 +150,7 @@ function RoomPage() {
       </header>
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-6">
+        <TurnBanner d={d} onChange={() => room.refetch()} />
         {game.status === "playing" && <SoundGate unlocked={amb.unlocked} onUnlock={() => amb.unlock().catch(() => toast.error("Impossible d'activer le son sur ce navigateur."))} />}
         {game.status !== "waiting" && <PersonalAmbience row={amb.row} settings={settings} update={update} />}
         {game.status === "finished" && (
@@ -196,10 +199,10 @@ function RoomPage() {
         <OperationSection d={d} onChange={() => room.refetch()} />
         {game.status === "playing" && !dungeonQ.isPending && !dungeonQ.data && <SalonWorld d={d} onChange={() => room.refetch()} />}
         {game.status === "playing" && !isNarr && !dungeonQ.data && !game.solo && <ExplorePanel d={d} />}
-        {game.status === "playing" && <DicePanel gameId={game.id} />}
+        {game.status === "playing" && <DicePanel gameId={game.id} enabled={turn.isMine} />}
 
         {isNarr && (
-          <NarratorPanel d={d} narr={narr} busy={busy} onTurn={() => run("turn", () => sTurn({ data: { gameId: game.id } }), "Nouveau tour")} refetch={() => room.refetch()} />
+          <NarratorPanel d={d} narr={narr} busy={busy} refetch={() => room.refetch()} />
         )}
 
         <section>
@@ -293,7 +296,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return <div className="min-h-screen bg-background">{children}</div>;
 }
 
-function DicePanel({ gameId }: { gameId: string }) {
+function DicePanel({ gameId, enabled }: { gameId: string; enabled: boolean }) {
   const roll = useServerFn(rollCheck);
   const [stat, setStat] = useState<"vitesse" | "force" | "endurance">("force");
   const [dice, setDice] = useState(2);
@@ -312,7 +315,7 @@ function DicePanel({ gameId }: { gameId: string }) {
         </select>
         <Input type="number" min={1} max={60} className="h-11 rounded-none" aria-label="Difficulté" value={difficulty} onChange={(e) => setDifficulty(Number(e.target.value))} />
       </div>
-      <Button disabled={busy === "roll"} className="mt-3 min-h-11 w-full rounded-none font-black uppercase"
+      <Button disabled={busy === "roll" || !enabled} className="mt-3 min-h-11 w-full rounded-none font-black uppercase"
         onClick={() => run("roll", async () => setLast(await roll({ data: { gameId, stat, dice, difficulty } })))}>
         <Dices /> {busy === "roll" ? "Lancer…" : "Lancer"}
       </Button>
@@ -321,7 +324,7 @@ function DicePanel({ gameId }: { gameId: string }) {
   );
 }
 
-function NarratorPanel({ d, narr, busy, onTurn, refetch }: { d: any; narr: any; busy: string | null; onTurn: () => void; refetch: () => void }) {
+function NarratorPanel({ d, narr, busy, refetch }: { d: any; narr: any; busy: string | null; refetch: () => void }) {
   const { game } = d;
   const [note, setNote] = useState("");
   const { busy: b2, run } = useAction();
@@ -337,7 +340,6 @@ function NarratorPanel({ d, narr, busy, onTurn, refetch }: { d: any; narr: any; 
         )}
         {game.status === "playing" && (
           <>
-            <Button variant="outline" disabled={!!busy} className="min-h-11 rounded-none" onClick={onTurn}>Tour suivant</Button>
             <Button disabled={!!busy} className="min-h-11 rounded-none" onClick={() => narr("finish", { result: "victoire" }, "Partie terminée")}>Terminer : victoire</Button>
             <Button variant="destructive" disabled={!!busy} className="min-h-11 rounded-none" onClick={() => narr("finish", { result: "defaite" }, "Partie terminée")}>Terminer : défaite</Button>
           </>
@@ -362,6 +364,7 @@ function NarratorPanel({ d, narr, busy, onTurn, refetch }: { d: any; narr: any; 
 
 function NarratorTabs({ d }: { d: any }) {
   const [tab, setTab] = useState<"ambiance" | "ennemis" | "tresors">("ambiance");
+  const canAct = d.game.status !== "playing" || salonTurn(d.game, d.players, d.me.user_id).isMine;
   const tabs = [["ambiance", "Ambiance"], ["ennemis", "Ennemis"], ["tresors", "Trésors"]] as const;
   return (
     <div className="border-t border-foreground/30 pt-4">
@@ -372,8 +375,8 @@ function NarratorTabs({ d }: { d: any }) {
       </div>
       <div role="tabpanel" className="mt-4">
         {tab === "ambiance" && <AmbiencePanel gameId={d.game.id} row={d.ambience} />}
-        {tab === "ennemis" && <EnemyPanel d={d} />}
-        {tab === "tresors" && <TreasurePanel d={d} />}
+        {tab === "ennemis" && <fieldset disabled={!canAct} className="min-w-0"><EnemyPanel d={d} /></fieldset>}
+        {tab === "tresors" && <fieldset disabled={!canAct} className="min-w-0"><TreasurePanel d={d} /></fieldset>}
       </div>
     </div>
   );
@@ -403,6 +406,7 @@ function ItemCell({ item, onTap, onLong }: { item: any; onTap: () => void; onLon
 
 function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
   const act = useServerFn(inventoryAction);
+  const canAct = d.game.status !== "playing" || salonTurn(d.game, d.players, d.me.user_id).isMine;
   const add = useServerFn(narratorAddItem);
   const isNarr = d.me.role === "narrator";
   const [tab, setTab] = useState<keyof typeof CAT_LABEL>("arme");
@@ -445,7 +449,7 @@ function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
           <select className="h-11 border border-input bg-background px-2" value={newItem.rarity} onChange={(e) => setNewItem({ ...newItem, rarity: e.target.value })}>
             {Object.entries(RARITY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
-          <Button disabled={busy === "add"} className="min-h-11 rounded-none font-bold uppercase">{busy === "add" ? "Ajout…" : "Ajouter l'objet"}</Button>
+          <Button disabled={busy === "add" || !canAct} className="min-h-11 rounded-none font-bold uppercase">{busy === "add" ? "Ajout…" : "Ajouter l'objet"}</Button>
         </form>
       )}
 
@@ -453,12 +457,12 @@ function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
         <SheetContent side="bottom" className="rounded-none border-t-2 border-foreground">
           <SheetHeader><SheetTitle className="font-display text-lg uppercase">{menu?.name}</SheetTitle></SheetHeader>
           {menu && !giveFor && (
-            <div className="grid gap-2 px-4 pb-6">
+            <fieldset disabled={!canAct} className="grid min-w-0 gap-2 px-4 pb-6">
               <Button variant="outline" disabled={menu.category !== "consommable" || !!busy} className="min-h-11 rounded-none font-bold uppercase" onClick={() => call(menu, "use", undefined, "Objet utilisé")}>{busy === "use" ? "…" : "Utiliser"}</Button>
               <Button variant="outline" disabled={menu.category !== "arme" || !!busy} className="min-h-11 rounded-none font-bold uppercase" onClick={() => call(menu, "equip", undefined, menu.equipped ? "Arme rangée" : "Arme équipée")}>{busy === "equip" ? "…" : menu.equipped ? "Déséquiper" : "Équiper"}</Button>
               <Button variant="outline" disabled={!others.length} className="min-h-11 rounded-none font-bold uppercase" onClick={() => setGiveFor(menu)}>Donner à un joueur</Button>
               <Button variant="destructive" className="min-h-11 rounded-none font-bold uppercase" onClick={() => setConfirm({ item: menu, action: "discard" })}>Jeter</Button>
-            </div>
+            </fieldset>
           )}
           {giveFor && (
             <div className="grid gap-2 px-4 pb-6">

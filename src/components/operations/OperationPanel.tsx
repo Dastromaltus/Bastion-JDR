@@ -9,6 +9,7 @@ import { getSalonDungeon, loadOperation, prepareOperation, operationControl, ope
 import { getNarratorCatalog, attackEnemy } from "@/lib/narrator.functions";
 import { DungeonMap } from "./DungeonMap";
 import { SalonWorld } from "@/components/room/SalonWorld";
+import { salonTurn } from "@/lib/turn-order";
 
 const SEL = "h-11 w-full min-w-0 border-2 border-foreground bg-background px-2 text-sm";
 const RARITY: Record<string, string> = { commun: "Commun", rare: "Rare", epique: "Épique", legendaire: "Légendaire" };
@@ -63,6 +64,7 @@ function NarratorOperation({ d, v, refresh }: { d: any; v: any; refresh: () => v
   const gameId = d.game.id;
   const { busy, run } = useAction();
   const sLoad = useServerFn(loadOperation);
+  const myTurn = salonTurn(d.game, d.players, d.me.user_id).isMine;
   const sCtl = useServerFn(operationControl);
   const ctl = (action: string, extra: Record<string, unknown> = {}, ok?: string) =>
     run(action + String(extra["eventId"] ?? extra["enemyId"] ?? extra["room"] ?? ""), async () => { await sCtl({ data: { gameId, action, ...extra } as any }); refresh(); }, ok);
@@ -111,7 +113,7 @@ function NarratorOperation({ d, v, refresh }: { d: any; v: any; refresh: () => v
       )}
 
       {dg.status === "en_cours" && (
-        <>
+        <fieldset disabled={!myTurn || !!busy} className="min-w-0 space-y-4">
           <TensionGauge value={dg.tension} events={events} />
            <SalonWorld d={d} zone={dg.current_room} name={cur?.name} onChange={refresh} />
           <div className="grid grid-cols-3 gap-2">
@@ -159,7 +161,7 @@ function NarratorOperation({ d, v, refresh }: { d: any; v: any; refresh: () => v
               {!d.enemies.some((e: any) => e.status === "cache") && <li className="text-sm text-muted-foreground">Plus aucun ennemi caché.</li>}
             </ul>
           </div>
-        </>
+        </fieldset>
       )}
     </section>
   );
@@ -248,6 +250,7 @@ function PrepEditor({ d, rooms, refresh }: { d: any; rooms: any[]; refresh: () =
 function PlayerOperation({ d, v, refresh }: { d: any; v: any; refresh: () => void }) {
   const gameId = d.game.id;
   const solo = !!d.game.solo;
+  const myTurn = salonTurn(d.game, d.players, d.me.user_id).isMine;
   const { busy, run } = useAction();
   const sAct = useServerFn(operationPlayerAction);
   const sSolo = useServerFn(soloAct);
@@ -265,7 +268,7 @@ function PlayerOperation({ d, v, refresh }: { d: any; v: any; refresh: () => voi
     );
   }
   const foes = d.enemies.filter((e: any) => e.status === "revele" && e.zone === dg.current_room);
-  const live = dg.status === "en_cours" && d.game.status === "playing";
+  const live = dg.status === "en_cours" && d.game.status === "playing" && myTurn;
   const act = (key: string, fn: () => Promise<unknown>, ok?: string) => run(key, async () => { await fn(); refresh(); }, ok);
   return (
     <section className="space-y-3 border-2 border-foreground bg-card p-4 shadow-game">

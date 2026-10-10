@@ -11,6 +11,8 @@ export const moveWorldPlayer = createServerFn({ method: "POST" })
     if (memberError || !me || me.role !== "adventurer") throw new Error("Seuls les aventuriers de ce salon peuvent se déplacer.");
     const { data: game } = await context.supabase.from("games").select("status").eq("id", data.gameId).single();
     if (game?.status !== "playing" || me.hp <= 0) throw new Error("Déplacement indisponible pour le moment.");
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId);
     const zone = me.current_zone ?? "entree";
     const { x, y } = worldPosition(me, zone);
     const [dx, dy] = WORLD_DELTAS[data.direction];

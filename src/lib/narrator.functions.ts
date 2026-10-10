@@ -153,6 +153,8 @@ export const placeEnemy = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await requireNarrator(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId, false);
     const db = await admin();
     const { data: cat } = await db.from("enemy_catalog").select("*").eq("id", data.catalogId).maybeSingle();
     if (!cat || (cat.game_id && cat.game_id !== data.gameId)) throw new Error("Cet ennemi n'est pas dans ton catalogue.");
@@ -178,6 +180,8 @@ export const enemyAction = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await requireNarrator(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId, false);
     const enemy = await loadEnemy(context, data.enemyId);
     if (enemy.game_id !== data.gameId) throw new Error("Ennemi introuvable.");
     const db = await admin();
@@ -267,6 +271,8 @@ export const placeTreasure = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await requireNarrator(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId, false);
     const db = await admin();
     const { data: cat } = await db.from("treasure_catalog").select("*").eq("id", data.catalogId).maybeSingle();
     if (!cat || (cat.game_id && cat.game_id !== data.gameId)) throw new Error("Ce trésor n'est pas dans ton catalogue.");
@@ -299,6 +305,8 @@ export const removeTreasure = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ gameId: uuid, treasureId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
     await requireNarrator(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId, false);
     const db = await admin();
     await db.from("game_treasures").delete().eq("id", data.treasureId).eq("game_id", data.gameId).eq("status", "cache");
     return { ok: true };
@@ -328,6 +336,8 @@ export const exploreAction = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ gameId: uuid, action: z.enum(["enter", "door", "chest"]), zone: zone.optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const me = await requireAdventurer(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId);
     const db = await admin();
     const { data: dg } = await db.from("game_dungeons").select("status").eq("game_id", data.gameId).maybeSingle();
     if (dg?.status === "en_cours") throw new Error("Une Opération est en cours : c'est le narrateur qui fait avancer la table de salle en salle.");
@@ -365,6 +375,8 @@ export const attackEnemy = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ gameId: uuid, enemyId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
     const me = await requireAdventurer(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId);
     const db = await admin();
     const { data: e } = await context.supabase.from("game_enemies").select("*").eq("id", data.enemyId).eq("game_id", data.gameId).maybeSingle();
     if (!e || e.status !== "revele") throw new Error("Aucun ennemi visible à attaquer.");

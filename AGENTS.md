@@ -21,3 +21,4 @@
 - Dungeon rooms carry grid_x/grid_y, features and the template map_key so each Operation can later become a Tiled tile map without a schema change.
 - Salon tile movement uses a shared Tiled map and member-checked server intents with compare-and-set position writes; a dynamically imported Phaser scene animates only server-confirmed positions, preserving room transitions and hidden-content filtering.
 - Solo games are games.solo=true with one adventurer and no narrator; soloAct runs the automatic enemy rules server-side.
+- Multiplayer salon turns use games turn state and a row-locked, member-checked end_salon_turn RPC; player gameplay handlers enforce the same shared order, while full-round Operation effects run only after the final participant ends their turn, preserving automatic solo play.
