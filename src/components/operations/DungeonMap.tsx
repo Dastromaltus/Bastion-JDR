@@ -1,3 +1,6 @@
+import { useEffect, useRef } from "react";
+import { motionDisabled } from "@/lib/motion";
+
 export type MapRoom = { key: string; name: string; grid_x: number; grid_y: number; connections: string[]; explored?: boolean };
 
 const CW = 120, CH = 70, BW = 96, BH = 46;
@@ -8,6 +11,18 @@ export function DungeonMap({
 }: {
   rooms: MapRoom[]; current?: string | undefined; fog?: boolean; selectable?: string[] | undefined; onSelect?: ((key: string) => void) | undefined; label?: string; playersHere?: number | undefined;
 }) {
+  const svg = useRef<SVGSVGElement>(null);
+  const explored = useRef(new Set(rooms.filter((r) => r.explored).map((r) => r.key)));
+  useEffect(() => {
+    for (const room of rooms) {
+      if (!room.explored || explored.current.has(room.key)) continue;
+      explored.current.add(room.key);
+      if (!motionDisabled()) {
+        const group = [...(svg.current?.querySelectorAll<SVGGElement>("[data-room]") ?? [])].find((g) => g.dataset["room"] === room.key);
+        group?.animate([{ opacity: 0.55 }, { opacity: 1 }], { duration: 250, easing: "linear" });
+      }
+    }
+  }, [JSON.stringify(rooms.map((r) => [r.key, r.explored]))]);
   if (!rooms.length) return <p className="text-sm text-muted-foreground">Aucune salle.</p>;
   const maxX = Math.max(...rooms.map((r) => r.grid_x)), maxY = Math.max(...rooms.map((r) => r.grid_y));
   const w = (maxX + 1) * CW, h = (maxY + 1) * CH;
@@ -16,7 +31,7 @@ export function DungeonMap({
   const edges = new Set<string>();
   for (const r of rooms) for (const c of r.connections) if (byKey.has(c)) edges.add([r.key, c].sort().join("|"));
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} role="img" aria-label={label} className="h-auto w-full max-w-full" style={{ shapeRendering: "crispEdges" }}>
+    <svg ref={svg} viewBox={`0 0 ${w} ${h}`} role="img" aria-label={label} className="h-auto w-full max-w-full" style={{ shapeRendering: "crispEdges" }}>
       {[...edges].map((e) => {
         const [a, b] = e.split("|").map((k) => byKey.get(k!)!);
         const pa = pos(a!), pb = pos(b!);
@@ -29,7 +44,7 @@ export function DungeonMap({
         const hidden = fog && !r.explored;
         const can = selectable.includes(r.key) && !!onSelect;
         return (
-          <g key={r.key} onClick={can ? () => onSelect!(r.key) : undefined} style={{ cursor: can ? "pointer" : "default" }}
+          <g key={r.key} data-room={r.key} onClick={can ? () => onSelect?.(r.key) : undefined} style={{ cursor: can ? "pointer" : "default" }}
             role={can ? "button" : undefined} tabIndex={can ? 0 : undefined} aria-label={can ? (hidden ? "Aller vers une salle inexplorée" : `Aller vers ${r.name}`) : undefined}
             onKeyDown={can ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect!(r.key); } } : undefined}>
             <rect x={p.x + 4} y={p.y + 4} width={BW} height={BH} className="fill-foreground" />

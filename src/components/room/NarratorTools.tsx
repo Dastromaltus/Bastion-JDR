@@ -14,6 +14,7 @@ import {
 } from "@/lib/narrator.functions";
 import type { AmbienceRow } from "./Ambience";
 import { salonTurn } from "@/lib/turn-order";
+import { HealthFill } from "./MotionBits";
 
 const SEL = "h-11 w-full border border-input bg-background px-2 focus-visible:outline-2 focus-visible:outline-primary";
 const RARITY: Record<string, string> = { commun: "Commun", rare: "Rare", epique: "Épique", legendaire: "Légendaire" };
@@ -164,7 +165,7 @@ export function EnemyPanel({ d, initialZone }: { d: any; initialZone?: string | 
         {!d.enemies.length && <p className="mt-1 text-sm text-muted-foreground">Aucun ennemi sur le parcours.</p>}
         <ul className="mt-2 space-y-2">
           {d.enemies.map((e: any) => (
-            <li key={e.id} className={`border-2 p-2 text-sm ${e.status === "cache" ? "border-dashed border-foreground/60" : e.status === "vaincu" ? "border-foreground/30 opacity-60" : "border-primary"}`}>
+            <li key={`${e.id}-${e.status}`} data-motion-reveal={e.status === "revele" ? "true" : undefined} className={`border-2 p-2 text-sm ${e.status === "cache" ? "border-dashed border-foreground/60" : e.status === "vaincu" ? "border-foreground/30 opacity-60" : "border-primary"}`}>
               <p><b>{e.icon} {e.name}</b> — {zoneLabel(e.zone)} · <span className="uppercase">{ENEMY_STATUS_LABEL[e.status]}</span> · {e.hp}/{e.max_hp} PV · {TRIGGER_LABEL[e.trigger]}</p>
               {e.status !== "vaincu" && (
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -319,9 +320,9 @@ export function ExplorePanel({ d }: { d: any }) {
       {visible.length > 0 && (
         <ul className="space-y-2">
           {visible.map((e: any) => (
-            <li key={e.id} className="retro-dialog border-2 border-primary p-2 text-sm">
+            <li key={e.id} data-motion-reveal="true" className="retro-dialog border-2 border-primary p-2 text-sm">
               <p><b>{e.icon} {e.name}</b> — {zoneLabel(e.zone)} · Vit {e.speed} · For {e.strength} · End {e.endurance} — {e.ability}</p>
-              <div className="mt-1 h-2 w-full bg-muted"><div className="h-full bg-primary" style={{ width: `${(e.hp / e.max_hp) * 100}%` }} /></div>
+              <div className="mt-1 h-2 w-full bg-muted"><HealthFill hp={e.hp} maxHp={e.max_hp} className="bg-primary" /></div>
               <Button disabled={!!busy || e.zone !== here} className="mt-2 min-h-11 w-full rounded-none font-black uppercase" onClick={() => run("atk" + e.id, () => attack({ data: { gameId, enemyId: e.id } }))}>
                 {busy === "atk" + e.id ? "Jet…" : e.zone === here ? `Attaquer (${e.hp}/${e.max_hp} PV)` : `Rejoins ${zoneLabel(e.zone)}`}
               </Button>

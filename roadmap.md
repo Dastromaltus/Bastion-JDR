@@ -6,3 +6,5 @@
 - [x] Add and verify a router-derived public sitemap with robots discovery.
 - [x] Resolve the extra SEO-page suggestion without overriding the single-page rulebook requirement (user declined the extra page; finding remains unresolved).
 - [x] Show all salon participants and the narrator on the game screen; verify map labels and participant visibility.
+- [x] Add subtle motion to navigation, lists, panels, dice, combat, inventory and events without changing artwork.
+- [x] Verify reduced motion, static appearance, hidden-content safety and simulated mobile performance; list modified files. Sixfold CPU simulation showed frame gaps; a real entry-level phone remains untested.

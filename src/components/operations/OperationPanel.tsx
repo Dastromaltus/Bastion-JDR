@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -10,6 +10,8 @@ import { getNarratorCatalog, attackEnemy } from "@/lib/narrator.functions";
 import { DungeonMap } from "./DungeonMap";
 import { SalonWorld } from "@/components/room/SalonWorld";
 import { salonTurn } from "@/lib/turn-order";
+import { AnimatedCount, HealthFill } from "@/components/room/MotionBits";
+import { motionFeedback } from "@/lib/motion";
 
 const SEL = "h-11 w-full min-w-0 border-2 border-foreground bg-background px-2 text-sm";
 const RARITY: Record<string, string> = { commun: "Commun", rare: "Rare", epique: "Épique", legendaire: "Légendaire" };
@@ -168,10 +170,15 @@ function NarratorOperation({ d, v, refresh }: { d: any; v: any; refresh: () => v
 }
 
 function TensionGauge({ value, events }: { value: number; events: any[] }) {
+  const previous = useRef(value);
+  useEffect(() => {
+    if (value > previous.current) motionFeedback("alarm");
+    previous.current = value;
+  }, [value]);
   const max = 10;
   return (
     <div>
-      <p className="text-xs font-black uppercase">Tension : {value} (visible par toi seul)</p>
+      <p className="text-xs font-black uppercase">Tension : <AnimatedCount value={value} /> (visible par toi seul)</p>
       <div className="mt-1 grid grid-cols-10 gap-1" role="meter" aria-valuemin={0} aria-valuemax={max} aria-valuenow={value} aria-label="Jauge de tension">
         {Array.from({ length: max }, (_, i) => i + 1).map((n) => {
           const ev = events.find((e: any) => e.threshold === n);
@@ -207,7 +214,7 @@ function PrepEditor({ d, rooms, refresh }: { d: any; rooms: any[]; refresh: () =
             <p className="text-xs text-muted-foreground">{r.description}{r.hazard ? ` · ${r.hazard}` : ""}</p>
             <ul className="mt-2 space-y-2">
               {es.map((e: any) => (
-                <li key={e.id} className="grid grid-cols-[1fr_auto] gap-2">
+                <li key={e.id} data-motion-pop="true" className="grid grid-cols-[1fr_auto] gap-2">
                   <select aria-label={`Changer ${e.name}`} className={SEL} value={e.catalog_id ?? ""} disabled={!!busy}
                     onChange={(ev) => prep("swap" + e.id, { op: "swapEnemy", id: e.id, catalogId: ev.target.value }, "Ennemi remplacé")}>
                     {enemies.map((c: any) => <option key={c.id} value={c.id}>{c.icon} {c.name} · menace {c.threat_cost} · V{c.speed}/F{c.strength}/E{c.endurance}</option>)}
@@ -216,7 +223,7 @@ function PrepEditor({ d, rooms, refresh }: { d: any; rooms: any[]; refresh: () =
                 </li>
               ))}
               {ts.map((t: any) => (
-                <li key={t.id} className="grid grid-cols-[1fr_auto] gap-2">
+                <li key={t.id} data-motion-pop="true" className="grid grid-cols-[1fr_auto] gap-2">
                   <select aria-label={`Changer ${t.name}`} className={SEL} value={t.catalog_id ?? ""} disabled={!!busy}
                     onChange={(ev) => prep("swapt" + t.id, { op: "swapTreasure", id: t.id, catalogId: ev.target.value }, "Trésor remplacé")}>
                     {treasures.map((c: any) => <option key={c.id} value={c.id}>✦ {c.name} · {RARITY[c.rarity]} ({t.placement === "ennemi" ? "sur ennemi" : t.placement === "zone" ? "au sol" : "coffre"})</option>)}
@@ -295,10 +302,10 @@ function PlayerOperation({ d, v, refresh }: { d: any; v: any; refresh: () => voi
       {foes.length > 0 && (
         <ul className="space-y-2">
           {foes.map((e: any) => (
-            <li key={e.id} className="flex items-center justify-between gap-2 border-2 border-destructive p-2">
+             <li key={e.id} data-motion-reveal="true" className="flex items-center justify-between gap-2 border-2 border-destructive p-2">
               <div className="min-w-0">
                 <p className="font-bold">{e.icon} {e.name}{e.overheated ? " 🔥" : ""}</p>
-                <div className="mt-1 h-2 w-40 max-w-full bg-muted"><div className="h-full bg-destructive" style={{ width: `${(e.hp / e.max_hp) * 100}%` }} /></div>
+                <div className="mt-1 h-2 w-40 max-w-full bg-muted"><HealthFill hp={e.hp} maxHp={e.max_hp} className="bg-destructive" /></div>
                 <p className="text-[11px] text-muted-foreground">{e.hp}/{e.max_hp} PV · {e.ability}</p>
               </div>
               {live && (

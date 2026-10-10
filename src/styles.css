@@ -235,3 +235,63 @@
   h1, h2, h3, .font-display { line-height: 1.25; letter-spacing: 0; }
   img { image-rendering: pixelated; }
 }
+
+/* Additive motion only: the existing artwork and all resting values stay intact. */
+@keyframes bastion-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bastion-page { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bastion-count { from { opacity: 0; transform: translateY(-65%); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bastion-pop { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: scale(1); } }
+@keyframes bastion-die { 0% { transform: rotate(0) translateY(0); } 35% { transform: translateY(-5px) rotate(90deg); } 70% { transform: translateY(0) rotate(180deg); } 100% { transform: translateY(0) rotate(360deg); } }
+@keyframes bastion-success { 50% { transform: scale(1.12); } }
+@keyframes bastion-failure { 50% { opacity: 0.55; } }
+@keyframes bastion-damage { 50% { opacity: 0.45; } }
+@keyframes bastion-shake { 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+@keyframes bastion-glitch { 0% { opacity: 0; transform: translateX(-4px); } 35% { opacity: 0.65; transform: translateX(3px); } 70% { opacity: 0.8; transform: translateX(-2px); } 100% { opacity: 1; transform: translateX(0); } }
+@keyframes bastion-highlight { 0%,100% { opacity: 0; } 40% { opacity: 0.28; } }
+@keyframes bastion-outline { 0%,100% { opacity: 0; } 50% { opacity: 0.65; } }
+@keyframes bastion-exit { to { opacity: 0; transform: translateY(8px); } }
+@keyframes bastion-loot { 0% { opacity: 0; transform: translateY(8px); } 15% { opacity: 1; transform: translateY(-4px); } 25%,75% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(45vh) scale(0.8); } }
+@keyframes bastion-loading { 50% { opacity: 0.45; } }
+.anim-enter { animation: bastion-enter 200ms linear var(--anim-delay, 0ms) backwards; }
+.anim-page { animation: bastion-page 350ms linear; }
+.anim-count { animation: bastion-count 160ms steps(4, end); }
+.anim-pop { animation: bastion-pop 160ms steps(4, end); }
+.anim-glitch { animation: bastion-glitch 200ms steps(4, end); }
+.anim-die { animation: bastion-die 560ms steps(6, end); }
+.anim-success { animation: bastion-success 200ms linear; }
+.anim-failure { animation: bastion-failure 220ms linear; }
+.anim-damage { animation: bastion-damage 220ms linear; }
+.anim-shake { animation: bastion-shake 200ms steps(4, end); }
+.anim-exit { animation: bastion-exit 150ms linear forwards; }
+.anim-health { transform-origin: left; transition: transform 200ms linear; }
+.anim-press, button:not([role=switch]) { transition: transform 100ms linear; }
+@media (hover: hover) { .anim-press:not(:disabled):hover { transform: translate(1px, 1px); } }
+.anim-press:not(:disabled):active, button:not([role=switch]):not(:disabled):active { transform: translate(2px, 2px); }
+.anim-join, .anim-active { position: relative; }
+.anim-join { animation: bastion-enter 200ms linear var(--anim-delay, 0ms) backwards; }
+.anim-join::after, .anim-active::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+.anim-join::after { background: var(--primary); animation: bastion-highlight 500ms linear var(--anim-delay, 0ms); }
+.anim-active::after { border: 2px solid var(--primary); animation: bastion-outline 1800ms linear 2; }
+body.anim-alarm::after { content: ""; position: fixed; inset: 0; z-index: 49; pointer-events: none; border: 6px solid var(--destructive); opacity: 0; animation: bastion-outline 1600ms linear 2; }
+.loot-pop { animation: bastion-loot 2600ms linear forwards; }
+[role=tabpanel] { animation: bastion-enter 180ms linear; }
+[data-motion-panel][data-state=open] { animation: bastion-enter 200ms linear; }
+[data-motion-panel][data-state=closed] { animation: bastion-exit 100ms linear; }
+[data-motion-select][data-state=open] { animation: bastion-enter 160ms steps(4, end); }
+[data-motion-select][data-state=closed] { animation: bastion-exit 80ms linear; }
+[data-sonner-toast][data-mounted=true] { animation: bastion-count 180ms linear; }
+.anim-loading { animation: bastion-loading 1000ms steps(2, end) infinite; }
+
+/* Portals live outside the salon wrapper: the document flag covers those too. */
+html[data-reduced-motion=true] *, html[data-reduced-motion=true] *::before, html[data-reduced-motion=true] *::after,
+html:has(.room-reduced-motion) *, html:has(.room-reduced-motion) *::before, html:has(.room-reduced-motion) *::after {
+  animation: none !important; transition: none !important; scroll-behavior: auto !important;
+}
+html[data-reduced-motion=true], html:has(.room-reduced-motion) { scroll-behavior: auto !important; }
+html[data-reduced-motion=true] .anim-press, html[data-reduced-motion=true] button:active,
+html:has(.room-reduced-motion) .anim-press, html:has(.room-reduced-motion) button:active { transform: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  html { scroll-behavior: auto !important; }
+  .anim-press, button:active { transform: none !important; }
+}
