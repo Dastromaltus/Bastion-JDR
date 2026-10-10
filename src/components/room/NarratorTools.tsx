@@ -13,6 +13,7 @@ import {
   setAmbience, getNarratorCatalog, placeEnemy, enemyAction, placeTreasure, removeTreasure, createCustomEnemy, createCustomTreasure, exploreAction, attackEnemy,
 } from "@/lib/narrator.functions";
 import type { AmbienceRow } from "./Ambience";
+import { salonTurn } from "@/lib/turn-order";
 
 const SEL = "h-11 w-full border border-input bg-background px-2 focus-visible:outline-2 focus-visible:outline-primary";
 const RARITY: Record<string, string> = { commun: "Commun", rare: "Rare", epique: "Épique", legendaire: "Légendaire" };
@@ -303,8 +304,9 @@ export function ExplorePanel({ d }: { d: any }) {
   const [target, setTarget] = useState(here);
   const hereDef = ZONES.find((z) => z.key === here);
   const visible = d.enemies.filter((e: any) => e.status === "revele");
+  const myTurn = salonTurn(d.game, d.players, d.me.user_id).isMine;
   return (
-    <section className="space-y-3 border-2 border-foreground p-4">
+    <fieldset disabled={!myTurn || !!busy} className="min-w-0 space-y-3 border-2 border-foreground p-4">
       <p className="section-label">Parcours — tu es dans : {zoneLabel(here)}</p>
       <div className="flex gap-2">
         <select aria-label="Zone de destination" className={SEL} value={target} onChange={(e) => setTarget(e.target.value)}>{ZONES.map((z) => <option key={z.key} value={z.key}>{z.label}{z.key === here ? " (ici)" : ""}</option>)}</select>
@@ -327,6 +329,6 @@ export function ExplorePanel({ d }: { d: any }) {
           ))}
         </ul>
       )}
-    </section>
+    </fieldset>
   );
 }
