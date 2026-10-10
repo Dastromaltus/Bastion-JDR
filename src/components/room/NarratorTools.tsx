@@ -75,7 +75,7 @@ function Stat({ label, value }: { label: string; value: number | string }) {
   return <div className="border border-foreground/60 p-1 text-center"><p className="text-[5.4px] font-black uppercase">{label}</p><p className="font-display text-sm">{value}</p></div>;
 }
 
-export function EnemyPanel({ d }: { d: any }) {
+export function EnemyPanel({ d, initialZone }: { d: any; initialZone?: string }) {
   const gameId = d.game.id;
   const fetchCat = useServerFn(getNarratorCatalog);
   const cat = useQuery({ queryKey: ["catalog", gameId], queryFn: () => fetchCat({ data: { gameId } }) });
@@ -85,7 +85,7 @@ export function EnemyPanel({ d }: { d: any }) {
   const { busy, run } = useAction();
   const [category, setCategory] = useState("");
   const [enemyId, setEnemyId] = useState("");
-  const [zone, setZone] = useState<string>(ZONES[1].key);
+  const [zone, setZone] = useState<string>(initialZone ?? ZONES[1].key);
   const [trigger, setTrigger] = useState("entree");
   const [stats, setStats] = useState<{ speed: number; strength: number; endurance: number } | null>(null);
   const [moving, setMoving] = useState<Record<string, string>>({});
