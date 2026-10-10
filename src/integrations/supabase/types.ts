@@ -954,14 +954,17 @@ export type Database = {
       game_secrets: {
         Row: {
           game_id: string
+          password_encrypted: string | null
           password_hash: string
         }
         Insert: {
           game_id: string
+          password_encrypted?: string | null
           password_hash: string
         }
         Update: {
           game_id?: string
+          password_encrypted?: string | null
           password_hash?: string
         }
         Relationships: [

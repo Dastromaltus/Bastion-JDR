@@ -19,6 +19,7 @@ import { ReportButton } from "@/components/ReportButton";
 import { useSettings, vibrate, type GameSettings } from "@/components/room/useSettings";
 import { useAmbience, SoundGate, PersonalAmbience } from "@/components/room/Ambience";
 import { AmbiencePanel, EnemyPanel, TreasurePanel, ExplorePanel } from "@/components/room/NarratorTools";
+import { RoomPassword } from "@/components/room/RoomPassword";
 import { OperationSection } from "@/components/operations/OperationPanel";
 import { getSalonDungeon } from "@/lib/operations.functions";
 import { SalonWorld } from "@/components/room/SalonWorld";
@@ -163,6 +164,7 @@ function RoomPage() {
           </section>
         )}
 
+        {game.created_by === me.user_id && <RoomPassword gameId={game.id} />}
         {game.status === "waiting" && (
           <section className="border-2 border-foreground p-4">
             <p className="section-label">Salle d'attente — {players.length}/{game.max_players} joueurs</p>

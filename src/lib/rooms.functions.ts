@@ -38,6 +38,23 @@ async function verifyPassword(password: string, stored: string) {
   return diff === 0;
 }
 
+async function aesKey() {
+  const raw = process.env["SALON_PASSWORD_KEY"];
+  if (!raw) throw new Error("Chiffrement indisponible.");
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  return crypto.subtle.importKey("raw", digest, "AES-GCM", false, ["encrypt", "decrypt"]);
+}
+async function encryptPassword(password: string) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await aesKey(), new TextEncoder().encode(password));
+  return `aesgcm$${toHex(iv)}$${toHex(ct)}`;
+}
+async function decryptPassword(stored: string) {
+  const [, ivHex = "", ctHex = ""] = stored.split("$");
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromHex(ivHex) }, await aesKey(), fromHex(ctHex));
+  return new TextDecoder().decode(pt);
+}
+
 function rollDie(sides: number) {
   const buf = crypto.getRandomValues(new Uint32Array(1));
   return ((buf[0] ?? 0) % sides) + 1;
@@ -115,7 +132,7 @@ export const createRoom = createServerFn({ method: "POST" })
     }
     if (!gameId) throw new Error("Impossible de générer un code unique, réessaie.");
     if (data.password) {
-      await db.from("game_secrets").insert({ game_id: gameId, password_hash: await hashPassword(data.password) });
+      await db.from("game_secrets").insert({ game_id: gameId, password_hash: await hashPassword(data.password), password_encrypted: await encryptPassword(data.password) });
     }
     await db.from("game_players").insert({
       game_id: gameId,
@@ -532,4 +549,41 @@ export const getReportData = createServerFn({ method: "POST" })
       notes = n ?? [];
     }
     return { game, players: players ?? [], events: events ?? [], notes, viewerRole: me.role };
+  });
+
+/* ---------- Mot de passe (créateur uniquement) ---------- */
+
+async function requireCreator(ctx: Ctx, gameId: string) {
+  const db = await admin();
+  const { data: g } = await db.from("games").select("id, created_by").eq("id", gameId).maybeSingle();
+  if (!g || g.created_by !== ctx.userId) throw new Error("Seul le créateur du salon peut voir son mot de passe.");
+  return db;
+}
+
+export const getRoomPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ gameId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await requireCreator(context, data.gameId);
+    const { data: s } = await db.from("game_secrets").select("password_encrypted").eq("game_id", data.gameId).maybeSingle();
+    if (!s) return { password: null as string | null, recoverable: true, hasPassword: false };
+    if (!s.password_encrypted) return { password: null as string | null, recoverable: false, hasPassword: true };
+    return { password: await decryptPassword(s.password_encrypted), recoverable: true, hasPassword: true };
+  });
+
+export const setRoomPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ gameId: z.string().uuid(), password: z.string().max(64) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await requireCreator(context, data.gameId);
+    if (!data.password) {
+      await db.from("game_secrets").delete().eq("game_id", data.gameId);
+      await db.from("games").update({ has_password: false }).eq("id", data.gameId);
+      return { ok: true };
+    }
+    const row = { game_id: data.gameId, password_hash: await hashPassword(data.password), password_encrypted: await encryptPassword(data.password) };
+    const { error } = await db.from("game_secrets").upsert(row, { onConflict: "game_id" });
+    if (error) throw new Error("Mot de passe non enregistré.");
+    await db.from("games").update({ has_password: true }).eq("id", data.gameId);
+    return { ok: true };
   });
