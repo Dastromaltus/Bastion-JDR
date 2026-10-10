@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { createRoom, listMyRooms } from "@/lib/rooms.functions";
+import { createRoom, listMyRooms, deleteRoom } from "@/lib/rooms.functions";
 import { SCENARIOS, STATUS_LABEL, ROLE_LABEL, scenarioLabel } from "@/lib/races";
 import { ReportButton } from "@/components/ReportButton";
 
@@ -32,6 +32,12 @@ function SalonsPage() {
   const qc = useQueryClient();
   const list = useServerFn(listMyRooms);
   const create = useServerFn(createRoom);
+  const remove = useServerFn(deleteRoom);
+  const onDelete = async (r: any) => {
+    if (!window.confirm(`Supprimer définitivement le salon « ${r.name} » ? Tout son contenu sera effacé.`)) return;
+    try { await remove({ data: { gameId: r.id } }); await qc.invalidateQueries({ queryKey: ["my-rooms"] }); }
+    catch (e) { setError(e instanceof Error ? e.message : "Suppression impossible."); }
+  };
   const rooms = useQuery({ queryKey: ["my-rooms"], queryFn: () => list() });
   const [form, setForm] = useState({ name: "", maxPlayers: 4, password: "", scenario: "tresor", displayName: "" });
   const [creating, setCreating] = useState(false);
@@ -103,6 +109,7 @@ function SalonsPage() {
         <h2 className="section-label">Salons créés et rejoints</h2>
         {rooms.isLoading && <p className="mt-4">Chargement…</p>}
         {rooms.error && <p role="alert" className="mt-4 font-bold text-primary">Impossible de charger tes salons. <button className="underline" onClick={() => rooms.refetch()}>Réessayer</button></p>}
+        <p className="mt-2 text-xs text-muted-foreground">Un salon sans activité pendant plus de 2 mois est supprimé automatiquement.</p>
         {rooms.data?.length === 0 && <p className="mt-4 text-muted-foreground">Aucun salon pour l'instant.</p>}
         <ul className="mt-4 grid gap-3 md:grid-cols-2">
           {rooms.data?.map((r: any) => (
@@ -118,6 +125,7 @@ function SalonsPage() {
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button asChild variant="outline" className="min-h-11 rounded-none font-bold uppercase"><Link to="/salon/$code" params={{ code: r.code }}>Ouvrir</Link></Button>
                 {r.status === "finished" && <ReportButton gameId={r.id} />}
+                {r.isCreator && <Button variant="destructive" className="min-h-11 rounded-none font-bold uppercase" onClick={() => onDelete(r)}>Supprimer</Button>}
               </div>
             </li>
           ))}
