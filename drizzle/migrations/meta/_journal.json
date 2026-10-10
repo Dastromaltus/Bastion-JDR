@@ -78,6 +78,13 @@
       "when": 1791652119638,
       "tag": "0010_salon_password_encrypted_copy",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791652617542,
+      "tag": "0011_game_levels",
+      "breakpoints": true
     }
   ]
 }

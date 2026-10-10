@@ -347,6 +347,8 @@ export const exploreAction = createServerFn({ method: "POST" })
       where = data.zone;
       await db.from("game_players").update({ current_zone: where }).eq("id", me.id);
       await log(data.gameId, context.userId, "deplacement", `${me.display_name} entre dans ${zoneLabel(where)}.`, { zone: where });
+      const { enterLevel } = await import("./levels.functions");
+      await enterLevel(data.gameId, where);
     }
     if (data.action === "door") {
       if (!ZONES.find((z) => z.key === where)?.door) throw new Error("Il n'y a pas de porte ici.");

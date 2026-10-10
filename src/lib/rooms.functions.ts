@@ -305,6 +305,14 @@ export const narratorAction = createServerFn({ method: "POST" })
         await db.from("games").update({ status: "playing", started_at: new Date().toISOString(), locked: true }).eq("id", data.gameId).eq("status", "waiting");
         await logEvent(data.gameId, context.userId, "systeme", "La partie commence. Tour 1.", { turn: 1 }, true);
         await openDungeon(data.gameId);
+        {
+          const { enterLevel } = await import("./levels.functions");
+          const { data: first } = await db.from("game_levels").select("zone").eq("game_id", data.gameId).order("position").limit(1).maybeSingle();
+          if (first) {
+            await db.from("game_players").update({ current_zone: first.zone }).eq("game_id", data.gameId).eq("role", "adventurer");
+            await enterLevel(data.gameId, first.zone);
+          }
+        }
         break;
       case "finish":
         await db.from("game_dungeons").update({ status: "termine" }).eq("game_id", data.gameId);
