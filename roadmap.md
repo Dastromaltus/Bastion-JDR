@@ -5,3 +5,4 @@
 - [x] Verify turn order, out-of-turn refusals, and the salon display.
 - [x] Add and verify a router-derived public sitemap with robots discovery.
 - [x] Resolve the extra SEO-page suggestion without overriding the single-page rulebook requirement (user declined the extra page; finding remains unresolved).
+- [x] Show all salon participants and the narrator on the game screen; verify map labels and participant visibility.
