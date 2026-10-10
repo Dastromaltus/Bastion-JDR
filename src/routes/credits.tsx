@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { TRACKS, SFX } from "@/lib/ambience-tracks";
 
 export const Route = createFileRoute("/credits")({
@@ -19,7 +19,6 @@ export const Route = createFileRoute("/credits")({
 function Credits() {
   return (
     <main className="mx-auto min-h-screen max-w-3xl bg-background px-4 py-8">
-      <Link to="/" className="font-display text-base uppercase">Bastion<span className="text-primary">.</span></Link>
       <h1 data-motion-enter className="mt-6 font-display text-3xl uppercase">Crédits audio</h1>
       <p className="mt-3 text-sm text-muted-foreground">
         Chaque ambiance est pour l'instant une boucle générée en direct par le navigateur, libre de droits. Chaque emplacement peut être remplacé par un fichier .mp3 ou .ogg libre de droits.
