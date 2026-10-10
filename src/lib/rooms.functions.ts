@@ -595,3 +595,15 @@ export const setRoomPassword = createServerFn({ method: "POST" })
     await db.from("games").update({ has_password: true }).eq("id", data.gameId);
     return { ok: true };
   });
+
+export const deleteRoom = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ gameId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await admin();
+    const { data: g } = await db.from("games").select("created_by").eq("id", data.gameId).maybeSingle();
+    if (!g || g.created_by !== context.userId) throw new Error("Seul le créateur du salon peut le supprimer.");
+    const { error } = await db.from("games").delete().eq("id", data.gameId);
+    if (error) throw new Error("Suppression impossible, réessaie.");
+    return { ok: true };
+  });

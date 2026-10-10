@@ -1297,6 +1297,7 @@ export type Database = {
       }
       is_game_member: { Args: { _game_id: string }; Returns: boolean }
       is_game_narrator: { Args: { _game_id: string }; Returns: boolean }
+      purge_inactive_salons: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never
