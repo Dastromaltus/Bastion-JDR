@@ -5,7 +5,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
+import { Plus, KeyRound, Search, Users } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { createRoom, listMyRooms, deleteRoom } from "@/lib/rooms.functions";
 import { SCENARIOS, STATUS_LABEL, ROLE_LABEL, scenarioLabel } from "@/lib/races";
 import { ReportButton } from "@/components/ReportButton";
@@ -43,6 +44,13 @@ function SalonsPage() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [code, setCode] = useState("");
+  const [dialog, setDialog] = useState<"create" | "join" | null>(null);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  const visibleRooms = (rooms.data ?? []).filter((r: any) =>
+    `${r.name} ${r.code}`.toLocaleLowerCase("fr").includes(search.toLocaleLowerCase("fr")) &&
+    (filter === "all" || r.status === filter),
+  );
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -61,23 +69,25 @@ function SalonsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 pb-16 pt-6 md:px-10">
-      <header className="flex items-center justify-between border-b-2 border-foreground pb-4">
-        <Link to="/" className="font-display text-lg uppercase">Bastion<span className="text-primary">.</span></Link>
-        <Button variant="outline" className="min-h-11 rounded-none" onClick={() => supabase.auth.signOut()}>Déconnexion</Button>
-      </header>
-
-      <div className="mt-8 flex flex-wrap items-end justify-between gap-3">
-        <Button asChild variant="secondary" className="mt-4 min-h-11"><Link to="/campagnes">Concevoir une campagne</Link></Button>
-        <h1 className="font-display text-3xl uppercase">Mes salons</h1>
-        <Button asChild className="min-h-11 rounded-none font-black uppercase"><Link to="/operations">Catalogue d'Opérations · solo gratuit</Link></Button>
+    <main className="mx-auto min-h-screen max-w-7xl bg-background px-4 pb-16 pt-8 md:px-10">
+      <p className="section-label">Ta table de jeu</p>
+      <div className="mt-6 flex flex-wrap items-end justify-between gap-5">
+        <h1 className="font-display text-xl uppercase leading-relaxed sm:text-3xl">Mes salons</h1>
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" className="min-h-11 rounded-none" onClick={() => setDialog("join")}><KeyRound />Rejoindre</Button>
+          <Button className="min-h-11 rounded-none" onClick={() => { setError(null); setDialog("create"); }}><Plus />Créer un salon</Button>
+        </div>
       </div>
 
-      <section data-motion-stagger className="mt-6 grid gap-6 lg:grid-cols-2">
-        <form onSubmit={submit} className="space-y-3 border-2 border-foreground p-4">
-          <h2 className="section-label">Créer un salon privé</h2>
-          <Input className={field} required maxLength={60} placeholder="Nom du salon" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <Input className={field} required maxLength={40} placeholder="Ton nom de narrateur" value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} />
+      <Dialog open={dialog !== null} onOpenChange={(open) => { if (!open) setDialog(null); }}>
+        <DialogContent className="max-h-[90dvh] w-[calc(100%-2rem)] overflow-y-auto rounded-none border-2 border-foreground sm:rounded-none">
+          <DialogHeader>
+            <DialogTitle className="pr-6 font-display text-base leading-relaxed">{dialog === "create" ? "Créer un salon privé" : "Rejoindre un salon"}</DialogTitle>
+            <DialogDescription>{dialog === "create" ? "Tu seras le narrateur de cette partie." : "Saisis le code à six caractères de ton invitation."}</DialogDescription>
+          </DialogHeader>
+        {dialog === "create" ? <form onSubmit={submit} className="space-y-3">
+          <label className="block text-sm font-bold">Nom du salon<Input className={`${field} mt-1`} required maxLength={60} placeholder="Nom du salon" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+          <label className="block text-sm font-bold">Ton nom de narrateur<Input className={`${field} mt-1`} required maxLength={40} placeholder="Ton nom de narrateur" value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} /></label>
           <div className="grid grid-cols-2 gap-3">
             <label className="text-xs font-bold uppercase">Joueurs max
               <select className="mt-1 h-11 w-full border border-input bg-background px-2" value={form.maxPlayers} onChange={(e) => setForm({ ...form, maxPlayers: Number(e.target.value) })}>
@@ -90,37 +100,43 @@ function SalonsPage() {
               </select>
             </label>
           </div>
-          <Input className={field} type="password" maxLength={64} placeholder="Mot de passe (optionnel)" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          <label className="block text-sm font-bold">Mot de passe (optionnel)<Input className={`${field} mt-1`} type="password" maxLength={64} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
           {error && <p role="alert" className="text-sm font-bold text-primary">{error}</p>}
           <Button disabled={creating} className="min-h-11 w-full rounded-none font-black uppercase">{creating ? "Création…" : "Créer le salon"}</Button>
-        </form>
-
-        <form
+        </form> : <form
           onSubmit={(e) => { e.preventDefault(); if (/^[A-Z0-9]{6}$/.test(code)) navigate({ to: "/rejoindre/$code", params: { code } }); }}
-          className="space-y-3 border-2 border-primary p-4"
+          className="space-y-3"
         >
-          <h2 className="section-label">Rejoindre avec un code</h2>
-          <Input className={`${field} font-pixel text-2xl uppercase tracking-[0.4em]`} maxLength={6} placeholder="ABC123" value={code} onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))} />
+          <label className="block text-sm font-bold">Code d'invitation<Input className={`${field} mt-1 font-pixel text-2xl uppercase`} maxLength={6} placeholder="ABC123" value={code} onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))} /></label>
           <Button disabled={code.length !== 6} className="min-h-11 w-full rounded-none font-black uppercase">Continuer</Button>
           <p className="text-sm text-muted-foreground">Tu peux aussi ouvrir directement le lien d'invitation envoyé par le narrateur.</p>
-        </form>
-      </section>
+        </form>}
+        </DialogContent>
+      </Dialog>
 
-      <section className="mt-10">
-        <h2 className="section-label">Salons créés et rejoints</h2>
+      <section className="mt-8 border-t border-border pt-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h2 className="section-label">Salons créés et rejoints {rooms.data ? `· ${rooms.data.length}` : ""}</h2>
+          <div className="flex w-full flex-wrap gap-3 sm:w-auto">
+            <div className="relative min-w-0 flex-1 sm:w-64"><Search aria-hidden="true" className="pointer-events-none absolute left-3 top-3 size-5 text-muted-foreground" /><Input aria-label="Rechercher un salon" placeholder="Nom ou code du salon" className="h-11 rounded-none pl-10" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+            <select aria-label="Filtrer les salons par statut" className="h-11 border border-input bg-background px-3" value={filter} onChange={(e) => setFilter(e.target.value)}><option value="all">Tous les statuts</option>{Object.entries(STATUS_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
+          </div>
+        </div>
         {rooms.isLoading && <p className="mt-4">Chargement…</p>}
-        {rooms.error && <p role="alert" className="mt-4 font-bold text-primary">Impossible de charger tes salons. <button className="underline" onClick={() => rooms.refetch()}>Réessayer</button></p>}
+        {rooms.error && <p role="alert" className="mt-4 font-bold text-primary">Impossible de charger tes salons. <Button variant="link" className="min-h-11" onClick={() => rooms.refetch()}>Réessayer</Button></p>}
+        {error && dialog !== "create" && <p role="alert" className="mt-4 text-primary">{error}</p>}
         <p className="mt-2 text-xs text-muted-foreground">Un salon sans activité pendant plus de 2 mois est supprimé automatiquement.</p>
-        {rooms.data?.length === 0 && <p className="mt-4 text-muted-foreground">Aucun salon pour l'instant.</p>}
-        <ul className="mt-4 grid gap-3 md:grid-cols-2">
-          {rooms.data?.map((r: any) => (
+        {rooms.data?.length === 0 && <div className="flex flex-col items-start gap-3 py-10"><Users className="size-8 text-primary" /><p className="font-bold">Aucun salon pour l'instant.</p><Button variant="outline" className="min-h-11" onClick={() => setDialog("create")}><Plus />Créer mon premier salon</Button></div>}
+        {!!rooms.data?.length && visibleRooms.length === 0 && <p className="py-8 text-muted-foreground">Aucun salon ne correspond à ta recherche.</p>}
+        <ul data-motion-stagger className="mt-4 grid gap-4 md:grid-cols-2">
+          {visibleRooms.map((r: any) => (
             <li key={r.id} className="border border-foreground/40 p-4">
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-display text-lg uppercase">{r.name}</p>
+                 <div className="min-w-0">
+                   <p className="break-words font-display text-base uppercase leading-relaxed">{r.name}</p>
                   <p className="text-xs text-muted-foreground">{scenarioLabel(r.scenario)} · code <span className="font-pixel">{r.code}</span>{r.isCreator ? " · créé par toi" : ""}</p>
                 </div>
-                <span className={`px-2 py-1 text-[10px] font-black uppercase ${r.role === "narrator" ? "bg-primary text-primary-foreground" : "border border-foreground"}`}>{ROLE_LABEL[r.role]}</span>
+                 <span className={`shrink-0 px-2 py-1 text-[10px] font-black uppercase ${r.role === "narrator" ? "bg-primary text-primary-foreground" : "border border-foreground"}`}>{ROLE_LABEL[r.role]}</span>
               </div>
               <p className="mt-2 text-xs font-bold uppercase">Statut : {STATUS_LABEL[r.status]}{r.result ? ` — ${r.result === "victoire" ? "victoire" : "défaite"}` : ""}</p>
               <div className="mt-3 flex flex-wrap gap-2">
