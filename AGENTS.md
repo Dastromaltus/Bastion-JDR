@@ -29,3 +29,4 @@
 - Keep motion as additive CSS utilities plus browser-only MotionEffects and MotionBits; use explicit DOM entrance markers and a shared IntersectionObserver for page content, and propagate the saved motion preference to the document so every page, portal and Phaser obeys the same accessibility setting without changing game rules.
 
 - Archive narrator sheets in an owner-readable separate table and zero narrator roster stats; use row-locked combat RPCs for server dice and filtered initiative, keeping exploration adventurer-only.
+- Store owner-private campaigns and make immutable salon snapshots through checked SQL RPCs; mark isolated solo playtests with game_campaigns.is_test so they reuse server gameplay without changing authored documents.
