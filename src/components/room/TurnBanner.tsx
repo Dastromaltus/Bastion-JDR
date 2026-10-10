@@ -10,7 +10,7 @@ export function TurnBanner({ d, onChange }: { d: any; onChange: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const turn = salonTurn(d.game, d.players, d.me.user_id);
-  if (d.game.status !== "playing" || d.game.solo) return null;
+  if (d.game.status !== "playing" || d.game.solo || d.combat) return null;
   return <section aria-label="Ordre des tours" className="space-y-3 border-y-2 border-foreground bg-secondary px-4 py-4">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div role="status" aria-live="polite" aria-atomic="true">

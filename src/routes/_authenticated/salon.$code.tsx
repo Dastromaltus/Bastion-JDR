@@ -24,6 +24,7 @@ import { RoomPassword } from "@/components/room/RoomPassword";
 import { OperationSection } from "@/components/operations/OperationPanel";
 import { getSalonDungeon } from "@/lib/operations.functions";
 import { SalonWorld } from "@/components/room/SalonWorld";
+import { MobControl } from "@/components/room/MobControl";
 import { TurnBanner } from "@/components/room/TurnBanner";
 import { salonTurn } from "@/lib/turn-order";
 import { AnimatedCount, DiceResult, HealthFill, RollingDice } from "@/components/room/MotionBits";
@@ -77,7 +78,7 @@ function RoomPage() {
   const { code } = Route.useParams();
   const navigate = useNavigate();
   const fetchRoom = useServerFn(getRoom);
-  const room = useQuery({ queryKey: ["room", code], queryFn: () => fetchRoom({ data: { code } }) });
+  const room = useQuery({ queryKey: ["room", code], queryFn: () => fetchRoom({ data: { code } }), refetchInterval: 2500 });
   const [userId, setUserId] = useState<string>();
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id)); }, []);
   const { settings, update, saving, error: settingsError } = useSettings(userId);
@@ -137,7 +138,7 @@ function RoomPage() {
 
   const { game, players, me } = d;
   const isNarr = me.role === "narrator";
-  const turn = salonTurn(game, players, me.user_id);
+  const turn = d.combat ? { ...salonTurn(game, players, me.user_id), isMine: !!d.combat.isMine } : salonTurn(game, players, me.user_id);
   const inviteUrl = typeof window !== "undefined" ? `${window.location.origin}/rejoindre/${game.code}` : "";
   const textClass = settings.textSize === "grand" ? "text-[17px]" : settings.textSize === "tres-grand" ? "text-[19px]" : "text-base";
   const narr = (action: any, extra: Record<string, unknown> = {}, ok?: string) =>
