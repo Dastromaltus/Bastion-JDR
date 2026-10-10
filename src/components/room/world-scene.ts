@@ -2,6 +2,7 @@ import * as Phaser from "phaser";
 import tiles from "@/assets/world-tiles.png";
 import map from "@/data/salon-world.json";
 import type { WorldActor } from "@/lib/world-actors";
+import { motionDisabled, MOTION_EVENT } from "@/lib/motion";
 
 export class WorldScene extends Phaser.Scene {
   private actors = new Map<string, Phaser.GameObjects.Container>();
@@ -10,12 +11,21 @@ export class WorldScene extends Phaser.Scene {
   create() {
     map.layers[0]?.data.forEach((tile, i) => this.add.image((i % map.width) * 16 + 8, Math.floor(i / map.width) * 16 + 8, "world-tiles", tile - 1));
     this.events.on("actors", (actors: WorldActor[]) => this.sync(actors));
+    const stop = () => {
+      if (motionDisabled()) {
+        this.tweens.getTweens().forEach((tween) => { tween.complete(); });
+      }
+    };
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    window.addEventListener(MOTION_EVENT, stop);
+    media.addEventListener("change", stop);
+    this.events.once("shutdown", () => { window.removeEventListener(MOTION_EVENT, stop); media.removeEventListener("change", stop); });
     this.game.events.emit("world-ready");
   }
   sync(actors: WorldActor[]) {
     const ids = new Set(actors.map((a) => a.id));
     for (const [id, node] of this.actors) if (!ids.has(id)) { node.destroy(); this.actors.delete(id); }
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches || !!document.querySelector(".room-reduced-motion");
+    const reduced = motionDisabled();
     for (const actor of actors) {
       let node = this.actors.get(actor.id);
       const sharing = actors.filter((a) => a.x === actor.x && a.y === actor.y);
@@ -26,6 +36,7 @@ export class WorldScene extends Phaser.Scene {
         const label = this.add.text(0, -15, actor.name, { fontFamily: "VT323, monospace", fontSize: "8px", color: getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim(), backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim(), padding: { x: 2, y: 1 } }).setOrigin(0.5, 1).setVisible(false);
         node = this.add.container(x, y, [sprite, label]);
         this.actors.set(actor.id, node);
+        if (!reduced) this.tweens.add({ targets: sprite, alpha: { from: 0, to: 1 }, scale: { from: 0.88, to: 1 }, duration: actor.frame === 12 ? 200 : 160, ease: "Linear" });
       } else {
         const sprite = node.list[0];
         if (sprite instanceof Phaser.GameObjects.Image) sprite.setFrame(actor.frame);

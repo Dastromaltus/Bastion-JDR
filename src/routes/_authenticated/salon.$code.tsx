@@ -26,6 +26,8 @@ import { getSalonDungeon } from "@/lib/operations.functions";
 import { SalonWorld } from "@/components/room/SalonWorld";
 import { TurnBanner } from "@/components/room/TurnBanner";
 import { salonTurn } from "@/lib/turn-order";
+import { AnimatedCount, DiceResult, HealthFill, RollingDice } from "@/components/room/MotionBits";
+import { motionFeedback } from "@/lib/motion";
 
 export const Route = createFileRoute("/_authenticated/salon/$code")({
   staticData: { sitemap: false },
@@ -107,8 +109,8 @@ function RoomPage() {
           vibrate(settings, 120);
         }
         const ev = table === "game_events" ? payload.new : null;
-        if (ev?.kind === "menace") { toast(ev.message, { duration: 4000 }); vibrate(settings, 200); }
-        if (ev?.kind === "declencheur") toast.warning(ev.message);
+        if (ev?.kind === "menace") { toast(ev.message, { duration: 3000 }); vibrate(settings, 200); motionFeedback("alarm"); }
+        if (ev?.kind === "declencheur") { toast.warning(ev.message); motionFeedback("alarm"); }
         if (ev?.kind === "tresor" && ev.actor_id === userId) { setLoot(ev.payload?.treasure ?? "Trésor"); setTimeout(() => setLoot(null), 2600); }
       });
     }
@@ -118,7 +120,7 @@ function RoomPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId, userId]);
 
-  if (room.isLoading) return <Shell><p className="p-6">Chargement du salon…</p></Shell>;
+  if (room.isLoading) return <Shell><p className="anim-loading p-6">Chargement du salon…</p></Shell>;
   if (room.error) return <Shell><p role="alert" className="p-6 font-bold text-primary">Impossible de charger le salon. <button className="underline" onClick={() => room.refetch()}>Réessayer</button></p></Shell>;
   const d = room.data;
   if (!d || !d.me) {
@@ -159,7 +161,7 @@ function RoomPage() {
         {game.status === "finished" && (
           <section className="border-4 border-primary p-5 text-center">
             <p className="section-label">Fin de partie</p>
-            <h1 className="mt-2 font-display text-3xl uppercase">{game.result === "victoire" ? "Victoire" : "Défaite"}</h1>
+            <h1 className="mt-2 font-display text-3xl uppercase">{(game.result === "victoire" ? "Victoire" : "Défaite").split("").map((letter, i) => <span key={i} className="anim-enter inline-block" style={{ "--anim-delay": `${i * 40}ms` } as React.CSSProperties}>{letter}</span>)}</h1>
             <p className="mt-2 text-sm text-muted-foreground">Le journal complet est disponible au format PDF.</p>
             <ReportButton gameId={game.id} className="mt-4" />
           </section>
@@ -168,7 +170,7 @@ function RoomPage() {
         {game.created_by === me.user_id && <RoomPassword gameId={game.id} />}
         {game.status === "waiting" && (
           <section className="border-2 border-foreground p-4">
-            <p className="section-label">Salle d'attente — {players.length}/{game.max_players} joueurs</p>
+            <p className="section-label">Salle d'attente — <AnimatedCount value={players.length} />/{game.max_players} joueurs</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button variant="outline" className="min-h-11 rounded-none" onClick={() => { navigator.clipboard.writeText(inviteUrl).then(() => toast.success("Lien d'invitation copié"), () => toast.error("Copie impossible")); }}>
                 <Copy /> Copier le lien d'invitation
@@ -180,9 +182,9 @@ function RoomPage() {
 
         <section>
           <p className="section-label">Table {isNarr ? "· tu es narrateur" : ""}</p>
-          <ul className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
+          <ul data-motion-players="true" className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
             {players.map((p: any) => (
-              <li key={p.id}>
+              <li key={p.id} className={game.status === "playing" && p.id === turn.active?.id ? "anim-active" : undefined}>
                 <button
                   onClick={() => p.user_id !== me.user_id && setSelectedPlayer(p)}
                   className={`w-full min-h-11 border-2 p-3 text-left transition-colors ${p.role === "narrator" ? "border-primary" : "border-foreground/50"} ${p.user_id === me.user_id ? "bg-secondary" : "hover:border-primary"}`}
@@ -191,7 +193,7 @@ function RoomPage() {
                   <p className="text-[11px] uppercase text-muted-foreground">{ROLE_LABEL[p.role]} · {p.race}</p>
                   {p.role !== "narrator" && (
                     <div className="mt-2 h-2 w-full bg-muted" aria-label={`PV ${p.hp}/${p.max_hp}`}>
-                      <div className="hp-bar h-full bg-primary" style={{ width: `${(p.hp / p.max_hp) * 100}%` }} />
+                      <HealthFill hp={p.hp} maxHp={p.max_hp} className="hp-bar bg-primary" />
                     </div>
                   )}
                 </button>
@@ -320,10 +322,10 @@ function DicePanel({ gameId, enabled }: { gameId: string; enabled: boolean }) {
         <Input type="number" min={1} max={60} className="h-11 rounded-none" aria-label="Difficulté" value={difficulty} onChange={(e) => setDifficulty(Number(e.target.value))} />
       </div>
       <Button disabled={busy === "roll" || !enabled} className="mt-3 min-h-11 w-full rounded-none font-black uppercase"
-        onClick={() => run("roll", async () => setLast(await roll({ data: { gameId, stat, dice, difficulty } })))}>
-        <Dices /> {busy === "roll" ? "Lancer…" : "Lancer"}
+        onClick={() => { setLast(null); void run("roll", async () => setLast(await roll({ data: { gameId, stat, dice, difficulty } }))); }}>
+        <RollingDice rolling={busy === "roll"} /> {busy === "roll" ? "Lancer…" : "Lancer"}
       </Button>
-      {last && <p className="mt-2 font-pixel">{last.rolls.join(" + ")} +{last.bonus} = <b>{last.total}</b> → {last.success ? "RÉUSSITE" : "ÉCHEC"}</p>}
+      {last && <DiceResult result={last} />}
     </section>
   );
 }
@@ -378,7 +380,7 @@ function NarratorTabs({ d }: { d: any }) {
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`min-h-11 text-xs font-black uppercase ${tab === k ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>{l}</button>
         ))}
       </div>
-      <div role="tabpanel" className="mt-4">
+      <div key={tab} role="tabpanel" className="mt-4">
         {tab === "niveaux" && <LevelsPanel d={d} onPlaceMobs={(z) => { setMobZone(z); setTab("ennemis"); }} />}
         {tab === "ambiance" && <AmbiencePanel gameId={d.game.id} row={d.ambience} />}
         {tab === "ennemis" && <fieldset disabled={!canAct} className="min-w-0"><EnemyPanel key={mobZone} d={d} initialZone={mobZone} /></fieldset>}
@@ -441,7 +443,7 @@ function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`min-h-11 text-xs font-black uppercase ${tab === k ? "bg-foreground text-background" : ""}`}>{CAT_LABEL[k]}</button>
         ))}
       </div>
-      <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
+      <div className="anim-list mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
         {items.map((i: any) => <ItemCell key={i.id} item={i} onTap={() => { vibrate(settings); setMenu(i); }} onLong={() => { vibrate(settings, 60); setDetails(i); }} />)}
         {Array.from({ length: Math.max(0, 8 - items.length) }).map((_, i) => <div key={i} className="aspect-square border border-dashed border-foreground/20" />)}
       </div>

@@ -8,6 +8,7 @@ import { participantActors, type WorldActor } from "@/lib/world-actors";
 import { zoneLabel } from "@/lib/races";
 import { salonTurn } from "@/lib/turn-order";
 import type Phaser from "phaser";
+import { motionDisabled } from "@/lib/motion";
 
 export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string; name?: string; onChange: () => void }) {
   const mount = useRef<HTMLDivElement>(null);
@@ -16,6 +17,8 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const [failure, setFailure] = useState(false);
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
+  const view = useRef<HTMLDivElement>(null);
+  const previousZone = useRef<string | undefined>(undefined);
   const [message, setMessage] = useState("");
   const move = useServerFn(moveWorldPlayer);
   const turn = salonTurn(d.game, d.players, d.me.user_id);
@@ -37,6 +40,13 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   useEffect(() => {
     if (ready) game.current?.scene.getScene("SalonWorld").events.emit("actors", actors);
   }, [ready, JSON.stringify(actors)]);
+  useEffect(() => {
+    if (previousZone.current && previousZone.current !== here && !motionDisabled()) view.current?.animate(
+      [{ opacity: 0.35, transform: "translateX(8px)" }, { opacity: 1, transform: "translateX(0)" }],
+      { duration: 200, easing: "linear" },
+    );
+    previousZone.current = here;
+  }, [here]);
   async function step(direction: WorldDirection) {
     if (!enabled || lock.current || !ready) return;
     lock.current = true; setBusy(true);
@@ -46,7 +56,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   }
   return <section className="space-y-3" aria-label="Exploration en vue de dessus">
     <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-pixel text-xl">{name ?? zoneLabel(here)}</h2><span className="text-xs text-muted-foreground">{participants.length} participant(s)</span></div>
-    <div tabIndex={0} role="group" aria-label="Carte du salon, vue de dessus" className="salon-world relative overflow-hidden border-2 border-foreground bg-game outline-none focus-visible:ring-2 focus-visible:ring-ring" onKeyDown={(event) => {
+    <div ref={view} tabIndex={0} role="group" aria-label="Carte du salon, vue de dessus" className="salon-world relative overflow-hidden border-2 border-foreground bg-game outline-none focus-visible:ring-2 focus-visible:ring-ring" onKeyDown={(event) => {
       const keys: Record<string, WorldDirection> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
       const direction = keys[event.key];
       if (direction && enabled) { event.preventDefault(); void step(direction); }
