@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { roomIcon } from "@/lib/map-identity";
 import { motionDisabled } from "@/lib/motion";
 
 export type MapRoom = { key: string; name: string; grid_x: number; grid_y: number; connections: string[]; explored?: boolean };
@@ -43,6 +44,7 @@ export function DungeonMap({
         const isCur = r.key === current;
         const hidden = fog && !r.explored;
         const can = selectable.includes(r.key) && !!onSelect;
+        const Icon = roomIcon(r.key);
         return (
           <g key={r.key} data-room={r.key} onClick={can ? () => onSelect?.(r.key) : undefined} style={{ cursor: can ? "pointer" : "default" }}
             role={can ? "button" : undefined} tabIndex={can ? 0 : undefined} aria-label={can ? (hidden ? "Aller vers une salle inexplorée" : `Aller vers ${r.name}`) : undefined}
@@ -50,6 +52,7 @@ export function DungeonMap({
             <rect x={p.x + 4} y={p.y + 4} width={BW} height={BH} className="fill-foreground" />
             <rect x={p.x} y={p.y} width={BW} height={BH} strokeWidth={3}
               className={`${isCur ? "fill-primary" : hidden ? "fill-muted" : can ? "fill-secondary" : "fill-card"} stroke-foreground`} />
+            {!hidden && <Icon x={p.x + 3} y={p.y + 3} width={12} height={12} className="stroke-foreground" />}
             <text x={p.x + BW / 2} y={p.y + BH / 2 + 4} textAnchor="middle" fontSize={10}
               className={`font-pixel ${isCur ? "fill-primary-foreground" : hidden ? "fill-muted-foreground" : "fill-foreground"}`}>
               {(hidden ? "???" : r.name).slice(0, 16)}

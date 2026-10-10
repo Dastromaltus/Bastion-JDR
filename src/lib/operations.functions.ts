@@ -32,8 +32,13 @@ function pool(dice: number) {
   return { rolls, successes: rolls.filter((r) => r >= 5).length };
 }
 
-async function loadTemplate(templateId: string) {
+async function loadTemplate(templateId: string, gameId?: string) {
   const db = await admin();
+  if (gameId) {
+    const { data: copy } = await db.from("game_campaigns").select("snapshot,stage_index").eq("game_id", gameId).maybeSingle();
+    const stage = copy?.snapshot?.stages?.[copy.stage_index];
+    if (stage) return { t: stage.t, rooms: stage.rooms as any[], roomEnemies: [] as any[], roomTreasures: [] as any[], events: stage.events as any[] };
+  }
   const { data: t } = await db.from("dungeon_templates").select("*").eq("id", templateId).maybeSingle();
   if (!t) throw new Error("Opération introuvable.");
   const { data: rooms } = await db.from("dungeon_rooms").select("*").eq("template_id", t.id).order("position");
@@ -181,7 +186,7 @@ async function markCore(gameId: string, dg: any, treasureNames: string[]) {
 /** Enters a room: validates the connection, moves the table, resolves traps, treasures, triggers and objective. */
 async function enterRoom(gameId: string, dg: any, roomKey: string, by: string) {
   const db = await admin();
-  const tpl = await loadTemplate(dg.template_id);
+  const tpl = await loadTemplate(dg.template_id, gameId);
   const from = tpl.rooms.find((r) => r.key === dg.current_room);
   const room = tpl.rooms.find((r) => r.key === roomKey);
   if (!room) throw new Error("Cette salle n'existe pas dans l'Opération.");
@@ -285,6 +290,7 @@ export const loadOperation = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: g } = await db.from("games").select("status").eq("id", data.gameId).single();
     if (g?.status !== "waiting") throw new Error("On ne charge une Opération qu'avant de lancer la partie.");
+    await db.from("game_campaigns").delete().eq("game_id", data.gameId);
     if (data.reshuffle) {
       const dg = await getDungeonRow(data.gameId);
       if (!dg || dg.template_id !== data.templateId) throw new Error("Charge d'abord cette Opération.");
@@ -314,7 +320,7 @@ export const prepareOperation = createServerFn({ method: "POST" })
     const db = await admin();
     const dg = await getDungeonRow(data.gameId);
     if (!dg || dg.status !== "preparation") throw new Error("Les modifications ne sont possibles qu'en préparation.");
-    const tpl = await loadTemplate(dg.template_id);
+    const tpl = await loadTemplate(dg.template_id, data.gameId);
     const room = data.room ? tpl.rooms.find((r) => r.key === data.room) : undefined;
     if (data.room && !room) throw new Error("Cette salle n'existe pas dans l'Opération.");
     const cat = async (table: "enemy_catalog" | "treasure_catalog") => {
@@ -393,8 +399,10 @@ export async function openDungeon(gameId: string) {
   const dg = await getDungeonRow(gameId);
   if (!dg) return;
   const db = await admin();
-  const tpl = await loadTemplate(dg.template_id);
-  const first = tpl.rooms.find((r) => r.key === dg.current_room)!;
+  const tpl = await loadTemplate(dg.template_id, gameId);
+  const first = tpl.rooms.find((r) => r.key === dg.current_room);
+  if (!first) throw new Error("Salle initiale introuvable.");
+  if (tpl.t.default_track) await db.from("game_ambience").upsert({ game_id: gameId, track: tpl.t.default_track, state: "playing" }, { onConflict: "game_id" });
   await db.from("game_dungeons").update({ status: "en_cours" }).eq("id", dg.id);
   await db.from("game_players").update({ current_zone: first.key }).eq("game_id", gameId).eq("role", "adventurer");
   await log(gameId, null, "salle", `Opération « ${tpl.t.name} » : la table entre dans ${first.name}. ${first.description}`, { room: first.key }, true);
@@ -425,7 +433,7 @@ export const operationControl = createServerFn({ method: "POST" })
     const db = await admin();
     const dg = await getDungeonRow(data.gameId);
     if (!dg || dg.status !== "en_cours") throw new Error("Aucune Opération en cours dans ce salon.");
-    const tpl = await loadTemplate(dg.template_id);
+    const tpl = await loadTemplate(dg.template_id, data.gameId);
     switch (data.action) {
       case "tension_up": await setTension(data.gameId, dg, dg.tension + 1); break;
       case "tension_down": await setTension(data.gameId, dg, dg.tension - 1); break;
@@ -470,15 +478,16 @@ export const getSalonDungeon = createServerFn({ method: "POST" })
     const { data: dg } = await context.supabase.from("game_dungeons").select("*").eq("game_id", data.gameId).maybeSingle();
     if (!dg) return null;
     const db = await admin();
-    const { data: t } = await db.from("dungeon_templates").select("*").eq("id", dg.template_id).single();
-    const { data: rooms } = await db.from("dungeon_rooms").select("*").eq("template_id", dg.template_id).order("position");
+    const tpl = await loadTemplate(dg.template_id, data.gameId);
+    const t = tpl.t, rooms = tpl.rooms;
+    const { data: campaignCopy } = await db.from("game_campaigns").select("stage_index,snapshot").eq("game_id", data.gameId).maybeSingle();
     const isNarr = me.role === "narrator";
     if (isNarr) {
       const [{ data: events }, b] = await Promise.all([
         context.supabase.from("game_dungeon_events").select("*").eq("game_id", data.gameId).order("threshold"),
         budgetOf(data.gameId),
       ]);
-      return { role: "narrator" as const, template: t, dungeon: dg, rooms: rooms ?? [], events: events ?? [], budget: b };
+      return { campaign: campaignCopy ? { name: campaignCopy.snapshot.name, stage: campaignCopy.stage_index + 1, total: campaignCopy.snapshot.stages.length } : null, role: "narrator" as const, template: t, dungeon: dg, rooms: rooms ?? [], events: events ?? [], budget: b };
     }
     // Players: only the layout (greyed), explored names, current room details, triggered events. No tension, no hidden content.
     const explored = new Set<string>(dg.explored ?? []);
@@ -517,12 +526,12 @@ export const operationPlayerAction = createServerFn({ method: "POST" })
 export async function completeDungeonRound(gameId: string) {
   const dg = await getDungeonRow(gameId);
   if (!dg || dg.status !== "en_cours") return;
-  await advanceTurn(gameId, dg, await loadTemplate(dg.template_id));
+  await advanceTurn(gameId, dg, await loadTemplate(dg.template_id, gameId));
 }
 
 async function playerAct(gameId: string, dg: any, me: any, action: "search" | "unlock_door", stat: "force" | "vitesse") {
   const db = await admin();
-  const tpl = await loadTemplate(dg.template_id);
+  const tpl = await loadTemplate(dg.template_id, gameId);
   const room = tpl.rooms.find((r) => r.key === dg.current_room)!;
   if (action === "search") {
     const { data: loot } = await db.from("game_treasures").select("*").eq("game_id", gameId).eq("zone", room.key).eq("placement", "coffre").eq("status", "cache");
@@ -585,7 +594,7 @@ export const soloAct = createServerFn({ method: "POST" })
     const dg = await getDungeonRow(data.gameId);
     if (!dg || dg.status !== "en_cours") throw new Error("Aucune Opération en cours.");
     if (me.hp <= 0) throw new Error("Tu es à terre.");
-    const tpl = await loadTemplate(dg.template_id);
+    const tpl = await loadTemplate(dg.template_id, data.gameId);
     const label = (k: string) => tpl.rooms.find((r) => r.key === k)?.name ?? k;
 
     // 1. Player action

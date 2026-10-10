@@ -11,6 +11,7 @@ import { DungeonMap } from "./DungeonMap";
 import { SalonWorld } from "@/components/room/SalonWorld";
 import { salonTurn } from "@/lib/turn-order";
 import { AnimatedCount, HealthFill } from "@/components/room/MotionBits";
+import { advanceCampaign } from "@/lib/campaigns.functions";
 import { motionFeedback } from "@/lib/motion";
 
 const SEL = "h-11 w-full min-w-0 border-2 border-foreground bg-background px-2 text-sm";
@@ -66,7 +67,8 @@ function NarratorOperation({ d, v, refresh }: { d: any; v: any; refresh: () => v
   const gameId = d.game.id;
   const { busy, run } = useAction();
   const sLoad = useServerFn(loadOperation);
-  const myTurn = salonTurn(d.game, d.players, d.me.user_id).isMine;
+  const myTurn = true;
+  const sAdvanceCampaign = useServerFn(advanceCampaign);
   const sCtl = useServerFn(operationControl);
   const ctl = (action: string, extra: Record<string, unknown> = {}, ok?: string) =>
     run(action + String(extra["eventId"] ?? extra["enemyId"] ?? extra["room"] ?? ""), async () => { await sCtl({ data: { gameId, action, ...extra } as any }); refresh(); }, ok);
@@ -78,6 +80,7 @@ function NarratorOperation({ d, v, refresh }: { d: any; v: any; refresh: () => v
 
   return (
     <section className="space-y-4 border-2 border-primary bg-card p-4 shadow-game">
+      {v.campaign && <div className="space-y-2"><p>{v.campaign.name} · étape {v.campaign.stage}/{v.campaign.total}</p><Button disabled={!!busy} onClick={() => run("campaign", async () => { await sAdvanceCampaign({ data: { gameId } }); refresh(); })}>Valider l’objectif et continuer</Button></div>}
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="section-label">Opération · {dg.status === "preparation" ? "préparation" : dg.status === "en_cours" ? "en cours" : "terminée"}</p>
@@ -257,7 +260,7 @@ function PrepEditor({ d, rooms, refresh }: { d: any; rooms: any[]; refresh: () =
 function PlayerOperation({ d, v, refresh }: { d: any; v: any; refresh: () => void }) {
   const gameId = d.game.id;
   const solo = !!d.game.solo;
-  const myTurn = salonTurn(d.game, d.players, d.me.user_id).isMine;
+  const myTurn = true;
   const { busy, run } = useAction();
   const sAct = useServerFn(operationPlayerAction);
   const sSolo = useServerFn(soloAct);

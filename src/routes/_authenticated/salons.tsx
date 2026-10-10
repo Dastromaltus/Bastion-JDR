@@ -68,6 +68,7 @@ function SalonsPage() {
       </header>
 
       <div className="mt-8 flex flex-wrap items-end justify-between gap-3">
+        <Button asChild variant="secondary" className="mt-4 min-h-11"><Link to="/campagnes">Concevoir une campagne</Link></Button>
         <h1 className="font-display text-3xl uppercase">Mes salons</h1>
         <Button asChild className="min-h-11 rounded-none font-black uppercase"><Link to="/operations">Catalogue d'Opérations · solo gratuit</Link></Button>
       </div>
