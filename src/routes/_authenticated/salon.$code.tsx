@@ -24,6 +24,7 @@ import { RoomPassword } from "@/components/room/RoomPassword";
 import { OperationSection } from "@/components/operations/OperationPanel";
 import { getSalonDungeon } from "@/lib/operations.functions";
 import { SalonWorld } from "@/components/room/SalonWorld";
+import { MobControl } from "@/components/room/MobControl";
 import { TurnBanner } from "@/components/room/TurnBanner";
 import { salonTurn } from "@/lib/turn-order";
 import { AnimatedCount, DiceResult, HealthFill, RollingDice } from "@/components/room/MotionBits";
@@ -77,7 +78,7 @@ function RoomPage() {
   const { code } = Route.useParams();
   const navigate = useNavigate();
   const fetchRoom = useServerFn(getRoom);
-  const room = useQuery({ queryKey: ["room", code], queryFn: () => fetchRoom({ data: { code } }) });
+  const room = useQuery({ queryKey: ["room", code], queryFn: () => fetchRoom({ data: { code } }), refetchInterval: 2500 });
   const [userId, setUserId] = useState<string>();
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id)); }, []);
   const { settings, update, saving, error: settingsError } = useSettings(userId);
@@ -137,7 +138,7 @@ function RoomPage() {
 
   const { game, players, me } = d;
   const isNarr = me.role === "narrator";
-  const turn = salonTurn(game, players, me.user_id);
+  const turn = d.combat ? { ...salonTurn(game, players, me.user_id), isMine: !!d.combat.isMine } : salonTurn(game, players, me.user_id);
   const inviteUrl = typeof window !== "undefined" ? `${window.location.origin}/rejoindre/${game.code}` : "";
   const textClass = settings.textSize === "grand" ? "text-[17px]" : settings.textSize === "tres-grand" ? "text-[19px]" : "text-base";
   const narr = (action: any, extra: Record<string, unknown> = {}, ok?: string) =>
@@ -171,7 +172,7 @@ function RoomPage() {
         {game.created_by === me.user_id && <RoomPassword gameId={game.id} />}
         {game.status === "waiting" && (
           <section className="border-2 border-foreground p-4">
-            <p className="section-label">Salle d'attente — <AnimatedCount value={players.length} />/{game.max_players} joueurs</p>
+            <p className="section-label">Salle d'attente — <AnimatedCount value={players.filter((p: any) => p.role === "adventurer").length} />/{game.max_players} joueurs</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button variant="outline" className="min-h-11 rounded-none" onClick={() => { navigator.clipboard.writeText(inviteUrl).then(() => toast.success("Lien d'invitation copié"), () => toast.error("Copie impossible")); }}>
                 <Copy /> Copier le lien d'invitation
@@ -182,9 +183,10 @@ function RoomPage() {
         )}
 
         <section>
-          <p className="section-label">Table {isNarr ? "· tu es narrateur" : ""}</p>
+          <p className="section-label">Aventuriers</p>
+          <p className="text-sm text-muted-foreground">Narrateur : {players.find((p: any) => p.role === "narrator")?.display_name ?? "aucun"}{isNarr ? " · toi" : ""}</p>
           <ul data-motion-players="true" className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
-            {players.map((p: any) => (
+            {players.filter((p: any) => p.role === "adventurer").map((p: any) => (
               <li key={p.id} className={game.status === "playing" && p.id === turn.active?.id ? "anim-active" : undefined}>
                 <button
                   onClick={() => p.user_id !== me.user_id && setSelectedPlayer(p)}
@@ -203,10 +205,11 @@ function RoomPage() {
           </ul>
         </section>
 
+        <MobControl d={d} onChange={() => room.refetch()} />
         <OperationSection d={d} onChange={() => room.refetch()} />
         {game.status === "playing" && !dungeonQ.isPending && !dungeonQ.data && <SalonWorld d={d} onChange={() => room.refetch()} />}
         {game.status === "playing" && !isNarr && !dungeonQ.data && !game.solo && <ExplorePanel d={d} />}
-        {game.status === "playing" && <DicePanel gameId={game.id} enabled={turn.isMine} />}
+        {game.status === "playing" && !isNarr && !d.combat && <DicePanel gameId={game.id} enabled={turn.isMine} />}
 
         {isNarr && (
           <NarratorPanel d={d} narr={narr} busy={busy} refetch={() => room.refetch()} />
@@ -251,7 +254,7 @@ function RoomPage() {
           ["journal", "Journal", BookOpen],
           ["chat", "Chat", MessageSquare],
           ["parametres", "Paramètres", Settings],
-        ] as const).map(([key, label, Icon]) => (
+        ] as const).filter(([key]) => !isNarr || key !== "fiche").map(([key, label, Icon]) => (
           <button key={key} onClick={() => { vibrate(settings); setPanel(key); }}
             className={`flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-black uppercase ${panel === key ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>
             <Icon size={22} /> {label}
@@ -264,7 +267,7 @@ function RoomPage() {
           <SheetHeader><SheetTitle className="font-display text-xl uppercase">{panel === "parametres" ? "Paramètres" : panel ? panel.charAt(0).toUpperCase() + panel.slice(1) : ""}</SheetTitle></SheetHeader>
           <div className="px-4 pb-6">
             {panel === "inventaire" && <InventoryPanel d={d} settings={settings} />}
-            {panel === "fiche" && <SheetPanel d={d} />}
+            {panel === "fiche" && !isNarr && <SheetPanel d={d} />}
             {panel === "journal" && <JournalPanel d={d} />}
             {panel === "chat" && <ChatPanel d={d} dmTo={dmTo} setDmTo={setDmTo} />}
             {panel === "parametres" && (
@@ -372,7 +375,7 @@ function NarratorPanel({ d, narr, busy, refetch }: { d: any; narr: any; busy: st
 function NarratorTabs({ d }: { d: any }) {
   const [tab, setTab] = useState<"niveaux" | "ambiance" | "ennemis" | "tresors">(d.game.status === "waiting" ? "niveaux" : "ambiance");
   const [mobZone, setMobZone] = useState<string | undefined>(undefined);
-  const canAct = d.game.status !== "playing" || salonTurn(d.game, d.players, d.me.user_id).isMine;
+  const canAct = d.me.role === "narrator" || d.game.status !== "playing" || (d.combat ? d.combat.isMine : salonTurn(d.game, d.players, d.me.user_id).isMine);
   const tabs = [["niveaux", "Niveaux"], ["ambiance", "Ambiance"], ["ennemis", "Ennemis"], ["tresors", "Trésors"]] as const;
   return (
     <div className="border-t border-foreground/30 pt-4">
@@ -415,11 +418,11 @@ function ItemCell({ item, onTap, onLong, leaving = false }: { item: any; onTap: 
 
 function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
   const act = useServerFn(inventoryAction);
-  const canAct = d.game.status !== "playing" || salonTurn(d.game, d.players, d.me.user_id).isMine;
+  const canAct = d.me.role === "narrator" || d.game.status !== "playing" || (d.combat ? d.combat.isMine : salonTurn(d.game, d.players, d.me.user_id).isMine);
   const add = useServerFn(narratorAddItem);
   const isNarr = d.me.role === "narrator";
   const [tab, setTab] = useState<keyof typeof CAT_LABEL>("arme");
-  const [owner, setOwner] = useState<string>(d.me.user_id);
+  const [owner, setOwner] = useState<string>(d.me.role === "narrator" ? d.players.find((p: any) => p.role === "adventurer")?.user_id ?? "" : d.me.user_id);
   const [menu, setMenu] = useState<any>(null);
   const [details, setDetails] = useState<any>(null);
   const [confirm, setConfirm] = useState<{ item: any; action: "give" | "discard"; target?: any } | null>(null);
@@ -437,7 +440,7 @@ function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
     <div>
       {isNarr && (
         <select className="mb-3 h-11 w-full border border-input bg-background px-2" value={owner} onChange={(e) => setOwner(e.target.value)} aria-label="Inventaire de">
-          {d.players.map((p: any) => <option key={p.user_id} value={p.user_id}>Inventaire de {p.display_name}</option>)}
+          {d.players.filter((p: any) => p.role === "adventurer").map((p: any) => <option key={p.user_id} value={p.user_id}>Inventaire de {p.display_name}</option>)}
         </select>
       )}
       <div role="tablist" className="grid grid-cols-3 border-2 border-foreground">
@@ -477,7 +480,7 @@ function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
           {giveFor && (
             <div className="grid gap-2 px-4 pb-6">
               <p className="text-sm">Donner {giveFor.name} à :</p>
-              {d.players.filter((p: any) => p.user_id !== giveFor.owner_id).map((p: any) => (
+              {d.players.filter((p: any) => p.role === "adventurer" && p.user_id !== giveFor.owner_id).map((p: any) => (
                 <Button key={p.user_id} variant="outline" className="min-h-11 rounded-none" onClick={() => setConfirm({ item: giveFor, action: "give", target: p })}>{p.display_name}</Button>
               ))}
             </div>

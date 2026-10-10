@@ -215,16 +215,11 @@ export async function revealEnemies(gameId: string, enemies: any[], trigger: { b
   }
   const ids = enemies.map((e) => e.id);
   await db.from("game_enemies").update({ status: "revele", revealed_at: new Date().toISOString() }).in("id", ids);
-  const { data: players } = await db.from("game_players").select("display_name, speed, current_zone").eq("game_id", gameId).eq("role", "adventurer");
   for (const e of enemies) {
     await log(gameId, null, "revelation", `${e.icon} ${e.name} surgit dans ${label(e.zone)} ! (Vit ${e.speed} · For ${e.strength} · End ${e.endurance} · ${e.hp} PV — ${e.ability})`, { enemy: e.name }, true);
-    const fighters = (players ?? []).filter((p: any) => p.current_zone === e.zone);
-    const order = [
-      ...(fighters.length ? fighters : players ?? []).map((p: any) => { const r = rollDie(); return { name: p.display_name, roll: r, bonus: Math.floor(p.speed / 20), total: r + Math.floor(p.speed / 20) }; }),
-      (() => { const r = rollDie(); return { name: e.name, roll: r, bonus: e.speed, total: r + e.speed }; })(),
-    ].sort((a, b) => b.total - a.total);
-    await log(gameId, null, "jet", `Initiative (Vitesse) : ${order.map((o) => `${o.name} ${o.roll}+${o.bonus}=${o.total}`).join(" > ")}.`, { stat: "vitesse", dice: 1, initiative: order }, true);
+
   }
+  await db.rpc("start_salon_combat", { p_game_id: gameId, p_zone: enemies[0]?.zone ?? "entree" });
 }
 
 export async function defeatEnemy(gameId: string, enemy: any, winner: { user_id: string; display_name: string } | null) {
@@ -379,6 +374,12 @@ export const attackEnemy = createServerFn({ method: "POST" })
     const me = await requireAdventurer(context, data.gameId);
     const { requireSalonTurn } = await import("./turns.server");
     await requireSalonTurn(context, data.gameId);
+    const { data: combat } = await context.supabase.rpc("get_salon_combat", { p_game_id: data.gameId });
+    if (combat) {
+      const { error } = await context.supabase.rpc("salon_combat_action", { p_game_id: data.gameId, p_revision: (combat as any).revision, p_action: "attack", p_enemy_id: data.enemyId });
+      if (error) throw new Error(error.message);
+      return { hit: true, dmg: 0, defeated: false };
+    }
     const db = await admin();
     const { data: e } = await context.supabase.from("game_enemies").select("*").eq("id", data.enemyId).eq("game_id", data.gameId).maybeSingle();
     if (!e || e.status !== "revele") throw new Error("Aucun ennemi visible à attaquer.");

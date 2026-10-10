@@ -2,7 +2,7 @@ export type TurnPlayer = { id: string; user_id: string; role: string; display_na
 export type TurnGame = { solo?: boolean; turn_player_id?: string | null; turn_round?: number; turn_revision?: number };
 
 export function turnOrder(players: TurnPlayer[]) {
-  return [...players].sort((a, b) => Number(a.role === "narrator") - Number(b.role === "narrator") || a.joined_at.localeCompare(b.joined_at) || a.id.localeCompare(b.id));
+  return players.filter((p) => p.role === "adventurer").sort((a, b) => Number(a.role === "narrator") - Number(b.role === "narrator") || a.joined_at.localeCompare(b.joined_at) || a.id.localeCompare(b.id));
 }
 export function salonTurn(game: TurnGame, players: TurnPlayer[], userId: string) {
   const order = turnOrder(players);

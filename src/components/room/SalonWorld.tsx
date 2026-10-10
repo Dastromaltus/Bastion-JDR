@@ -25,10 +25,10 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const followed = turn.active?.role === "adventurer" ? d.players.find((p: any) => p.id === turn.active?.id) : d.players.find((p: any) => p.role === "adventurer");
   const here = zone ?? (d.me.role === "narrator" ? followed?.current_zone : d.me.current_zone) ?? "entree";
   const canMove = d.game.status === "playing" && d.me.role === "adventurer" && d.me.hp > 0 && here === (d.me.current_zone ?? "entree");
-  const enabled = canMove && turn.isMine;
+  const enabled = canMove && !d.combat && turn.isMine;
   const participants = participantActors(d.players, here, d.me.id);
   const actors: WorldActor[] = [...participants];
-  d.enemies.filter((e: any) => e.status === "revele" && e.zone === here).forEach((e: any, i: number) => actors.push({ id: e.id, name: e.name, x: 16 + i % 4, y: 9, frame: 12 }));
+  d.enemies.filter((e: any) => e.status === "revele" && e.zone === here).forEach((e: any, i: number) => actors.push({ id: e.id, name: e.name, x: e.tile_x ?? 16 + i % 4, y: e.tile_y ?? 9, frame: 12 }));
   useEffect(() => {
     let disposed = false;
     import("./world-scene").then(({ createWorldGame }) => {

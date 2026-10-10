@@ -10,6 +10,12 @@ export async function requireSalonTurn(ctx: { supabase: any; userId: string }, g
   }
   const { data: players, error: rosterError } = await ctx.supabase.from("game_players").select("id, user_id, role, display_name, joined_at, hp").eq("game_id", gameId);
   if (rosterError || !players?.some((p: any) => p.user_id === ctx.userId)) throw new Error("Tu n’es pas membre de ce salon.");
+  if (!playingOnly && players.some((p: any) => p.user_id === ctx.userId && p.role === "narrator")) return game;
+  const { data: combat } = await ctx.supabase.rpc("get_salon_combat", { p_game_id: gameId });
+  if (combat?.active) {
+    if (!combat.isMine) throw new Error(combat.label);
+    return game;
+  }
   const turn = salonTurn(game, players, ctx.userId);
   if (!turn.isMine) throw new Error(turn.label);
   return game;
