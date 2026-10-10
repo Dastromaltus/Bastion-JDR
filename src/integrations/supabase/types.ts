@@ -1612,6 +1612,7 @@ export type Database = {
         }
         Returns: Json
       }
+      salon_d6: { Args: never; Returns: number }
       save_private_campaign: {
         Args: { p_document: Json; p_publish?: boolean }
         Returns: Json

@@ -120,6 +120,13 @@
       "when": 1791655865148,
       "tag": "0016_campaign_salon_snapshots",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791656025532,
+      "tag": "0017_campaign_audio_and_combat_validation",
+      "breakpoints": true
     }
   ]
 }
