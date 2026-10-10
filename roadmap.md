@@ -3,3 +3,5 @@
 - [x] Verify collisions, rendering, movement controls and existing tests.
 - [x] Enforce salon turns in player order, narrator last, with synchronized turn messages and end-turn controls.
 - [x] Verify turn order, out-of-turn refusals, and the salon display.
+- [ ] Add and verify a router-derived public sitemap with robots discovery.
+- [ ] Resolve the extra SEO-page suggestion without overriding the single-page rulebook requirement.

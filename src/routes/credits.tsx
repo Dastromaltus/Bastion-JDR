@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { TRACKS, SFX } from "@/lib/ambience-tracks";
 
 export const Route = createFileRoute("/credits")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Crédits audio — Bastion" },

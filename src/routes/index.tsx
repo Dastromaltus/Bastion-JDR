@@ -5,6 +5,7 @@ import bastionFortress from "@/assets/bastion-fortress.jpg";
 import { ExplorationGame } from "@/components/ExplorationGame";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Bastion — Entrez dans la forteresse" },

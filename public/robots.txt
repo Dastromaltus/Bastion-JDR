@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://bastion-brutalist-crawl.lovable.app/sitemap.xml

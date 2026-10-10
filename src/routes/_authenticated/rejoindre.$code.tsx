@@ -8,6 +8,7 @@ import { getRoomPreview, joinRoom } from "@/lib/rooms.functions";
 import { RACE_NAMES, scenarioLabel } from "@/lib/races";
 
 export const Route = createFileRoute("/_authenticated/rejoindre/$code")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Rejoindre un salon — Bastion" },
