@@ -14,6 +14,146 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaign_placements: {
+        Row: {
+          catalog_id: string
+          hidden: boolean
+          id: string
+          kind: string
+          overrides: Json
+          room_key: string
+          stage_id: string
+          tile_x: number
+          tile_y: number
+          trigger: string
+        }
+        Insert: {
+          catalog_id: string
+          hidden?: boolean
+          id?: string
+          kind: string
+          overrides?: Json
+          room_key: string
+          stage_id: string
+          tile_x?: number
+          tile_y?: number
+          trigger?: string
+        }
+        Update: {
+          catalog_id?: string
+          hidden?: boolean
+          id?: string
+          kind?: string
+          overrides?: Json
+          room_key?: string
+          stage_id?: string
+          tile_x?: number
+          tile_y?: number
+          trigger?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_placements_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_stages: {
+        Row: {
+          campaign_id: string
+          exit_room: string
+          id: string
+          intro_text: string
+          objective: string
+          objective_room: string
+          position: number
+          template_id: string
+          track: string
+        }
+        Insert: {
+          campaign_id: string
+          exit_room: string
+          id?: string
+          intro_text?: string
+          objective?: string
+          objective_room: string
+          position?: number
+          template_id: string
+          track?: string
+        }
+        Update: {
+          campaign_id?: string
+          exit_room?: string
+          id?: string
+          intro_text?: string
+          objective?: string
+          objective_room?: string
+          position?: number
+          template_id?: string
+          track?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_stages_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_stages_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "dungeon_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          created_at: string
+          difficulty: string
+          id: string
+          is_template: boolean
+          name: string
+          owner_id: string
+          recommended_players: number
+          revision: number
+          status: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: string
+          id?: string
+          is_template?: boolean
+          name?: string
+          owner_id: string
+          recommended_players?: number
+          revision?: number
+          status?: string
+          summary?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          id?: string
+          is_template?: boolean
+          name?: string
+          owner_id?: string
+          recommended_players?: number
+          revision?: number
+          status?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dungeon_events: {
         Row: {
           effect: string
@@ -186,6 +326,7 @@ export type Database = {
       dungeon_templates: {
         Row: {
           created_at: string
+          default_track: string
           difficulty: string
           difficulty_label: string
           duration: number
@@ -208,6 +349,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          default_track?: string
           difficulty: string
           difficulty_label?: string
           duration: number
@@ -230,6 +372,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          default_track?: string
           difficulty?: string
           difficulty_label?: string
           duration?: number
@@ -536,6 +679,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "game_ambience_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: true
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_campaigns: {
+        Row: {
+          game_id: string
+          is_test: boolean
+          snapshot: Json
+          stage_index: number
+          updated_at: string
+        }
+        Insert: {
+          game_id: string
+          is_test?: boolean
+          snapshot: Json
+          stage_index?: number
+          updated_at?: string
+        }
+        Update: {
+          game_id?: string
+          is_test?: boolean
+          snapshot?: Json
+          stage_index?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_campaigns_game_id_fkey"
             columns: ["game_id"]
             isOneToOne: true
             referencedRelation: "games"
@@ -1426,6 +1601,10 @@ export type Database = {
           p_x?: number
           p_y?: number
         }
+        Returns: Json
+      }
+      save_private_campaign: {
+        Args: { p_document: Json; p_publish?: boolean }
         Returns: Json
       }
       start_salon_combat: {
