@@ -172,7 +172,7 @@ export const joinRoom = createServerFn({ method: "POST" })
     if (existing) return { ok: true as const, code: game.code };
     if (game.status !== "waiting") return { ok: false as const, error: "Cette partie a déjà commencé : impossible de la rejoindre." };
     if (game.locked) return { ok: false as const, error: "Le narrateur a verrouillé ce salon." };
-    const { count } = await db.from("game_players").select("id", { count: "exact", head: true }).eq("game_id", game.id);
+    const { count } = await db.from("game_players").select("id", { count: "exact", head: true }).eq("game_id", game.id).eq("role", "adventurer");
     if ((count ?? 0) >= game.max_players) return { ok: false as const, error: `Salon complet (${game.max_players} joueurs maximum).` };
     if (game.has_password) {
       const { data: secret } = await db.from("game_secrets").select("password_hash").eq("game_id", game.id).single();
@@ -207,7 +207,7 @@ export const getRoomPreview = createServerFn({ method: "POST" })
       .eq("code", data.code)
       .maybeSingle();
     if (!game) return null;
-    const { count } = await db.from("game_players").select("id", { count: "exact", head: true }).eq("game_id", game.id);
+    const { count } = await db.from("game_players").select("id", { count: "exact", head: true }).eq("game_id", game.id).eq("role", "adventurer");
     return { name: game.name, maxPlayers: game.max_players, hasPassword: game.has_password, status: game.status, locked: game.locked, scenario: game.scenario, players: count ?? 0 };
   });
 
@@ -243,6 +243,8 @@ export const getRoom = createServerFn({ method: "POST" })
       context.supabase.from("game_treasures").select("*").eq("game_id", game.id).order("created_at"),
       context.supabase.from("game_ambience").select("*").eq("game_id", game.id).maybeSingle(),
     ]);
+    const { data: combat } = await context.supabase.rpc("get_salon_combat", { p_game_id: game.id });
+    const { data: control } = await context.supabase.from("game_mob_control").select("enemy_id").eq("game_id", game.id).maybeSingle();
     const me = (players ?? []).find((p: any) => p.user_id === context.userId);
     let notes: any[] = [];
     let hiddenEnemies: any[] = [];
@@ -256,6 +258,8 @@ export const getRoom = createServerFn({ method: "POST" })
     }
     return {
       game,
+      combat: combat as any,
+      controlledEnemyId: control?.enemy_id ?? null,
       players: players ?? [],
       me: me ?? null,
       events: (events ?? []).reverse(),
@@ -321,8 +325,8 @@ export const narratorAction = createServerFn({ method: "POST" })
         break;
       case "transfer": {
         if (!target || target.user_id === context.userId) throw new Error("Choisis un autre joueur du salon.");
-        await db.from("game_players").update({ role: "adventurer" }).eq("id", me.id);
-        await db.from("game_players").update({ role: "narrator" }).eq("id", target.id);
+        const { error } = await context.supabase.rpc("transfer_salon_narrator", { p_game_id: data.gameId, p_target: target.user_id });
+        if (error) throw new Error(error.message);
         await logEvent(data.gameId, context.userId, "systeme", `${me.display_name} transmet le rôle de narrateur à ${target.display_name}.`, {}, true);
         break;
       }
@@ -362,6 +366,7 @@ export const updateCharacter = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const me = await membership(context, data.gameId);
+    if (me.role !== "adventurer") throw new Error("Le narrateur n’a pas de fiche de personnage.");
     const db = await admin();
     const { data: game } = await db.from("games").select("status").eq("id", data.gameId).single();
     if (game?.status !== "waiting") throw new Error("La fiche ne peut plus changer une fois la partie lancée.");
@@ -388,6 +393,7 @@ export const rollCheck = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const me = await membership(context, data.gameId);
+    if (me.role !== "adventurer") throw new Error("Le narrateur agit via les mobs.");
     const db = await admin();
     const { data: p } = await db.from("game_players").select("*").eq("id", me.id).single();
     const { requireSalonTurn } = await import("./turns.server");
@@ -444,6 +450,8 @@ export const inventoryAction = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const me = await membership(context, data.gameId);
     const item = await loadItem(data.gameId, data.itemId);
+    const { data: itemOwner } = await context.supabase.from("game_players").select("role").eq("game_id", data.gameId).eq("user_id", item.owner_id).maybeSingle();
+    if (itemOwner?.role !== "adventurer") throw new Error("Cette fiche est archivée.");
     if (item.owner_id !== context.userId && me.role !== "narrator") throw new Error("Cet objet ne t'appartient pas.");
     const { requireSalonTurn } = await import("./turns.server");
     await requireSalonTurn(context, data.gameId, false);
@@ -470,7 +478,7 @@ export const inventoryAction = createServerFn({ method: "POST" })
       }
       case "give": {
         if (!data.targetUserId || data.targetUserId === item.owner_id) throw new Error("Choisis un autre joueur.");
-        const { data: target } = await db.from("game_players").select("display_name").eq("game_id", data.gameId).eq("user_id", data.targetUserId).maybeSingle();
+        const { data: target } = await db.from("game_players").select("display_name").eq("game_id", data.gameId).eq("user_id", data.targetUserId).eq("role", "adventurer").maybeSingle();
         if (!target) throw new Error("Ce joueur n'est pas dans le salon.");
         await db.from("game_inventory").update({ owner_id: data.targetUserId, equipped: false }).eq("id", item.id);
         await logEvent(data.gameId, context.userId, "objet", `${me.display_name} donne ${item.name} à ${target.display_name}.`, {}, true);
@@ -503,7 +511,7 @@ export const narratorAddItem = createServerFn({ method: "POST" })
     const { requireSalonTurn } = await import("./turns.server");
     await requireSalonTurn(context, data.gameId, false);
     const db = await admin();
-    const { data: owner } = await db.from("game_players").select("display_name").eq("game_id", data.gameId).eq("user_id", data.ownerId).maybeSingle();
+    const { data: owner } = await db.from("game_players").select("display_name").eq("game_id", data.gameId).eq("user_id", data.ownerId).eq("role", "adventurer").maybeSingle();
     if (!owner) throw new Error("Ce joueur n'est pas dans le salon.");
     await db.from("game_inventory").insert({ game_id: data.gameId, owner_id: data.ownerId, name: data.name, category: data.category, effect: data.effect, rarity: data.rarity });
     await logEvent(data.gameId, context.userId, "objet", `Le narrateur remet ${data.name} à ${owner.display_name}.`);
