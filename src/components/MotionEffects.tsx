@@ -12,6 +12,7 @@ export function MotionEffects() {
     const apply = (reduced: boolean) => {
       document.documentElement.dataset["reducedMotion"] = String(reduced);
       if (reduced) document.getAnimations().forEach((a) => a.cancel());
+      else requestAnimationFrame(() => { if (alive) decorate(document.body); });
     };
     const changed = (event: Event) => { revision++; apply((event as CustomEvent<boolean>).detail); };
     window.addEventListener(MOTION_EVENT, changed);
@@ -46,7 +47,7 @@ export function MotionEffects() {
         if (!(item instanceof HTMLElement) || item.dataset["motionSeen"]) return;
         item.dataset["motionSeen"] = "true";
         item.style.setProperty("--anim-delay", `${Math.min(i, 6) * 40}ms`);
-        playMotion(item, item.closest('[data-motion-players]') ? "anim-join" : "anim-enter");
+        playMotion(item, item.hasAttribute("data-motion-reveal") ? "anim-glitch" : item.closest('[data-motion-players]') ? "anim-join" : "anim-enter");
       });
     };
     decorate(document.body);

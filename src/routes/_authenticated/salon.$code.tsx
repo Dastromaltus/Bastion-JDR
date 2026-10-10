@@ -28,6 +28,7 @@ import { TurnBanner } from "@/components/room/TurnBanner";
 import { salonTurn } from "@/lib/turn-order";
 import { AnimatedCount, DiceResult, HealthFill, RollingDice } from "@/components/room/MotionBits";
 import { motionFeedback } from "@/lib/motion";
+import { useMotionItems } from "@/hooks/use-motion-items";
 
 export const Route = createFileRoute("/_authenticated/salon/$code")({
   staticData: { sitemap: false },
@@ -401,10 +402,10 @@ function useLongPress(onLong: () => void, onTap: () => void) {
   };
 }
 
-function ItemCell({ item, onTap, onLong }: { item: any; onTap: () => void; onLong: () => void }) {
+function ItemCell({ item, onTap, onLong, leaving = false }: { item: any; onTap: () => void; onLong: () => void; leaving?: boolean }) {
   const lp = useLongPress(onLong, onTap);
   return (
-    <button {...lp} onKeyDown={(e) => e.key === "Enter" && onTap()} className={`relative flex aspect-square min-h-16 select-none flex-col items-center justify-center border-2 p-1 text-center text-xs font-bold ${item.equipped ? "border-primary bg-secondary" : "border-foreground/50"}`}>
+    <button {...lp} disabled={leaving} onKeyDown={(e) => e.key === "Enter" && onTap()} className={`${leaving ? "anim-exit" : ""} relative flex aspect-square min-h-16 select-none flex-col items-center justify-center border-2 p-1 text-center text-xs font-bold ${item.equipped ? "border-primary bg-secondary" : "border-foreground/50"}`}>
       <span className="line-clamp-2">{item.name}</span>
       {item.quantity > 1 && <span className="absolute bottom-1 right-1 font-pixel">×{item.quantity}</span>}
       {item.equipped && <span className="absolute left-1 top-1 text-[9px] text-primary">ÉQUIPÉ</span>}
@@ -428,6 +429,7 @@ function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
   const others = d.players.filter((p: any) => p.user_id !== d.me.user_id);
   const viewOwner = isNarr ? owner : d.me.user_id;
   const items = d.inventory.filter((i: any) => i.owner_id === viewOwner && i.category === tab);
+  const shownItems = useMotionItems<any>(items);
   const call = (item: any, action: any, targetUserId?: string, ok?: string) =>
     run(action, () => act({ data: { gameId: d.game.id, itemId: item.id, action, targetUserId } }), ok).then((r) => { if (r) { setMenu(null); setConfirm(null); } });
 
@@ -444,7 +446,7 @@ function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
         ))}
       </div>
       <div className="anim-list mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
-        {items.map((i: any) => <ItemCell key={i.id} item={i} onTap={() => { vibrate(settings); setMenu(i); }} onLong={() => { vibrate(settings, 60); setDetails(i); }} />)}
+        {shownItems.map(({ item: i, leaving }) => <ItemCell key={i.id} item={i} leaving={leaving} onTap={() => { vibrate(settings); setMenu(i); }} onLong={() => { vibrate(settings, 60); setDetails(i); }} />)}
         {Array.from({ length: Math.max(0, 8 - items.length) }).map((_, i) => <div key={i} className="aspect-square border border-dashed border-foreground/20" />)}
       </div>
       <p className="mt-2 text-xs text-muted-foreground">Appui : actions · appui long : détails.</p>
