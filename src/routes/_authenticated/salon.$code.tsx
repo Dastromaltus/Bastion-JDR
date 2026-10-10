@@ -21,6 +21,7 @@ import { useAmbience, SoundGate, PersonalAmbience } from "@/components/room/Ambi
 import { AmbiencePanel, EnemyPanel, TreasurePanel, ExplorePanel } from "@/components/room/NarratorTools";
 import { OperationSection } from "@/components/operations/OperationPanel";
 import { getSalonDungeon } from "@/lib/operations.functions";
+import { SalonWorld } from "@/components/room/SalonWorld";
 
 export const Route = createFileRoute("/_authenticated/salon/$code")({
   head: ({ params }) => ({
@@ -193,6 +194,7 @@ function RoomPage() {
         </section>
 
         <OperationSection d={d} onChange={() => room.refetch()} />
+        {game.status === "playing" && !dungeonQ.isPending && !dungeonQ.data && <SalonWorld d={d} onChange={() => room.refetch()} />}
         {game.status === "playing" && !isNarr && !dungeonQ.data && !game.solo && <ExplorePanel d={d} />}
         {game.status === "playing" && <DicePanel gameId={game.id} />}
 
