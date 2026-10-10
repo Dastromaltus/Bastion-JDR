@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { MOTION_EVENT } from "@/lib/motion";
 
 export type GameSettings = {
   volume: number;
@@ -34,6 +35,10 @@ export function useSettings(userId: string | undefined) {
     async (patch: Partial<GameSettings>) => {
       if (!userId) return;
       const next = { ...settings, ...patch };
+      if (patch.reducedMotion !== undefined) {
+        document.documentElement.dataset.reducedMotion = String(patch.reducedMotion);
+        window.dispatchEvent(new CustomEvent(MOTION_EVENT, { detail: patch.reducedMotion }));
+      }
       setSettings(next);
       setSaving(true);
       setError(null);
