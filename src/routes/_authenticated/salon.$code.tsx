@@ -205,6 +205,7 @@ function RoomPage() {
           </ul>
         </section>
 
+        <MobControl d={d} onChange={() => room.refetch()} />
         <OperationSection d={d} onChange={() => room.refetch()} />
         {game.status === "playing" && !dungeonQ.isPending && !dungeonQ.data && <SalonWorld d={d} onChange={() => room.refetch()} />}
         {game.status === "playing" && !isNarr && !dungeonQ.data && !game.solo && <ExplorePanel d={d} />}
@@ -374,7 +375,7 @@ function NarratorPanel({ d, narr, busy, refetch }: { d: any; narr: any; busy: st
 function NarratorTabs({ d }: { d: any }) {
   const [tab, setTab] = useState<"niveaux" | "ambiance" | "ennemis" | "tresors">(d.game.status === "waiting" ? "niveaux" : "ambiance");
   const [mobZone, setMobZone] = useState<string | undefined>(undefined);
-  const canAct = d.game.status !== "playing" || salonTurn(d.game, d.players, d.me.user_id).isMine;
+  const canAct = d.me.role === "narrator" || d.game.status !== "playing" || (d.combat ? d.combat.isMine : salonTurn(d.game, d.players, d.me.user_id).isMine);
   const tabs = [["niveaux", "Niveaux"], ["ambiance", "Ambiance"], ["ennemis", "Ennemis"], ["tresors", "Trésors"]] as const;
   return (
     <div className="border-t border-foreground/30 pt-4">
@@ -417,7 +418,7 @@ function ItemCell({ item, onTap, onLong, leaving = false }: { item: any; onTap: 
 
 function InventoryPanel({ d, settings }: { d: any; settings: GameSettings }) {
   const act = useServerFn(inventoryAction);
-  const canAct = d.game.status !== "playing" || salonTurn(d.game, d.players, d.me.user_id).isMine;
+  const canAct = d.me.role === "narrator" || d.game.status !== "playing" || (d.combat ? d.combat.isMine : salonTurn(d.game, d.players, d.me.user_id).isMine);
   const add = useServerFn(narratorAddItem);
   const isNarr = d.me.role === "narrator";
   const [tab, setTab] = useState<keyof typeof CAT_LABEL>("arme");

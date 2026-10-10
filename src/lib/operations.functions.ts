@@ -421,7 +421,7 @@ export const operationControl = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const me = await requireNarrator(context, data.gameId);
     const { requireSalonTurn } = await import("./turns.server");
-    const game = await requireSalonTurn(context, data.gameId);
+    const game = await requireSalonTurn(context, data.gameId, false);
     const db = await admin();
     const dg = await getDungeonRow(data.gameId);
     if (!dg || dg.status !== "en_cours") throw new Error("Aucune Opération en cours dans ce salon.");
