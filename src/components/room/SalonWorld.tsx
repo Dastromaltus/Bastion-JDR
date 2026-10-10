@@ -41,6 +41,9 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     if (ready) game.current?.scene.getScene("SalonWorld").events.emit("actors", actors);
   }, [ready, JSON.stringify(actors)]);
   useEffect(() => {
+    if (ready) game.current?.scene.getScene("SalonWorld").events.emit("zone", here);
+  }, [ready, here]);
+  useEffect(() => {
     if (previousZone.current && previousZone.current !== here && !motionDisabled()) view.current?.animate(
       [{ opacity: 0.35, transform: "translateX(8px)" }, { opacity: 1, transform: "translateX(0)" }],
       { duration: 200, easing: "linear" },
