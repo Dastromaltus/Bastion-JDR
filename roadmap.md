@@ -14,3 +14,4 @@
 - [x] Step 3: Add private campaign authoring, live placements/player preview, validation, autosave/publication, duplication/templates, salon copies, solo testing and A4 PDF.
 - [x] Verify 23 focused tests, campaign autosave, real solo-test navigation and Phaser rendering; review hidden-row policies and author permissions. Multi-account combat/transfer and physical-phone checks remain unverified.
 - [x] Give the six salon zones distinct pixel-art scenery; verified all six canvases, live salon rendering, unchanged tile identities and six focused tests.
+- [ ] Strengthen site-wide page, title, section and interaction motion while preserving artwork and reduced-motion behavior.

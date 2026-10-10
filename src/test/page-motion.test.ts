@@ -23,6 +23,15 @@ function setup() {
 }
 
 describe("site-wide page entrances", () => {
+  it("covers page landmarks and titles without requiring page-by-page markers", () => {
+    const fake = setup();
+    document.body.innerHTML = '<main><header>Navigation</header><h1>Salons</h1><section>A</section><section>B</section></main><aside>Unrelated</aside>';
+    const entrances = createPageEntrances();
+    entrances.scan(document.body);
+    expect(fake.observe).toHaveBeenCalledTimes(4);
+    expect(document.querySelectorAll("section")[1]?.style.getPropertyValue("--anim-delay")).toBe("40ms");
+    entrances.disconnect();
+  });
   it("observes only marked rendered content once with a bounded cascade", () => {
     const fake = setup();
     document.body.innerHTML = '<div data-motion-stagger><article>A</article><article>B</article></div><div>Unmarked</div>';
