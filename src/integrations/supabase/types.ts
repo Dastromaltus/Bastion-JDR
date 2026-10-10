@@ -1066,6 +1066,9 @@ export type Database = {
           solo: boolean
           started_at: string | null
           status: string
+          turn_player_id: string | null
+          turn_revision: number
+          turn_round: number
         }
         Insert: {
           code: string
@@ -1082,6 +1085,9 @@ export type Database = {
           solo?: boolean
           started_at?: string | null
           status?: string
+          turn_player_id?: string | null
+          turn_revision?: number
+          turn_round?: number
         }
         Update: {
           code?: string
@@ -1098,6 +1104,9 @@ export type Database = {
           solo?: boolean
           started_at?: string | null
           status?: string
+          turn_player_id?: string | null
+          turn_revision?: number
+          turn_round?: number
         }
         Relationships: []
       }
@@ -1238,6 +1247,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      end_salon_turn: {
+        Args: { p_game_id: string; p_revision: number }
+        Returns: Json
+      }
       is_game_member: { Args: { _game_id: string }; Returns: boolean }
       is_game_narrator: { Args: { _game_id: string }; Returns: boolean }
     }
