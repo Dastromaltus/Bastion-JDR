@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { FEEDBACK_EVENT, MOTION_EVENT, motionDisabled, playMotion } from "@/lib/motion";
+import { createPageEntrances } from "@/lib/page-motion";
 
 /** Decorate rendered, authorized content only; never inspect hidden game data. */
 export function MotionEffects() {
@@ -9,10 +10,16 @@ export function MotionEffects() {
   useEffect(() => {
     let alive = true;
     let revision = 0;
+    const entrances = createPageEntrances();
     const apply = (reduced: boolean) => {
       document.documentElement.dataset["reducedMotion"] = String(reduced);
       if (reduced) document.getAnimations().forEach((a) => a.cancel());
-      else requestAnimationFrame(() => { if (alive) decorate(document.body); });
+      else requestAnimationFrame(() => {
+        if (!alive) return;
+        decorate(document.body);
+        const main = document.querySelector<HTMLElement>("main");
+        if (main) playMotion(main, "anim-page");
+      });
     };
     const changed = (event: Event) => { revision++; apply((event as CustomEvent<boolean>).detail); };
     window.addEventListener(MOTION_EVENT, changed);
@@ -42,6 +49,7 @@ export function MotionEffects() {
     window.addEventListener(FEEDBACK_EVENT, feedback);
     const decorate = (root: Element) => {
       if (motionDisabled()) return;
+      entrances.scan(root);
       const lists = root.matches("ul,ol,.anim-list") ? [root] : [...root.querySelectorAll("ul,ol,.anim-list")];
       for (const list of lists) [...list.children].forEach((item, i) => {
         if (!(item instanceof HTMLElement) || item.dataset["motionSeen"]) return;
@@ -59,7 +67,7 @@ export function MotionEffects() {
     });
     observer.observe(document.body, { childList: true, subtree: true });
     return () => {
-      alive = false; observer.disconnect(); auth.subscription.unsubscribe();
+      alive = false; observer.disconnect(); entrances.disconnect(); auth.subscription.unsubscribe();
       window.removeEventListener(MOTION_EVENT, changed); window.removeEventListener(FEEDBACK_EVENT, feedback);
       media.removeEventListener("change", stop);
     };

@@ -67,7 +67,7 @@ function JoinPage() {
                 {r.status !== "waiting" ? "La partie a déjà commencé : les nouvelles arrivées sont refusées." : r.locked ? "Le narrateur a verrouillé ce salon." : "Ce salon est complet."}
               </p>
             ) : null}
-            <form onSubmit={submit} className="mt-6 space-y-3">
+            <form data-motion-enter onSubmit={submit} className="mt-6 space-y-3">
               <Input required maxLength={40} className="h-11 rounded-none" placeholder="Ton nom d'aventurier" value={name} onChange={(e) => setName(e.target.value)} />
               <select className="h-11 w-full border border-input bg-background px-2" value={race} onChange={(e) => setRace(e.target.value as any)}>
                 {RACE_NAMES.map((n) => <option key={n}>{n}</option>)}

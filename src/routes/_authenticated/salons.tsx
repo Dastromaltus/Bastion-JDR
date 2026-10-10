@@ -72,7 +72,7 @@ function SalonsPage() {
         <Button asChild className="min-h-11 rounded-none font-black uppercase"><Link to="/operations">Catalogue d'Opérations · solo gratuit</Link></Button>
       </div>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-2">
+      <section data-motion-stagger className="mt-6 grid gap-6 lg:grid-cols-2">
         <form onSubmit={submit} className="space-y-3 border-2 border-foreground p-4">
           <h2 className="section-label">Créer un salon privé</h2>
           <Input className={field} required maxLength={60} placeholder="Nom du salon" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />

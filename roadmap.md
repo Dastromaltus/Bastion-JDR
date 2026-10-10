@@ -8,3 +8,4 @@
 - [x] Show all salon participants and the narrator on the game screen; verify map labels and participant visibility.
 - [x] Add subtle motion to navigation, lists, panels, dice, combat, inventory and events without changing artwork.
 - [x] Verify reduced motion, static appearance, hidden-content safety and simulated mobile performance; list modified files. Sixfold CPU simulation showed frame gaps; a real entry-level phone remains untested.
+- [x] Extend lightweight entrance animations across all site pages and verify navigation and reduced motion (8 tests passing; public-page browser checks show zero errors and zero animations when reduced motion is enabled).
