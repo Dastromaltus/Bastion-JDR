@@ -9,5 +9,5 @@ export const WORLD_DECOR_ROWS: Record<string, number> = {
 };
 
 export function worldDecorFrame(tile: number, zone: string) {
-  return (WORLD_DECOR_ROWS[zone] ?? WORLD_DECOR_ROWS.entree ?? 1) * 16 + tile - 1;
+  return (WORLD_DECOR_ROWS[zone] ?? WORLD_DECOR_ROWS["entree"] ?? 1) * 16 + tile - 1;
 }
