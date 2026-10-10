@@ -134,6 +134,13 @@
       "when": 1791656285424,
       "tag": "0018_isolated_campaign_playtests",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791656339979,
+      "tag": "0019_enforce_narrator_campaign_authoring",
+      "breakpoints": true
     }
   ]
 }
