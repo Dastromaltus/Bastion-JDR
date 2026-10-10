@@ -365,7 +365,10 @@ export const rollCheck = createServerFn({ method: "POST" })
     const me = await membership(context, data.gameId);
     const db = await admin();
     const { data: p } = await db.from("game_players").select("*").eq("id", me.id).single();
-    const statValue = data.stat === "vitesse" ? p!.speed : data.stat === "force" ? p!.strength : p!.endurance;
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId);
+    if (!p) throw new Error("Personnage introuvable.");
+    const statValue = data.stat === "vitesse" ? p.speed : data.stat === "force" ? p.strength : p.endurance;
     const rolls = Array.from({ length: data.dice }, () => rollDie(6));
     const bonus = Math.floor(statValue / 20);
     const total = rolls.reduce((a, b) => a + b, 0) + bonus;
@@ -384,14 +387,17 @@ export const rollCheck = createServerFn({ method: "POST" })
 
 export const nextTurn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ gameId: z.string().uuid() }).parse(d))
+  .inputValidator((d) => z.object({ gameId: z.string().uuid(), revision: z.number().int().nonnegative() }).parse(d))
   .handler(async ({ data, context }) => {
-    await requireNarrator(context, data.gameId);
-    const db = await admin();
-    const { count } = await db.from("game_events").select("id", { count: "exact", head: true }).eq("game_id", data.gameId).eq("kind", "tour");
-    const turn = (count ?? 0) + 2;
-    await logEvent(data.gameId, context.userId, "tour", `Début du tour ${turn}.`, { turn }, true);
-    return { turn };
+    await membership(context, data.gameId);
+    const { data: result, error } = await context.supabase.rpc("end_salon_turn", { p_game_id: data.gameId, p_revision: data.revision });
+    if (error) throw new Error(error.message);
+    const state = result as { wrapped?: boolean; round?: number } | null;
+    if (state?.wrapped) {
+      const { completeDungeonRound } = await import("./operations.functions");
+      await completeDungeonRound(data.gameId);
+    }
+    return { turn: state?.round ?? 1 };
   });
 
 /* ---------- Inventaire ---------- */
@@ -414,6 +420,8 @@ export const inventoryAction = createServerFn({ method: "POST" })
     const me = await membership(context, data.gameId);
     const item = await loadItem(data.gameId, data.itemId);
     if (item.owner_id !== context.userId && me.role !== "narrator") throw new Error("Cet objet ne t'appartient pas.");
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId, false);
     const db = await admin();
     switch (data.action) {
       case "use": {

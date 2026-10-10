@@ -420,6 +420,8 @@ export const operationControl = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const me = await requireNarrator(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    const game = await requireSalonTurn(context, data.gameId);
     const db = await admin();
     const dg = await getDungeonRow(data.gameId);
     if (!dg || dg.status !== "en_cours") throw new Error("Aucune Opération en cours dans ce salon.");
@@ -437,7 +439,13 @@ export const operationControl = createServerFn({ method: "POST" })
         await fireEvent(data.gameId, ev, dg);
         break;
       }
-      case "next_turn": await advanceTurn(data.gameId, dg, tpl); break;
+      case "next_turn": {
+        if (!game) throw new Error("Partie indisponible.");
+        const { data: result, error } = await context.supabase.rpc("end_salon_turn", { p_game_id: data.gameId, p_revision: game.turn_revision });
+        if (error) throw new Error(error.message);
+        if (result?.wrapped) await advanceTurn(data.gameId, dg, tpl);
+        break;
+      }
       case "reveal": {
         const { data: e } = await db.from("game_enemies").select("*").eq("id", data.enemyId).eq("game_id", data.gameId).eq("status", "cache").maybeSingle();
         if (!e) throw new Error("Cet ennemi est déjà révélé.");
@@ -499,10 +507,18 @@ export const operationPlayerAction = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const me = await membership(context, data.gameId);
     if (me.role !== "adventurer") throw new Error("Seuls les aventuriers agissent dans les salles.");
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId);
     const dg = await getDungeonRow(data.gameId);
     if (!dg || dg.status !== "en_cours") throw new Error("Aucune Opération en cours.");
     return playerAct(data.gameId, dg, me, data.action, data.stat ?? "force");
   });
+
+export async function completeDungeonRound(gameId: string) {
+  const dg = await getDungeonRow(gameId);
+  if (!dg || dg.status !== "en_cours") return;
+  await advanceTurn(gameId, dg, await loadTemplate(dg.template_id));
+}
 
 async function playerAct(gameId: string, dg: any, me: any, action: "search" | "unlock_door", stat: "force" | "vitesse") {
   const db = await admin();

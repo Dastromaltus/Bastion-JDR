@@ -22,6 +22,8 @@ import { AmbiencePanel, EnemyPanel, TreasurePanel, ExplorePanel } from "@/compon
 import { OperationSection } from "@/components/operations/OperationPanel";
 import { getSalonDungeon } from "@/lib/operations.functions";
 import { SalonWorld } from "@/components/room/SalonWorld";
+import { TurnBanner } from "@/components/room/TurnBanner";
+import { salonTurn } from "@/lib/turn-order";
 
 export const Route = createFileRoute("/_authenticated/salon/$code")({
   head: ({ params }) => ({
@@ -82,11 +84,10 @@ function RoomPage() {
   const sNarr = useServerFn(narratorAction);
   const sLeave = useServerFn(leaveRoom);
   const sSignal = useServerFn(sendSignal);
-  const sTurn = useServerFn(nextTurn);
 
   const gameId = room.data?.game.id as string | undefined;
   const fetchDg = useServerFn(getSalonDungeon);
-  const dungeonQ = useQuery({ queryKey: ["dungeon", gameId], queryFn: () => fetchDg({ data: { gameId: gameId! } }), enabled: !!gameId });
+  const dungeonQ = useQuery({ queryKey: ["dungeon", gameId], queryFn: () => { if (!gameId) throw new Error("Salon indisponible."); return fetchDg({ data: { gameId } }); }, enabled: !!gameId });
   const amb = useAmbience(gameId, (room.data as any)?.ambience ?? null, settings);
   const [loot, setLoot] = useState<string | null>(null);
 
@@ -130,6 +131,7 @@ function RoomPage() {
 
   const { game, players, me } = d;
   const isNarr = me.role === "narrator";
+  const turn = salonTurn(game, players, me.user_id);
   const inviteUrl = typeof window !== "undefined" ? `${window.location.origin}/rejoindre/${game.code}` : "";
   const textClass = settings.textSize === "grand" ? "text-[17px]" : settings.textSize === "tres-grand" ? "text-[19px]" : "text-base";
   const narr = (action: any, extra: Record<string, unknown> = {}, ok?: string) =>
@@ -148,6 +150,7 @@ function RoomPage() {
       </header>
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-6">
+        <TurnBanner d={d} onChange={() => room.refetch()} />
         {game.status === "playing" && <SoundGate unlocked={amb.unlocked} onUnlock={() => amb.unlock().catch(() => toast.error("Impossible d'activer le son sur ce navigateur."))} />}
         {game.status !== "waiting" && <PersonalAmbience row={amb.row} settings={settings} update={update} />}
         {game.status === "finished" && (
@@ -196,10 +199,10 @@ function RoomPage() {
         <OperationSection d={d} onChange={() => room.refetch()} />
         {game.status === "playing" && !dungeonQ.isPending && !dungeonQ.data && <SalonWorld d={d} onChange={() => room.refetch()} />}
         {game.status === "playing" && !isNarr && !dungeonQ.data && !game.solo && <ExplorePanel d={d} />}
-        {game.status === "playing" && <DicePanel gameId={game.id} />}
+        {game.status === "playing" && <DicePanel gameId={game.id} enabled={turn.isMine} />}
 
         {isNarr && (
-          <NarratorPanel d={d} narr={narr} busy={busy} onTurn={() => run("turn", () => sTurn({ data: { gameId: game.id } }), "Nouveau tour")} refetch={() => room.refetch()} />
+          <NarratorPanel d={d} narr={narr} busy={busy} refetch={() => room.refetch()} />
         )}
 
         <section>
@@ -293,7 +296,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return <div className="min-h-screen bg-background">{children}</div>;
 }
 
-function DicePanel({ gameId }: { gameId: string }) {
+function DicePanel({ gameId, enabled }: { gameId: string; enabled: boolean }) {
   const roll = useServerFn(rollCheck);
   const [stat, setStat] = useState<"vitesse" | "force" | "endurance">("force");
   const [dice, setDice] = useState(2);
@@ -312,7 +315,7 @@ function DicePanel({ gameId }: { gameId: string }) {
         </select>
         <Input type="number" min={1} max={60} className="h-11 rounded-none" aria-label="Difficulté" value={difficulty} onChange={(e) => setDifficulty(Number(e.target.value))} />
       </div>
-      <Button disabled={busy === "roll"} className="mt-3 min-h-11 w-full rounded-none font-black uppercase"
+      <Button disabled={busy === "roll" || !enabled} className="mt-3 min-h-11 w-full rounded-none font-black uppercase"
         onClick={() => run("roll", async () => setLast(await roll({ data: { gameId, stat, dice, difficulty } })))}>
         <Dices /> {busy === "roll" ? "Lancer…" : "Lancer"}
       </Button>
@@ -321,7 +324,7 @@ function DicePanel({ gameId }: { gameId: string }) {
   );
 }
 
-function NarratorPanel({ d, narr, busy, onTurn, refetch }: { d: any; narr: any; busy: string | null; onTurn: () => void; refetch: () => void }) {
+function NarratorPanel({ d, narr, busy, refetch }: { d: any; narr: any; busy: string | null; refetch: () => void }) {
   const { game } = d;
   const [note, setNote] = useState("");
   const { busy: b2, run } = useAction();
@@ -337,7 +340,6 @@ function NarratorPanel({ d, narr, busy, onTurn, refetch }: { d: any; narr: any; 
         )}
         {game.status === "playing" && (
           <>
-            <Button variant="outline" disabled={!!busy} className="min-h-11 rounded-none" onClick={onTurn}>Tour suivant</Button>
             <Button disabled={!!busy} className="min-h-11 rounded-none" onClick={() => narr("finish", { result: "victoire" }, "Partie terminée")}>Terminer : victoire</Button>
             <Button variant="destructive" disabled={!!busy} className="min-h-11 rounded-none" onClick={() => narr("finish", { result: "defaite" }, "Partie terminée")}>Terminer : défaite</Button>
           </>

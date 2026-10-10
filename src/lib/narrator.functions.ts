@@ -328,6 +328,8 @@ export const exploreAction = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ gameId: uuid, action: z.enum(["enter", "door", "chest"]), zone: zone.optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const me = await requireAdventurer(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId);
     const db = await admin();
     const { data: dg } = await db.from("game_dungeons").select("status").eq("game_id", data.gameId).maybeSingle();
     if (dg?.status === "en_cours") throw new Error("Une Opération est en cours : c'est le narrateur qui fait avancer la table de salle en salle.");
@@ -365,6 +367,8 @@ export const attackEnemy = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ gameId: uuid, enemyId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
     const me = await requireAdventurer(context, data.gameId);
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId);
     const db = await admin();
     const { data: e } = await context.supabase.from("game_enemies").select("*").eq("id", data.enemyId).eq("game_id", data.gameId).maybeSingle();
     if (!e || e.status !== "revele") throw new Error("Aucun ennemi visible à attaquer.");
