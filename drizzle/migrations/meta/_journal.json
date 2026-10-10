@@ -85,6 +85,13 @@
       "when": 1791652617542,
       "tag": "0011_game_levels",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791653184997,
+      "tag": "0012_purge_inactive_salons",
+      "breakpoints": true
     }
   ]
 }
