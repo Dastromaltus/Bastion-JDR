@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 import tiles from "@/assets/world-tiles.png";
 import map from "@/data/salon-world.json";
 
