@@ -1582,13 +1582,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      advance_private_campaign: { Args: { p_game_id: string }; Returns: Json }
       end_salon_turn: {
         Args: { p_game_id: string; p_revision: number }
         Returns: Json
       }
       get_salon_combat: { Args: { p_game_id: string }; Returns: Json }
+      install_campaign_stage: {
+        Args: { p_game_id: string; p_index: number }
+        Returns: undefined
+      }
       is_game_member: { Args: { _game_id: string }; Returns: boolean }
       is_game_narrator: { Args: { _game_id: string }; Returns: boolean }
+      load_private_campaign: {
+        Args: { p_campaign_id: string; p_game_id: string }
+        Returns: Json
+      }
       purge_inactive_salons: { Args: never; Returns: number }
       salon_combat_action: {
         Args: {
