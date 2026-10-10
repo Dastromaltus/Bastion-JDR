@@ -44,7 +44,7 @@ function OperationsPage() {
       <h1 className="mt-8 font-display text-3xl uppercase">Catalogue d'Opérations</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">Des donjons préconstruits, prêts à charger dans ton salon. Ennemis, trésors et événements sont préplacés : tu peux tout ajuster avant de lancer.</p>
 
-      <div className="mt-6 grid max-w-xl grid-cols-2 gap-3">
+      <div data-motion-enter className="mt-6 grid max-w-xl grid-cols-2 gap-3">
         <label className="text-xs font-bold uppercase">Durée
           <select className={SEL + " mt-1"} value={dur} onChange={(e) => setDur(e.target.value)}>
             <option value="all">Toutes</option><option value="30">30 min</option><option value="60">60 min</option><option value="90">90 min</option>
@@ -138,7 +138,7 @@ function OperationCard({ op, salons }: { op: any; salons: any[] }) {
           {op.solo && !soloForm && <Button variant="secondary" className="min-h-11 rounded-none font-bold uppercase" onClick={() => setSoloForm({ name: "", race: "Humain" })}>Jouer en solo</Button>}
         </div>
         {soloForm && (
-          <form onSubmit={doSolo} className="grid gap-2 border-2 border-primary p-3 sm:grid-cols-3">
+          <form data-motion-enter onSubmit={doSolo} className="grid gap-2 border-2 border-primary p-3 sm:grid-cols-3">
             <Input required maxLength={40} className="h-11 rounded-none" placeholder="Ton nom" value={soloForm.name} onChange={(e) => setSoloForm({ ...soloForm, name: e.target.value })} />
             <select aria-label="Race" className={SEL} value={soloForm.race} onChange={(e) => setSoloForm({ ...soloForm, race: e.target.value })}>
               {RACE_NAMES.map((r) => <option key={r}>{r}</option>)}

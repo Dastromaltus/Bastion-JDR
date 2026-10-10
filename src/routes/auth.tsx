@@ -81,7 +81,7 @@ function AuthPage() {
       <div className="w-full max-w-sm border-2 border-foreground p-6">
         <a href="/" className="font-display text-xl uppercase">Bastion<span className="text-primary">.</span></a>
         <h1 className="mt-6 font-display text-lg uppercase">{mode === "in" ? "Connexion" : "Créer un compte"}</h1>
-        <form onSubmit={submit} className="mt-6 space-y-3">
+        <form key={mode} data-motion-enter onSubmit={submit} className="mt-6 space-y-3">
           <Input type="email" required placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 rounded-none" />
           <Input type="password" required minLength={6} placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 rounded-none" />
           {error && <p role="alert" className="text-sm font-bold text-primary">{error}</p>}

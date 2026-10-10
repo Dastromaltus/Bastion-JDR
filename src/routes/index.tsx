@@ -61,7 +61,7 @@ function Index() {
           </div>
           <a href="/salons" className="flex min-h-11 items-center border-2 border-primary bg-primary px-4 text-xs font-black uppercase text-primary-foreground transition-colors hover:bg-background">Mes salons</a>
         </nav>
-        <div id="top" className="relative z-10 flex min-h-[calc(92vh-65px)] max-w-7xl flex-col justify-end px-5 pb-12 pt-32 md:px-10 md:pb-16">
+        <div id="top" data-motion-enter className="relative z-10 flex min-h-[calc(92vh-65px)] max-w-7xl flex-col justify-end px-5 pb-12 pt-32 md:px-10 md:pb-16">
           <p className="mb-4 flex items-center gap-3 text-xs font-black uppercase text-primary"><span className="h-px w-10 bg-primary" /> Dungeon crawler asymétrique</p>
           <h1 className="font-display text-[clamp(2.2rem,11vw,9rem)] font-black uppercase leading-[1.1] drop-shadow-[4px_4px_0_var(--color-secondary)] tracking-normal">Bastion</h1>
           <div className="mt-8 grid gap-8 border-t border-foreground/40 pt-6 md:grid-cols-[1fr_auto] md:items-end">
@@ -74,7 +74,7 @@ function Index() {
         </div>
       </section>
 
-      <section id="concept" className="grid border-b border-border lg:grid-cols-2">
+      <section id="concept" data-motion-stagger className="grid border-b border-border lg:grid-cols-2">
         <div className="px-5 py-20 md:px-10 lg:border-r lg:border-border lg:py-28">
           <p className="section-label">Le pacte de jeu</p>
           <h2 className="mt-6 max-w-2xl font-display text-3xl font-black uppercase leading-[0.9] tracking-normal md:text-5xl">Tous contre<br /><span className="text-primary">le narrateur.</span></h2>
@@ -91,11 +91,11 @@ function Index() {
 
       <section id="salons" className="border-b border-border bg-secondary px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div data-motion-enter className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div><p className="section-label">Salons privés</p><h2 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Conçois tes propres<br /><span className="text-primary">parties.</span></h2></div>
             <p className="max-w-sm text-sm text-muted-foreground">Un salon, un code à six caractères et la table est montée. Toi ou un ami incarne le narrateur, les autres incarnent les peuples — en ligne, sur téléphone ou ordinateur.</p>
           </div>
-          <div className="grid border border-border bg-background md:grid-cols-3">
+          <div data-motion-stagger className="grid border border-border bg-background md:grid-cols-3">
             {salonSteps.map((step) => (
               <article key={step.title} className="border-b border-border p-7 last:border-b-0 md:border-b-0 md:border-r md:p-9 md:last:border-r-0">
                 <span className="text-primary">{step.icon}</span>
@@ -113,7 +113,7 @@ function Index() {
 
       <section id="exploration" className="relative border-b border-border px-4 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-10 grid gap-6 lg:grid-cols-[1fr_0.8fr] lg:items-end">
+          <div data-motion-enter className="mb-10 grid gap-6 lg:grid-cols-[1fr_0.8fr] lg:items-end">
             <div><p className="section-label">Mode jouable</p><h2 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Exploration<br /><span className="text-primary">2D</span></h2></div>
             <p className="max-w-xl text-base leading-relaxed text-muted-foreground">Progressez case par case dans le premier secteur. Chaque peuple ouvre un chemin différent, pendant que le narrateur transforme la carte en direct.</p>
           </div>
@@ -123,19 +123,19 @@ function Index() {
 
       <section id="peuples" className="px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div data-motion-enter className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div><p className="section-label">Choisir son origine</p><h2 className="mt-4 font-display text-3xl font-black uppercase tracking-normal md:text-5xl">Cinq peuples</h2></div>
             <p className="max-w-sm text-sm text-muted-foreground">Chaque peuple modifie votre manière d’explorer, de combattre et de survivre.</p>
           </div>
           <div className="grid border border-border lg:grid-cols-[0.8fr_1.2fr]">
-            <div className="divide-y divide-border lg:border-r lg:border-border">
+            <div data-motion-stagger className="divide-y divide-border lg:border-r lg:border-border">
               {races.map((item, index) => (
                 <button key={item.name} onClick={() => setActiveRace(index)} className={`group flex w-full items-center gap-5 px-5 py-5 text-left transition-colors ${activeRace === index ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>
                   <span className="font-display text-xl font-black">{item.mark}</span><span className="flex-1 font-bold uppercase">{item.name}</span><ArrowRight size={18} className={activeRace === index ? "opacity-100" : "opacity-30 group-hover:opacity-100"} />
                 </button>
               ))}
             </div>
-            <div className="flex min-h-[430px] flex-col justify-between bg-card p-7 md:p-12">
+            <div key={race.name} data-motion-enter className="flex min-h-[430px] flex-col justify-between bg-card p-7 md:p-12">
               <div><span className="text-xs font-black uppercase text-primary">Spécialité / {race.trait}</span><h3 className="mt-5 font-display text-4xl font-black uppercase tracking-normal md:text-5xl">{race.name}</h3><p className="mt-6 max-w-xl text-sm leading-relaxed text-muted-foreground">{race.detail}</p></div>
               <div className="mt-12 grid gap-4">
                 {['Vitesse', 'Force', 'Endurance'].map((label, i) => <div key={label} className="grid grid-cols-[90px_1fr] items-center gap-4"><span className="text-[10px] font-bold uppercase">{label}</span><div className="h-2 bg-secondary"><div className="h-full bg-primary transition-all duration-500" style={{ width: `${race.stats[i]}%` }} /></div></div>)}
@@ -148,7 +148,7 @@ function Index() {
       <section id="partie" className="border-y border-border bg-secondary px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
           <p className="section-label">Structure de partie</p><h2 className="mt-4 font-display text-3xl font-black uppercase tracking-normal md:text-5xl">Trois temps.<br />Une mission.</h2>
-          <div className="mt-14 grid border-t border-border md:grid-cols-3">
+          <div data-motion-stagger className="mt-14 grid border-t border-border md:grid-cols-3">
             {phases.map((phase) => <article key={phase.number} className="group border-b border-border py-8 md:border-b-0 md:border-r md:px-7 md:first:pl-0 md:last:border-r-0"><span className="font-display text-3xl font-black text-primary">{phase.number}</span><h3 className="mt-10 text-base font-black uppercase">{phase.title}</h3><p className="mt-4 text-sm leading-relaxed text-muted-foreground">{phase.text}</p></article>)}
           </div>
         </div>
@@ -156,7 +156,7 @@ function Index() {
 
       <section className="px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.8fr_1.2fr]">
-          <div><p className="section-label">Protocole de test</p><h2 className="mt-5 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Jouer.<br /><span className="text-primary">Observer.</span><br />Ajuster.</h2></div>
+          <div data-motion-enter><p className="section-label">Protocole de test</p><h2 className="mt-5 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Jouer.<br /><span className="text-primary">Observer.</span><br />Ajuster.</h2></div>
           <ol className="divide-y divide-border border-y border-border">
             {["Lancer une partie courte", "Attribuer un peuple différent à chaque joueur", "Limiter chacun à une compétence forte", "Noter ce qui gagne trop souvent", "Ajuster les coûts, durées et restrictions"].map((step, i) => <li key={step} className="flex items-center gap-5 py-5"><span className="text-xs font-black text-primary">0{i + 1}</span><span className="font-bold">{step}</span></li>)}
           </ol>
