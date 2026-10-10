@@ -1,15 +1,24 @@
 import * as Phaser from "phaser";
 import tiles from "@/assets/world-tiles.png";
+import decorTiles from "@/assets/zone-tiles.png.asset.json";
+import { worldDecorFrame } from "@/lib/world-decor";
 import map from "@/data/salon-world.json";
 import type { WorldActor } from "@/lib/world-actors";
 import { motionDisabled, MOTION_EVENT } from "@/lib/motion";
 
 export class WorldScene extends Phaser.Scene {
   private actors = new Map<string, Phaser.GameObjects.Container>();
+  private scenery: Phaser.GameObjects.Image[] = [];
   constructor() { super("SalonWorld"); }
-  preload() { this.load.spritesheet("world-tiles", tiles, { frameWidth: 16, frameHeight: 16 }); }
+  preload() {
+    this.load.spritesheet("world-tiles", tiles, { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet("zone-tiles", decorTiles.url, { frameWidth: 16, frameHeight: 16 });
+  }
   create() {
-    map.layers[0]?.data.forEach((tile, i) => this.add.image((i % map.width) * 16 + 8, Math.floor(i / map.width) * 16 + 8, "world-tiles", tile - 1));
+    map.layers[0]?.data.forEach((tile, i) => this.scenery.push(this.add.image((i % map.width) * 16 + 8, Math.floor(i / map.width) * 16 + 8, "zone-tiles", worldDecorFrame(tile, "entree"))));
+    this.events.on("zone", (zone: string) => {
+      map.layers[0]?.data.forEach((tile, i) => this.scenery[i]?.setFrame(worldDecorFrame(tile, zone)));
+    });
     this.events.on("actors", (actors: WorldActor[]) => this.sync(actors));
     const stop = () => {
       if (motionDisabled()) {
