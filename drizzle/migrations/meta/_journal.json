@@ -64,6 +64,13 @@
       "when": 1791649658857,
       "tag": "0008_salon_turn_order",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791650357024,
+      "tag": "0009_scope_selected_catalogue_and_demo_reads",
+      "breakpoints": true
     }
   ]
 }
