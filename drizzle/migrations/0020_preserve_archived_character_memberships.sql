@@ -1,0 +1,1 @@
+ALTER TABLE public.game_character_archives DROP CONSTRAINT IF EXISTS game_character_archives_player_id_fkey; COMMENT ON COLUMN public.game_character_archives.player_id IS 'Original membership UUID retained after membership deletion; restores the character while the membership still exists.';

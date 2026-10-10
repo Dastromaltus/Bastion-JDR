@@ -748,13 +748,6 @@ export type Database = {
             referencedRelation: "games"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "game_character_archives_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: true
-            referencedRelation: "game_players"
-            referencedColumns: ["id"]
-          },
         ]
       }
       game_combats: {
