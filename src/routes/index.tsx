@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowDown, ArrowRight, Crown, KeyRound, Shield, Swords, Users, Zap } from "lucide-react";
 import { useState } from "react";
 import bastionFortress from "@/assets/bastion-fortress.jpg";
 import { ExplorationGame } from "@/components/ExplorationGame";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
@@ -47,32 +48,25 @@ function Index() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
-      <section className="relative min-h-[92vh] border-b-4 border-primary">
+      <section className="relative min-h-[74vh] border-b-4 border-primary">
         <img src={bastionFortress} alt="Cinq aventuriers avancent vers la forteresse de Bastion" width={1536} height={1024} className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-hero-overlay" />
-        <nav className="relative z-10 flex items-center justify-between border-b border-foreground/30 px-5 py-4 md:px-10">
-          <a href="#top" className="font-display text-base font-black uppercase tracking-normal">Bastion<span className="text-primary">.</span></a>
-          <div className="hidden items-center gap-8 text-xs font-bold uppercase md:flex">
-            <a href="#concept" className="transition-colors hover:text-primary">Le jeu</a>
-            <a href="#salons" className="transition-colors hover:text-primary">Salons</a>
-            <a href="#peuples" className="transition-colors hover:text-primary">Peuples</a>
-            <a href="#partie" className="transition-colors hover:text-primary">Une partie</a>
-            <a href="#exploration" className="transition-colors hover:text-primary">Exploration 2D</a>
-          </div>
-          <a href="/salons" className="flex min-h-11 items-center border-2 border-primary bg-primary px-4 text-xs font-black uppercase text-primary-foreground transition-colors hover:bg-background">Mes salons</a>
-        </nav>
-        <div id="top" data-motion-enter className="relative z-10 flex min-h-[calc(92vh-65px)] max-w-7xl flex-col justify-end px-5 pb-12 pt-32 md:px-10 md:pb-16">
+        <div id="top" data-motion-enter className="relative z-10 flex min-h-[74vh] max-w-7xl flex-col justify-end px-5 pb-12 pt-20 md:px-10 md:pb-16">
           <p className="mb-4 flex items-center gap-3 text-xs font-black uppercase text-primary"><span className="h-px w-10 bg-primary" /> Dungeon crawler asymétrique</p>
           <h1 className="font-display text-[clamp(2.2rem,11vw,9rem)] font-black uppercase leading-[1.1] drop-shadow-[4px_4px_0_var(--color-secondary)] tracking-normal">Bastion</h1>
           <div className="mt-8 grid gap-8 border-t border-foreground/40 pt-6 md:grid-cols-[1fr_auto] md:items-end">
             <div>
               <p className="max-w-xl text-lg font-medium leading-relaxed md:text-xl">Les aventuriers avancent. Le narrateur prépare l’inconnu. <span className="text-primary">La forteresse ne pardonne rien.</span></p>
-              <a href="/salons" className="mt-6 inline-flex min-h-12 items-center gap-3 border-4 border-primary bg-primary px-6 font-display text-sm font-black uppercase text-primary-foreground transition-transform hover:translate-x-1 hover:translate-y-1">Crée ta propre partie →</a>
+              <div className="mt-6 flex flex-wrap gap-3"><Button asChild className="h-auto min-h-12 rounded-none border-2 border-primary px-5 py-3 font-bold"><Link to="/salons"><Users />Créer ou rejoindre un salon</Link></Button><Button asChild variant="outline" className="h-auto min-h-12 rounded-none px-5 py-3 font-bold"><Link to="/operations"><Swords />Jouer en solo</Link></Button></div>
             </div>
             <a href="#concept" aria-label="Découvrir le jeu" className="flex h-14 w-14 items-center justify-center border-2 border-foreground transition-colors hover:border-primary hover:bg-primary"><ArrowDown size={24} /></a>
           </div>
         </div>
       </section>
+
+      <nav aria-label="Sommaire des règles" className="flex flex-wrap gap-2 border-b border-border px-5 py-4 md:px-10">
+        {[{ id: "concept", label: "Le jeu" }, { id: "salons", label: "Les salons" }, { id: "peuples", label: "Les peuples" }, { id: "partie", label: "Les phases" }, { id: "exploration", label: "Démo 2D" }].map(({ id, label }) => <Button key={id} asChild variant="ghost" className="min-h-11 rounded-none font-bold"><a href={`#${id}`}>{label}</a></Button>)}
+      </nav>
 
       <section id="concept" data-motion-stagger className="grid border-b border-border lg:grid-cols-2">
         <div className="px-5 py-20 md:px-10 lg:border-r lg:border-border lg:py-28">
@@ -105,7 +99,7 @@ function Index() {
             ))}
           </div>
           <div className="mt-10 flex flex-col gap-4 md:flex-row md:items-center">
-            <a href="/salons" className="inline-flex min-h-12 items-center justify-center gap-3 border-4 border-primary bg-primary px-6 font-display text-sm font-black uppercase text-primary-foreground transition-transform hover:translate-x-1 hover:translate-y-1">Créer ou rejoindre un salon →</a>
+            <Button asChild className="h-auto min-h-12 rounded-none px-5 py-3 font-bold"><Link to="/salons"><Users />Créer ou rejoindre un salon</Link></Button>
             <p className="text-xs font-bold uppercase text-muted-foreground">Gratuit · 3 à 5 joueurs · Le créateur devient narrateur</p>
           </div>
         </div>
@@ -163,7 +157,7 @@ function Index() {
         </div>
       </section>
 
-      <footer className="border-t-4 border-primary bg-card px-5 py-10 md:px-10"><div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-end md:justify-between"><div><p className="font-display text-2xl font-black uppercase">Bastion<span className="text-primary">.</span></p><p className="mt-2 text-xs text-muted-foreground">Un jeu de Mathéo Destin · 27/07/2026</p></div><p className="text-xs font-bold uppercase">Financement participatif · Ulule · PIJ</p></div></footer>
+      <footer className="border-t-4 border-primary bg-card px-5 py-10 md:px-10"><div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-end md:justify-between"><div><p className="font-display text-2xl font-black uppercase">Bastion<span className="text-primary">.</span></p><p className="mt-2 text-xs text-muted-foreground">Un jeu de Mathéo Destin · 27/07/2026</p><Button asChild variant="link" className="mt-2 min-h-11 px-0"><Link to="/credits">Crédits audio</Link></Button></div><p className="text-xs font-bold uppercase">Financement participatif · Ulule · PIJ</p></div></footer>
     </main>
   );
 }

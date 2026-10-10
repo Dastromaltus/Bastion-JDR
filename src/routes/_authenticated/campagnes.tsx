@@ -12,5 +12,5 @@ export const Route = createFileRoute("/_authenticated/campagnes")({
 });
 function CampaignPage() {
   const q = useSuspenseQuery(workspaceOptions);
-  return <main className="min-h-screen bg-background px-4 pb-16 pt-6 md:px-10"><header className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-foreground pb-4"><Link to="/" className="font-display text-lg">Bastion</Link><Button asChild variant="outline"><Link to="/salons">Mes salons</Link></Button></header><h1 className="my-8 font-display text-3xl">Concevoir une campagne</h1>{q.data.allowed ? <CampaignEditor workspace={q.data} refresh={() => { void q.refetch(); }} /> : <p>Crée un salon dont tu es narrateur pour concevoir une campagne.</p>}</main>;
+  return <main className="mx-auto min-h-screen max-w-7xl bg-background px-4 pb-16 pt-8 md:px-10"><p className="section-label">Atelier du narrateur</p><h1 className="my-6 break-words font-display text-xl leading-relaxed sm:text-3xl">Mes campagnes</h1>{q.data.allowed ? <CampaignEditor workspace={q.data} refresh={() => { void q.refetch(); }} /> : <div className="space-y-4"><p>Crée un salon dont tu es narrateur pour concevoir une campagne.</p><Button asChild className="min-h-11"><Link to="/salons">Mes salons</Link></Button></div>}</main>;
 }

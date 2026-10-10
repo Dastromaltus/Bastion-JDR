@@ -38,13 +38,9 @@ function OperationsPage() {
   const ops = useMemo(() => (q.data?.operations ?? []).filter((o: any) => (dur === "all" || String(o.duration) === dur) && (diff === "all" || o.difficulty === diff)), [q.data, dur, diff]);
 
   return (
-    <main className="min-h-screen bg-background px-4 pb-16 pt-6 md:px-10">
-      <header className="flex items-center justify-between border-b-2 border-foreground pb-4">
-        <Link to="/" className="font-display text-lg uppercase">Bastion<span className="text-primary">.</span></Link>
-        <Button asChild variant="outline" className="min-h-11 rounded-none"><Link to="/salons">Mes salons</Link></Button>
-      </header>
-      <Button asChild variant="secondary" className="mt-4 min-h-11"><Link to="/campagnes">Concevoir une campagne</Link></Button>
-      <h1 className="mt-8 font-display text-3xl uppercase">Catalogue d'Opérations</h1>
+    <main className="mx-auto min-h-screen max-w-7xl bg-background px-4 pb-16 pt-8 md:px-10">
+      <p className="section-label">Bibliothèque de donjons</p>
+      <h1 className="mt-6 break-words font-display text-xl uppercase leading-relaxed sm:text-3xl">Opérations</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">Des donjons préconstruits, prêts à charger dans ton salon. Ennemis, trésors et événements sont préplacés : tu peux tout ajuster avant de lancer.</p>
 
       <div data-motion-enter className="mt-6 grid max-w-xl grid-cols-2 gap-3">
