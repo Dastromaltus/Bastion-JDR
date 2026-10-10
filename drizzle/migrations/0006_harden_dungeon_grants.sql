@@ -1,0 +1,2 @@
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON public.dungeon_templates, public.dungeon_rooms, public.dungeon_room_enemies, public.dungeon_room_treasures, public.dungeon_events, public.game_dungeons, public.game_dungeon_events, public.game_enemies, public.game_treasures, public.enemy_catalog, public.treasure_catalog FROM anon, authenticated;
+REVOKE SELECT ON public.dungeon_templates, public.dungeon_rooms, public.dungeon_room_enemies, public.dungeon_room_treasures, public.dungeon_events, public.game_dungeons, public.game_dungeon_events FROM anon;
