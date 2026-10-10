@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as AuthenticatedCampagnesRouteImport } from './routes/_authenticated/campagnes'
 import { Route as AuthenticatedOperationsRouteImport } from './routes/_authenticated/operations'
 import { Route as AuthenticatedSalonsRouteImport } from './routes/_authenticated/salons'
 import { Route as AuthenticatedRejoindreCodeRouteImport } from './routes/_authenticated/rejoindre.$code'
@@ -43,6 +44,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedCampagnesRoute = AuthenticatedCampagnesRouteImport.update({
+  id: '/campagnes',
+  path: '/campagnes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOperationsRoute = AuthenticatedOperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/credits': typeof CreditsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/campagnes': typeof AuthenticatedCampagnesRoute
   '/operations': typeof AuthenticatedOperationsRoute
   '/salons': typeof AuthenticatedSalonsRoute
   '/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/credits': typeof CreditsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/campagnes': typeof AuthenticatedCampagnesRoute
   '/operations': typeof AuthenticatedOperationsRoute
   '/salons': typeof AuthenticatedSalonsRoute
   '/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/credits': typeof CreditsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/campagnes': typeof AuthenticatedCampagnesRoute
   '/_authenticated/operations': typeof AuthenticatedOperationsRoute
   '/_authenticated/salons': typeof AuthenticatedSalonsRoute
   '/_authenticated/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/credits'
     | '/sitemap.xml'
+    | '/campagnes'
     | '/operations'
     | '/salons'
     | '/rejoindre/$code'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/credits'
     | '/sitemap.xml'
+    | '/campagnes'
     | '/operations'
     | '/salons'
     | '/rejoindre/$code'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/credits'
     | '/sitemap.xml'
+    | '/_authenticated/campagnes'
     | '/_authenticated/operations'
     | '/_authenticated/salons'
     | '/_authenticated/rejoindre/$code'
@@ -176,6 +188,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/campagnes': {
+      id: '/_authenticated/campagnes'
+      path: '/campagnes'
+      fullPath: '/campagnes'
+      preLoaderRoute: typeof AuthenticatedCampagnesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/operations': {
       id: '/_authenticated/operations'
       path: '/operations'
@@ -208,6 +227,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCampagnesRoute: typeof AuthenticatedCampagnesRoute
   AuthenticatedOperationsRoute: typeof AuthenticatedOperationsRoute
   AuthenticatedSalonsRoute: typeof AuthenticatedSalonsRoute
   AuthenticatedRejoindreCodeRoute: typeof AuthenticatedRejoindreCodeRoute
@@ -215,6 +235,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCampagnesRoute: AuthenticatedCampagnesRoute,
   AuthenticatedOperationsRoute: AuthenticatedOperationsRoute,
   AuthenticatedSalonsRoute: AuthenticatedSalonsRoute,
   AuthenticatedRejoindreCodeRoute: AuthenticatedRejoindreCodeRoute,
