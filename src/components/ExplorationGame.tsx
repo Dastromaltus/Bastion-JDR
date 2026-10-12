@@ -166,6 +166,8 @@ export function ExplorationGame() {
     const keyHandler = (event: KeyboardEvent) => {
       const directions: Record<string, Direction> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", z: "up", s: "down", q: "left", d: "right", Z: "up", S: "down", Q: "left", D: "right" };
       const direction = directions[event.key];
+      const el = event.target as HTMLElement | null;
+      if (el && (el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName))) return;
       if (direction && !encounter) { event.preventDefault(); void handleMove(direction); }
     };
     window.addEventListener("keydown", keyHandler);
