@@ -18,6 +18,8 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const [movingDirection, setMovingDirection] = useState<WorldDirection | null>(null);
+  const [focused, setFocused] = useState(false);
+  const [pressed, setPressed] = useState<WorldDirection | null>(null);
   const view = useRef<HTMLDivElement>(null);
   const previousZone = useRef<string | undefined>(undefined);
   const [message, setMessage] = useState("");
