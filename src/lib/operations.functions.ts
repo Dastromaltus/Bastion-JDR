@@ -73,7 +73,7 @@ function shuffle<T>(arr: T[]) {
 async function copyTemplate(gameId: string, templateId: string, opts: { reshuffle: boolean; status: "preparation" | "en_cours" }) {
   const db = await admin();
   const tpl = await loadTemplate(templateId);
-  const { budget, players } = await budgetOf(gameId);
+  const { players } = await budgetOf(gameId);
   await Promise.all([
     db.from("game_treasures").delete().eq("game_id", gameId).eq("status", "cache"),
     db.from("game_dungeon_events").delete().eq("game_id", gameId),
@@ -83,13 +83,11 @@ async function copyTemplate(gameId: string, templateId: string, opts: { reshuffl
   let enemies = tpl.roomEnemies;
   let treasures = tpl.roomTreasures;
   if (opts.reshuffle) {
-    const cap = Math.max(budget, THREAT_PER_PLAYER);
     const mustKeep = enemies.filter((e) => tpl.t.objective_type === "boss" && e.enemy_catalog.category === "boss");
-    let used = mustKeep.reduce((a, e) => a + e.enemy_catalog.threat_cost, 0);
     const kept = [...mustKeep];
     for (const e of shuffle(enemies.filter((x) => !mustKeep.includes(x)))) {
       if (rollDie(4) === 1) continue; // random gaps even when budget allows
-      if (used + e.enemy_catalog.threat_cost <= cap) { kept.push(e); used += e.enemy_catalog.threat_cost; }
+      kept.push(e);
     }
     enemies = kept;
     treasures = treasures.filter((t) => ["quete", "cle"].includes(t.treasure_catalog.type) || rollDie(5) > 2);
@@ -298,8 +296,8 @@ export const loadOperation = createServerFn({ method: "POST" })
     const tpl = await copyTemplate(data.gameId, data.templateId, { reshuffle: data.reshuffle, status: "preparation" });
     const b = await budgetOf(data.gameId);
     await log(data.gameId, context.userId, "operation", data.reshuffle ? `Opération « ${tpl.t.name} » remélangée.` : `Opération chargée : « ${tpl.t.name} ». Objectif : ${tpl.t.objective_text}.`, { template: tpl.t.slug }, true);
-    await log(data.gameId, context.userId, "placement", `[Secret] Menace préplacée : ${b.used} / ${b.budget} points.`, b, false, true);
-    return { ...b, over: b.used > b.budget };
+
+    return { ...b, over: false };
   });
 
 const prepSchema = z.object({
@@ -335,10 +333,6 @@ export const prepareOperation = createServerFn({ method: "POST" })
       if (!e) throw new Error("Ennemi introuvable.");
       return e;
     };
-    const checkBudget = async (delta: number) => {
-      const b = await budgetOf(data.gameId);
-      if (b.used + delta > b.budget) throw new Error(`Budget de menace dépassé : +${delta} point(s) alors qu'il reste ${Math.max(0, b.budget - b.used)} point(s) sur ${b.budget}.`);
-    };
     const enemyRow = (c: any, zone: string, trigger: string) => {
       const hp = 10 + 2 * c.endurance;
       return { catalog_id: c.id, name: c.name, category: c.category, icon: c.icon, ability: c.ability, speed: c.speed, strength: c.strength, endurance: c.endurance, hp, max_hp: hp, threat_cost: c.threat_cost, zone, trigger };
@@ -347,7 +341,6 @@ export const prepareOperation = createServerFn({ method: "POST" })
       case "addEnemy": {
         if (!room) throw new Error("Choisis une salle.");
         const c = await cat("enemy_catalog");
-        await checkBudget(c.threat_cost);
         await db.from("game_enemies").insert({ game_id: data.gameId, ...enemyRow(c, room.key, data.trigger ?? "entree") });
         await log(data.gameId, context.userId, "placement", `[Secret] ${c.name} ajouté dans ${room.name}.`, {}, false, true);
         break;
@@ -355,7 +348,6 @@ export const prepareOperation = createServerFn({ method: "POST" })
       case "swapEnemy": {
         const e = await ownEnemy();
         const c = await cat("enemy_catalog");
-        await checkBudget(c.threat_cost - e.threat_cost);
         await db.from("game_enemies").update(enemyRow(c, e.zone, e.trigger)).eq("id", e.id);
         await log(data.gameId, context.userId, "placement", `[Secret] ${e.name} remplacé par ${c.name}.`, {}, false, true);
         break;
@@ -387,12 +379,11 @@ export const prepareOperation = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Called by narratorAction("start"): blocks over-budget launches and opens the first room. */
+/** Called by narratorAction("start"): checks the loaded dungeon before opening it. */
 export async function startDungeonIfAny(gameId: string) {
   const dg = await getDungeonRow(gameId);
   if (!dg) return;
-  const b = await budgetOf(gameId);
-  if (b.used > b.budget) throw new Error(`Budget de menace dépassé : ${b.used} / ${b.budget} points (${THREAT_PER_PLAYER} par aventurier). Retire des ennemis ou clique « Remélanger » avant de lancer.`);
+
   return dg;
 }
 export async function openDungeon(gameId: string) {

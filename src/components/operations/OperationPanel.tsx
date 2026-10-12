@@ -72,11 +72,10 @@ function NarratorOperation({ d, v, refresh }: { d: any; v: any; refresh: () => v
   const sCtl = useServerFn(operationControl);
   const ctl = (action: string, extra: Record<string, unknown> = {}, ok?: string) =>
     run(action + String(extra["eventId"] ?? extra["enemyId"] ?? extra["room"] ?? ""), async () => { await sCtl({ data: { gameId, action, ...extra } as any }); refresh(); }, ok);
-  const { dungeon: dg, template: t, rooms, events, budget } = v;
+  const { dungeon: dg, template: t, rooms, events } = v;
   const name = (k: string) => rooms.find((r: any) => r.key === k)?.name ?? k;
   const cur = rooms.find((r: any) => r.key === dg.current_room);
   const adventurers = d.players.filter((p: any) => p.role === "adventurer");
-  const over = budget.used > budget.budget;
 
   return (
     <section className="space-y-4 border-2 border-primary bg-card p-4 shadow-game">
@@ -90,21 +89,11 @@ function NarratorOperation({ d, v, refresh }: { d: any; v: any; refresh: () => v
         </div>
       </div>
 
-      {/* Threat budget */}
-      <div>
-        <p className="text-xs font-black uppercase">Menace : {budget.used} / {budget.budget} points ({adventurers.length} aventurier{adventurers.length > 1 ? "s" : ""} × 3)</p>
-        <div className="mt-1 h-4 w-full border-2 border-foreground bg-muted" role="meter" aria-valuemin={0} aria-valuemax={budget.budget} aria-valuenow={budget.used}>
-          <div className={`h-full ${over ? "bg-destructive" : "bg-accent"}`} style={{ width: `${Math.min(100, budget.budget ? (budget.used / budget.budget) * 100 : 100)}%` }} />
-        </div>
-        {over && <p role="alert" className="mt-1 text-sm font-bold text-destructive">Budget dépassé de {budget.used - budget.budget} point(s) : retire des ennemis ou remélange avant de lancer la partie.</p>}
-        {!adventurers.length && <p className="mt-1 text-sm text-muted-foreground">Aucun aventurier pour l'instant : le budget est de 0 tant que personne n'a rejoint.</p>}
-      </div>
-
       {dg.status === "preparation" && (
         <>
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" disabled={!!busy} className="min-h-11 rounded-none font-bold uppercase"
-              onClick={() => run("shuffle", async () => { const r = await sLoad({ data: { gameId, templateId: dg.template_id, reshuffle: true } }); refresh(); toast(r.over ? `Remélangé — encore au-dessus du budget (${r.used}/${r.budget})` : `Remélangé — menace ${r.used}/${r.budget}`); })}>
+              onClick={() => run("shuffle", async () => { const r = await sLoad({ data: { gameId, templateId: dg.template_id, reshuffle: true } }); refresh(); toast.success("Opération remélangée."); })}>
               {busy === "shuffle" ? "Mélange…" : "Remélanger"}
             </Button>
             <Button variant="outline" disabled={!!busy} className="min-h-11 rounded-none"
@@ -220,7 +209,7 @@ function PrepEditor({ d, rooms, refresh }: { d: any; rooms: any[]; refresh: () =
                 <li key={e.id} data-motion-pop="true" className="grid grid-cols-[1fr_auto] gap-2">
                   <select aria-label={`Changer ${e.name}`} className={SEL} value={e.catalog_id ?? ""} disabled={!!busy}
                     onChange={(ev) => prep("swap" + e.id, { op: "swapEnemy", id: e.id, catalogId: ev.target.value }, "Ennemi remplacé")}>
-                    {enemies.map((c: any) => <option key={c.id} value={c.id}>{c.icon} {c.name} · menace {c.threat_cost} · V{c.speed}/F{c.strength}/E{c.endurance}</option>)}
+                    {enemies.map((c: any) => <option key={c.id} value={c.id}>{c.icon} {c.name} · V{c.speed}/F{c.strength}/E{c.endurance}</option>)}
                   </select>
                   <Button size="sm" variant="outline" disabled={!!busy} className="min-h-11 rounded-none" onClick={() => prep("rm" + e.id, { op: "removeEnemy", id: e.id }, "Ennemi retiré")}>Retirer</Button>
                 </li>
@@ -240,7 +229,7 @@ function PrepEditor({ d, rooms, refresh }: { d: any; rooms: any[]; refresh: () =
               <select aria-label={`Ajouter un ennemi dans ${r.name}`} className={SEL} value="" disabled={!!busy}
                 onChange={(ev) => ev.target.value && prep("add" + r.key, { op: "addEnemy", room: r.key, catalogId: ev.target.value, trigger: "entree" }, "Ennemi ajouté")}>
                 <option value="">+ Ajouter un ennemi caché…</option>
-                {enemies.map((c: any) => <option key={c.id} value={c.id}>{c.icon} {c.name} (menace {c.threat_cost})</option>)}
+                {enemies.map((c: any) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
               </select>
               <select aria-label={`Ajouter un trésor dans ${r.name}`} className={SEL} value="" disabled={!!busy}
                 onChange={(ev) => ev.target.value && prep("addt" + r.key, { op: "addTreasure", room: r.key, catalogId: ev.target.value, container: "coffre" }, "Trésor ajouté")}>
