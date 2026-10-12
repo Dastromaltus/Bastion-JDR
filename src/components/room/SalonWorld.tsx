@@ -61,12 +61,16 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   }
   return <section className="space-y-3" aria-label="Exploration en vue de dessus">
     <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-pixel text-xl">{name ?? zoneLabel(here)}</h2><span className="text-xs text-muted-foreground">{participants.length} participant(s)</span></div>
-    <div ref={view} tabIndex={0} role="group" aria-label="Carte du salon, vue de dessus" className="salon-world relative overflow-hidden border-2 border-foreground bg-game outline-none focus-visible:ring-2 focus-visible:ring-ring" onKeyDown={(event) => {
+    <div ref={view} tabIndex={0} role="group" aria-label="Carte du salon, vue de dessus. Clique puis utilise Z, Q, S, D." onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onMouseDown={() => view.current?.focus()} className={`salon-world relative overflow-hidden border-2 bg-game outline-none ${focused ? "border-primary ring-4 ring-primary" : "border-foreground"}`} onKeyUp={() => setPressed(null)} onKeyDown={(event) => {
       const keys: Record<string, WorldDirection> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", z: "up", s: "down", q: "left", d: "right", Z: "up", S: "down", Q: "left", D: "right" };
       const direction = keys[event.key];
-      if (direction && enabled) { event.preventDefault(); void step(direction); }
+      if (direction) { event.preventDefault(); setPressed(direction); if (enabled) void step(direction); }
     }}>
       <div ref={mount} className="salon-world-canvas" />
+      <p aria-live="polite" className={`pointer-events-none absolute left-2 top-2 border-2 px-2 py-1 font-pixel text-[10px] uppercase ${focused ? "border-primary bg-primary text-primary-foreground" : "border-foreground bg-background text-foreground"}`}>{focused ? "▶ Contrôles actifs · Z Q S D" : "Clique sur la carte pour jouer"}</p>
+      {focused && <div aria-hidden="true" className="pointer-events-none absolute bottom-2 right-2 grid grid-cols-3 gap-1">
+        {([["up", "Z", "col-start-2"], ["left", "Q", "col-start-1 row-start-2"], ["down", "S", "col-start-2 row-start-2"], ["right", "D", "col-start-3 row-start-2"]] as const).map(([dir, k, cls]) => <span key={dir} className={`flex h-8 w-8 items-center justify-center border-2 font-pixel text-xs ${cls} ${pressed === dir ? "anim-pop border-foreground bg-primary text-primary-foreground translate-y-0.5" : "border-foreground bg-background text-foreground"}`}>{k}</span>)}
+      </div>}
       {!ready && <p role={failure ? "alert" : "status"} className="absolute inset-0 flex items-center justify-center bg-game">{failure ? "La carte n'a pas pu être affichée." : "Chargement de la carte…"}</p>}
     </div>
     <ul aria-label="Participants du salon" className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">

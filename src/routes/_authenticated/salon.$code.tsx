@@ -211,7 +211,6 @@ function RoomPage() {
         <OperationSection d={d} onChange={() => room.refetch()} />
         {game.status === "playing" && !dungeonQ.isPending && !dungeonQ.data && <SalonWorld d={d} onChange={() => room.refetch()} />}
         {game.status === "playing" && !isNarr && !dungeonQ.data && !game.solo && <ExplorePanel d={d} />}
-        {game.status === "playing" && !isNarr && !d.combat && <DicePanel gameId={game.id} enabled={turn.isMine} />}
 
         {isNarr && (
           <NarratorPanel d={d} narr={narr} busy={busy} refetch={() => room.refetch()} />
