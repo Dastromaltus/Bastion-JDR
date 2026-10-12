@@ -16,6 +16,7 @@ import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedCampagnesRouteImport } from './routes/_authenticated/campagnes'
 import { Route as AuthenticatedOperationsRouteImport } from './routes/_authenticated/operations'
+import { Route as AuthenticatedPersonnageRouteImport } from './routes/_authenticated/personnage'
 import { Route as AuthenticatedSalonsRouteImport } from './routes/_authenticated/salons'
 import { Route as AuthenticatedRejoindreCodeRouteImport } from './routes/_authenticated/rejoindre.$code'
 import { Route as AuthenticatedSalonCodeRouteImport } from './routes/_authenticated/salon.$code'
@@ -54,6 +55,11 @@ const AuthenticatedOperationsRoute = AuthenticatedOperationsRouteImport.update({
   path: '/operations',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPersonnageRoute = AuthenticatedPersonnageRouteImport.update({
+  id: '/personnage',
+  path: '/personnage',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSalonsRoute = AuthenticatedSalonsRouteImport.update({
   id: '/salons',
   path: '/salons',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/campagnes': typeof AuthenticatedCampagnesRoute
   '/operations': typeof AuthenticatedOperationsRoute
+  '/personnage': typeof AuthenticatedPersonnageRoute
   '/salons': typeof AuthenticatedSalonsRoute
   '/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
   '/salon/$code': typeof AuthenticatedSalonCodeRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/campagnes': typeof AuthenticatedCampagnesRoute
   '/operations': typeof AuthenticatedOperationsRoute
+  '/personnage': typeof AuthenticatedPersonnageRoute
   '/salons': typeof AuthenticatedSalonsRoute
   '/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
   '/salon/$code': typeof AuthenticatedSalonCodeRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/campagnes': typeof AuthenticatedCampagnesRoute
   '/_authenticated/operations': typeof AuthenticatedOperationsRoute
+  '/_authenticated/personnage': typeof AuthenticatedPersonnageRoute
   '/_authenticated/salons': typeof AuthenticatedSalonsRoute
   '/_authenticated/rejoindre/$code': typeof AuthenticatedRejoindreCodeRoute
   '/_authenticated/salon/$code': typeof AuthenticatedSalonCodeRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/campagnes'
     | '/operations'
+    | '/personnage'
     | '/salons'
     | '/rejoindre/$code'
     | '/salon/$code'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/campagnes'
     | '/operations'
+    | '/personnage'
     | '/salons'
     | '/rejoindre/$code'
     | '/salon/$code'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/campagnes'
     | '/_authenticated/operations'
+    | '/_authenticated/personnage'
     | '/_authenticated/salons'
     | '/_authenticated/rejoindre/$code'
     | '/_authenticated/salon/$code'
@@ -202,6 +214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOperationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/personnage': {
+      id: '/_authenticated/personnage'
+      path: '/personnage'
+      fullPath: '/personnage'
+      preLoaderRoute: typeof AuthenticatedPersonnageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/salons': {
       id: '/_authenticated/salons'
       path: '/salons'
@@ -229,6 +248,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCampagnesRoute: typeof AuthenticatedCampagnesRoute
   AuthenticatedOperationsRoute: typeof AuthenticatedOperationsRoute
+  AuthenticatedPersonnageRoute: typeof AuthenticatedPersonnageRoute
   AuthenticatedSalonsRoute: typeof AuthenticatedSalonsRoute
   AuthenticatedRejoindreCodeRoute: typeof AuthenticatedRejoindreCodeRoute
   AuthenticatedSalonCodeRoute: typeof AuthenticatedSalonCodeRoute
@@ -237,6 +257,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCampagnesRoute: AuthenticatedCampagnesRoute,
   AuthenticatedOperationsRoute: AuthenticatedOperationsRoute,
+  AuthenticatedPersonnageRoute: AuthenticatedPersonnageRoute,
   AuthenticatedSalonsRoute: AuthenticatedSalonsRoute,
   AuthenticatedRejoindreCodeRoute: AuthenticatedRejoindreCodeRoute,
   AuthenticatedSalonCodeRoute: AuthenticatedSalonCodeRoute,
