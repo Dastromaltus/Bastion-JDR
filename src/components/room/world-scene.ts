@@ -54,7 +54,14 @@ export class WorldScene extends Phaser.Scene {
         if (label instanceof Phaser.GameObjects.Text) label.setText(actor.name);
         this.tweens.killTweensOf(node);
         if (reduced) node.setPosition(x, y);
-        else this.tweens.add({ targets: node, x, y, duration: 160, ease: "Linear" });
+        else if (node.x !== x || node.y !== y) {
+          this.tweens.add({ targets: node, x, y, duration: 160, ease: "Linear" });
+          if (sprite instanceof Phaser.GameObjects.Image) {
+            this.tweens.killTweensOf(sprite);
+            sprite.setY(-2).setScale(1).setAlpha(1);
+            this.tweens.add({ targets: sprite, y: -4, duration: 80, yoyo: true, ease: "Linear" });
+          }
+        }
       }
       const label = node.list[1];
       if (label instanceof Phaser.GameObjects.Text) {
