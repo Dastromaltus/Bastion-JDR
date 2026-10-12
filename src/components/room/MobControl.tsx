@@ -4,6 +4,7 @@ import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Swords, SkipForward 
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { combatAction } from "@/lib/combat.functions";
+import { CombatDice, HealthFill, RollingDice } from "./MotionBits";
 
 export function MobControl({ d, onChange }: { d: any; onChange: () => void }) {
   const act = useServerFn(combatAction);
@@ -32,10 +33,11 @@ export function MobControl({ d, onChange }: { d: any; onChange: () => void }) {
   if (!narr && !combat) return null;
   return <section className="space-y-3 border-2 border-primary p-4">
     <h2 className="section-label">{combat ? `Combat · manche ${combat.round}` : "Contrôle des mobs"}</h2>
-    {combat && <><p role="status" className="font-bold">{combat.isMine ? "C’est à ton tour !" : combat.label}</p><ol className="flex flex-wrap gap-3 text-sm">{combat.fighters.map((f: any) => <li key={f.id} className={f.id === combat.current?.id ? "font-bold text-primary" : "text-muted-foreground"}>{f.name} · V{f.speed}</li>)}</ol></>}
+    {combat && <><p key={combat.current?.id} role="status" className="anim-enter font-pixel text-xl">{combat.isMine ? "C’est à ton tour !" : combat.label}</p><ol className="flex flex-wrap gap-3 text-sm" aria-label="Initiative de combat">{combat.fighters.map((f: any) => <li key={f.id} aria-current={f.id === combat.current?.id ? "step" : undefined} className={f.id === combat.current?.id ? "anim-active px-2 py-1 font-bold text-primary" : "px-2 py-1 text-muted-foreground"}>{f.id === combat.current?.id ? "▶ " : ""}{f.name} · V{f.speed}</li>)}</ol></>}
     {narr && <>
       <ul className="grid gap-2 sm:grid-cols-2">{d.enemies.map((e: any) => <li key={e.id} className={`border-2 p-3 ${e.id === mob?.id ? "border-accent bg-secondary" : "border-foreground"}`}>
         <p className="font-bold">{e.icon} {e.name}</p><p className="text-sm">{e.status === "cache" ? "Caché" : e.status === "vaincu" ? "Vaincu" : "Révélé"} · {e.hp}/{e.max_hp} PV</p>
+        <div className="mt-2 h-2 w-full overflow-hidden bg-muted" role="meter" aria-label={`PV de ${e.name}`} aria-valuemin={0} aria-valuemax={e.max_hp} aria-valuenow={Math.max(0, e.hp)}><HealthFill hp={e.hp} maxHp={e.max_hp} className="bg-primary" /></div>
         <Button variant="outline" className="mt-2 min-h-11" disabled={busy || e.status === "vaincu"} onClick={() => run("control", e.id)}>{e.id === mob?.id ? "Contrôlé" : "Contrôler"}</Button>
       </li>)}</ul>
       {!d.enemies.length && <p className="text-sm text-muted-foreground">Aucun mob placé.</p>}
@@ -48,6 +50,6 @@ export function MobControl({ d, onChange }: { d: any; onChange: () => void }) {
       </div>}
     </>}
     {!narr && combat?.isMine && <Button variant="outline" className="min-h-11" disabled={busy} onClick={() => run("pass")}>Passer mon tour de combat</Button>}
-    {busy && <p role="status">Résolution…</p>}{last.length > 0 && <p role="status">Dés : {last.join(" · ")} → {last.filter((r) => r >= 5).length} réussite(s)</p>}
+    {busy && <p role="status" className="flex items-center gap-2"><RollingDice rolling />Résolution…</p>}<CombatDice rolls={last} />
   </section>;
 }

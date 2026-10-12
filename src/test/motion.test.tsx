@@ -1,10 +1,22 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render } from "@testing-library/react";
-import { DiceResult, HealthFill } from "@/components/room/MotionBits";
+import { CombatDice, DiceResult, HealthFill } from "@/components/room/MotionBits";
 import { FEEDBACK_EVENT, motionDisabled, motionFeedback } from "@/lib/motion";
 
 afterEach(() => { cleanup(); delete document.documentElement.dataset["reducedMotion"]; vi.restoreAllMocks(); });
 describe("accessible additive motion", () => {
+  it("shows only confirmed combat dice with immediate reduced-motion results", () => {
+    document.documentElement.dataset["reducedMotion"] = "true";
+    const { container, getByLabelText } = render(<CombatDice rolls={[6, 1, 5]} />);
+    expect(getByLabelText("Résultat des dés").textContent).toBe("615");
+    expect(container.textContent).toContain("2 réussites");
+    expect(container.querySelector(".anim-die")).toBeNull();
+    expect(container.querySelector("[aria-busy=false]")).toBeTruthy();
+  });
+  it("does not draw a result for an action without dice", () => {
+    const { container } = render(<CombatDice rolls={[]} />);
+    expect(container.textContent).toBe("");
+  });
   it("honors the document preference including outside portal panels", () => {
     document.documentElement.dataset["reducedMotion"] = "true";
     expect(motionDisabled()).toBe(true);
