@@ -10,7 +10,7 @@ export function CatalogArtwork({ kind, item }: { kind: "mob" | "treasure"; item:
   const key = item.type === "cle";
   const weapon = item.type === "arme";
   const potion = item.type === "consommable";
-  return <svg role="img" aria-label={`Design de ${item.name}`} viewBox="0 0 32 32" className="mx-auto h-24 w-24 shrink-0" shapeRendering="crispEdges">
+  return <svg role="img" aria-label={`Design de ${item.name}`} viewBox="0 0 32 32" className="mx-auto size-24! shrink-0" shapeRendering="crispEdges">
     {kind === "mob" ? <>
       <path d={robot ? "M8 5h16v12H8zM6 18h20v9H6zM3 18h3v7H3zM26 18h3v7h-3zM9 27h5v4H9zM18 27h5v4h-5z" : boss ? "M3 3h5v7h16V3h5v18h-4v7H7v-7H3zM8 28h6v3H8zM18 28h6v3h-6z" : "M10 3h4v4h4V3h4v5h4v16h-4v5H10v-5H6V8h4zM3 16h3v10H3zM26 16h3v10h-3z"} className="fill-primary stroke-foreground" strokeWidth="1" />
       <path d="M10 11h4v4h-4zM18 11h4v4h-4z" className="fill-secondary" /><path d="M11 12h2v2h-2zM19 12h2v2h-2zM13 20h6v2h-6z" className="fill-foreground" />
