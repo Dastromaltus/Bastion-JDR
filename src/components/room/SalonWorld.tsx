@@ -8,7 +8,7 @@ import { participantActors, type WorldActor } from "@/lib/world-actors";
 import { zoneLabel } from "@/lib/races";
 import { salonTurn } from "@/lib/turn-order";
 import type Phaser from "phaser";
-import { motionDisabled } from "@/lib/motion";
+import { motionDisabled, playMotion } from "@/lib/motion";
 
 export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string; name?: string; onChange: () => void }) {
   const mount = useRef<HTMLDivElement>(null);
@@ -17,6 +17,8 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const [failure, setFailure] = useState(false);
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
+  const directionRef = useRef<WorldDirection | null>(null);
+  const [movingDirection, setMovingDirection] = useState<WorldDirection | null>(null);
   const view = useRef<HTMLDivElement>(null);
   const previousZone = useRef<string | undefined>(undefined);
   const [message, setMessage] = useState("");
@@ -27,7 +29,8 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const canMove = d.game.status === "playing" && d.me.role === "adventurer" && d.me.hp > 0 && here === (d.me.current_zone ?? "entree");
   const enabled = canMove && !d.combat && turn.isMine;
   const participants = participantActors(d.players, here, d.me.id);
-  const actors: WorldActor[] = [...participants];
+  const activeId = d.combat?.current?.id ?? turn.active?.id;
+  const actors: WorldActor[] = participants.map((actor) => ({ ...actor, name: `${actor.id === activeId ? "▶ " : ""}${actor.name}` }));
    d.enemies.filter((e: any) => (e.status === "revele" || (d.me.role === "narrator" && e.status === "cache")) && e.zone === here).forEach((e: any, i: number) => actors.push({ id: e.id, name: `${e.id === d.controlledEnemyId ? '▶ ' : ''}${e.status === 'cache' ? '? ' : ''}${e.name}`, x: e.tile_x ?? 16 + i % 4, y: e.tile_y ?? 9, frame: 12 }));
   useEffect(() => {
     let disposed = false;
@@ -52,10 +55,10 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   }, [here]);
   async function step(direction: WorldDirection) {
     if (!enabled || lock.current || !ready) return;
-    lock.current = true; setBusy(true);
+    lock.current = true; setBusy(true); setMovingDirection(direction); directionRef.current = direction;
     try { const result = await move({ data: { gameId: d.game.id, direction } }); setMessage(result.message); onChange(); }
     catch (e) { setMessage(e instanceof Error ? e.message : "Déplacement impossible."); onChange(); }
-    finally { lock.current = false; setBusy(false); }
+    finally { lock.current = false; setBusy(false); setMovingDirection(null); directionRef.current = null; }
   }
   return <section className="space-y-3" aria-label="Exploration en vue de dessus">
     <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-pixel text-xl">{name ?? zoneLabel(here)}</h2><span className="text-xs text-muted-foreground">{participants.length} participant(s)</span></div>
@@ -73,8 +76,8 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
         <div className="min-w-0"><p className="break-words font-bold">{p.display_name}{p.id === d.me.id ? " · toi" : ""}</p><p className="text-xs text-muted-foreground">{p.role === "narrator" ? "Narrateur · observe la carte" : `${p.race} · ${zoneLabel(p.current_zone ?? "entree")}${(p.current_zone ?? "entree") === here ? " · ici" : ""}`}</p></div>
       </li>)}
     </ul>
-    {canMove && <div className="flex items-center justify-between gap-3"><p role="status" className="min-w-0 text-sm text-muted-foreground">{!turn.isMine ? turn.message : message || (busy ? "Déplacement…" : "C’est à ton tour !")}</p><div className="grid shrink-0 grid-cols-3 grid-rows-3 gap-1">
-      {([["up", "Monter", ChevronUp, "col-start-2"], ["left", "Gauche", ChevronLeft, "col-start-1 row-start-2"], ["right", "Droite", ChevronRight, "col-start-3 row-start-2"], ["down", "Descendre", ChevronDown, "col-start-2 row-start-3"]] as const).map(([dir, label, Icon, cls]) => <Button key={dir} variant="secondary" size="icon" aria-label={label} title={label} disabled={busy || !ready || !enabled} className={`h-11 w-11 ${cls}`} onClick={() => void step(dir)}><Icon /></Button>)}
+    {canMove && <div className="flex items-center justify-between gap-3"><p key={`${turn.active?.id}-${message}`} role="status" className="anim-enter min-w-0 text-sm text-muted-foreground">{!turn.isMine ? turn.message : busy ? "Déplacement…" : message || "C’est à ton tour !"}</p><div className="grid shrink-0 grid-cols-3 grid-rows-3 gap-1">
+      {([["up", "Monter", ChevronUp, "col-start-2"], ["left", "Gauche", ChevronLeft, "col-start-1 row-start-2"], ["right", "Droite", ChevronRight, "col-start-3 row-start-2"], ["down", "Descendre", ChevronDown, "col-start-2 row-start-3"]] as const).map(([dir, label, Icon, cls]) => <Button key={dir} variant={movingDirection === dir ? "primary" as never : "secondary"} size="icon" aria-label={label} title={label} disabled={busy || !ready || !enabled} className={`h-11 w-11 ${cls} ${movingDirection === dir ? "anim-pop" : ""}`} onClick={() => void step(dir)}><Icon /></Button>)}
     </div></div>}
   </section>;
 }

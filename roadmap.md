@@ -20,3 +20,4 @@
 - [x] Defer scenario selection to narrator preparation; verified creation and persisted selection in a real salon.
 - [x] Add selectable enemy, treasure and environment previews; verified map gallery and both catalogues visually.
 - [x] Suspend threat budgets throughout preparation and publication; 10 tests passed and authenticated placements, publication and reload succeeded. Ownership checks retained; new multi-account isolation checks not performed.
+- [ ] Make gameplay more lively with confirmed movement feedback, clearer active turns and animated combat dice; verify reduced motion and a real salon.

@@ -38,3 +38,22 @@ export function DiceResult({ result }: { result: { rolls: number[]; bonus: numbe
 export function RollingDice({ rolling }: { rolling: boolean }) {
   return <Dices className={rolling ? "anim-die" : undefined} />;
 }
+
+/** Only display the dice returned by the server; never invent intermediate rolls. */
+export function CombatDice({ rolls }: { rolls: number[] }) {
+  const [settled, setSettled] = useState(true);
+  useEffect(() => {
+    if (motionDisabled()) { setSettled(true); return; }
+    setSettled(false);
+    const timer = window.setTimeout(() => setSettled(true), 560);
+    return () => window.clearTimeout(timer);
+  }, [rolls]);
+  if (!rolls.length) return null;
+  const successes = rolls.filter((n) => n >= 5).length;
+  return <div className="space-y-2" role="status" aria-live="polite" aria-busy={!settled}>
+    <div className="flex flex-wrap gap-2" aria-label="Résultat des dés">
+      {rolls.map((n, i) => <span key={i} className={`flex size-11 shrink-0 items-center justify-center border-2 font-pixel text-2xl ${n >= 5 ? "border-primary bg-secondary text-foreground" : "border-foreground bg-background text-muted-foreground"} ${!settled ? "anim-die" : n >= 5 ? "anim-success" : "anim-failure"}`}>{n}</span>)}
+    </div>
+    <p className="font-pixel text-xl">{successes} réussite{successes > 1 ? "s" : ""}</p>
+  </div>;
+}

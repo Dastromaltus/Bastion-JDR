@@ -27,7 +27,7 @@ export function TurnBanner({ d, onChange }: { d: any; onChange: () => void }) {
       }}>{busy ? <LoaderCircle className="anim-loading" /> : <ArrowRight />}{busy ? "Passage du tour…" : "Terminer mon tour"}</Button>
     </div>
     <ol className="flex flex-wrap gap-x-4 gap-y-2 text-sm" aria-label="Participants dans l’ordre">
-      {turn.order.map((p, i) => <li key={p.id} aria-current={p.id === turn.active?.id ? "step" : undefined} className={p.id === turn.active?.id ? "font-bold text-primary" : "text-muted-foreground"}>
+      {turn.order.map((p, i) => <li key={p.id} aria-current={p.id === turn.active?.id ? "step" : undefined} className={p.id === turn.active?.id ? "anim-active px-2 py-1 font-bold text-primary" : "px-2 py-1 text-muted-foreground"}>
         {p.role === "narrator" ? "Narrateur" : `Joueur ${i + 1}`} · {p.display_name}{p.hp <= 0 && p.role !== "narrator" ? " (à terre)" : ""}{p.id === turn.active?.id ? " ◀" : ""}
       </li>)}
     </ol>
