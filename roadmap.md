@@ -17,3 +17,6 @@
 - [x] Strengthen site-wide page, title, section and interaction motion; eight tests and three public-page checks passed, with zero active animations under either reduced-motion preference.
 - [x] Reorganize navigation around salons, campaigns, Operations and the single-page rulebook, inspired by Roll20's My Games organization, preserving public URLs and gameplay screens.
 - [x] Prioritize existing salons, add search/status filters and create/join dialogs; 11 focused tests passed, authenticated navigation and desktop/narrow-screen layouts verified without runtime errors or horizontal overflow.
+- [x] Defer scenario selection to narrator preparation; verified creation and persisted selection in a real salon.
+- [x] Add selectable enemy, treasure and environment previews; verified map gallery and both catalogues visually.
+- [x] Suspend threat budgets throughout preparation and publication; 10 tests passed and authenticated placements, publication and reload succeeded. Ownership checks retained; new multi-account isolation checks not performed.

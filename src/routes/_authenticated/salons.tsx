@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, KeyRound, Search, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { createRoom, listMyRooms, deleteRoom } from "@/lib/rooms.functions";
-import { SCENARIOS, STATUS_LABEL, ROLE_LABEL, scenarioLabel } from "@/lib/races";
+import { STATUS_LABEL, ROLE_LABEL, scenarioLabel } from "@/lib/races";
 import { ReportButton } from "@/components/ReportButton";
 
 export const Route = createFileRoute("/_authenticated/salons")({
@@ -40,7 +40,7 @@ function SalonsPage() {
     catch (e) { setError(e instanceof Error ? e.message : "Suppression impossible."); }
   };
   const rooms = useQuery({ queryKey: ["my-rooms"], queryFn: () => list() });
-  const [form, setForm] = useState({ name: "", maxPlayers: 4, password: "", scenario: "tresor", displayName: "" });
+  const [form, setForm] = useState({ name: "", maxPlayers: 4, password: "", displayName: "" });
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -88,17 +88,13 @@ function SalonsPage() {
         {dialog === "create" ? <form onSubmit={submit} className="space-y-3">
           <label className="block text-sm font-bold">Nom du salon<Input className={`${field} mt-1`} required maxLength={60} placeholder="Nom du salon" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
           <label className="block text-sm font-bold">Ton nom de narrateur<Input className={`${field} mt-1`} required maxLength={40} placeholder="Ton nom de narrateur" value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} /></label>
-          <div className="grid grid-cols-2 gap-3">
+          <div>
             <label className="text-xs font-bold uppercase">Joueurs max
               <select className="mt-1 h-11 w-full border border-input bg-background px-2" value={form.maxPlayers} onChange={(e) => setForm({ ...form, maxPlayers: Number(e.target.value) })}>
                 {[3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </label>
-            <label className="text-xs font-bold uppercase">Scénario
-              <select className="mt-1 h-11 w-full border border-input bg-background px-2" value={form.scenario} onChange={(e) => setForm({ ...form, scenario: e.target.value })}>
-                {SCENARIOS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-              </select>
-            </label>
+
           </div>
           <label className="block text-sm font-bold">Mot de passe (optionnel)<Input className={`${field} mt-1`} type="password" maxLength={64} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
           {error && <p role="alert" className="text-sm font-bold text-primary">{error}</p>}

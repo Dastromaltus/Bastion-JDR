@@ -20,7 +20,7 @@ export const SCENARIOS = [
 ] as const;
 
 export function scenarioLabel(key: string) {
-  return SCENARIOS.find((s) => s.key === key)?.label ?? key;
+  return key === "a-definir" ? "Scénario à définir" : SCENARIOS.find((s) => s.key === key)?.label ?? key;
 }
 
 export const STATUS_LABEL: Record<string, string> = {

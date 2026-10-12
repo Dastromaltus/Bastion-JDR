@@ -148,6 +148,13 @@
       "when": 1791656495644,
       "tag": "0020_preserve_archived_character_memberships",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791831663772,
+      "tag": "0021_suspend_campaign_threat_budget",
+      "breakpoints": true
     }
   ]
 }

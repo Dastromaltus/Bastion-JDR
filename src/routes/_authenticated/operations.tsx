@@ -81,8 +81,7 @@ function OperationCard({ op, salons }: { op: any; salons: any[] }) {
     setBusy("load");
     try {
       const r = await load({ data: { gameId: target.id, templateId: op.id, reshuffle: false } });
-      if (r.over) toast.warning(`Opération chargée, mais la menace dépasse le budget : ${r.used} / ${r.budget} points. Retire des ennemis ou remélange avant de lancer.`, { duration: 8000 });
-      else toast.success(`Opération chargée — menace ${r.used} / ${r.budget}`);
+      toast.success("Opération chargée.");
       navigate({ to: "/salon/$code", params: { code: target.code } });
     } catch (e) { toast.error(e instanceof Error ? e.message : "Chargement impossible."); }
     finally { setBusy(null); }
@@ -115,7 +114,7 @@ function OperationCard({ op, salons }: { op: any; salons: any[] }) {
         <div className="border border-foreground p-2"><dt className="uppercase text-muted-foreground">Durée</dt><dd className="font-bold">{op.duration} min</dd></div>
         <div className="border border-foreground p-2"><dt className="uppercase text-muted-foreground">Difficulté</dt><dd className="font-bold">{op.difficulty_label || DIFF[op.difficulty]}</dd></div>
         <div className="border border-foreground p-2"><dt className="uppercase text-muted-foreground">Salles</dt><dd className="font-bold">{op.rooms.length} · {MAPT[op.map_type]}</dd></div>
-        <div className="border border-foreground p-2"><dt className="uppercase text-muted-foreground">Menace</dt><dd className="font-bold">{op.threat} pts</dd></div>
+        <div className="border border-foreground p-2"><dt className="uppercase text-muted-foreground">Ennemis</dt><dd className="font-bold">{op.enemies?.length ?? 0}</dd></div>
       </dl>
       <p className="mt-3 text-sm"><b>Objectif :</b> {op.objective_text}</p>
       <div className="mt-3 border-2 border-foreground bg-background p-2"><DungeonMap rooms={op.rooms} current={op.rooms[0]?.key} label={`Aperçu de la carte de ${op.name}`} /></div>

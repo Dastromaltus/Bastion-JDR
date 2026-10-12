@@ -31,4 +31,5 @@
 
 - Archive narrator sheets in an owner-readable separate table and zero narrator roster stats; use row-locked combat RPCs for server dice and filtered initiative, keeping exploration adventurer-only.
 - Store owner-private campaigns and make immutable salon snapshots through checked SQL RPCs; mark isolated solo playtests with game_campaigns.is_test so they reuse server gameplay without changing authored documents.
-- Share workspace navigation through SiteNavigation in the root, keep gameplay screens distraction-free, and prioritize the salon list over create/join dialogs so page organization stays consistent without changing game rules or public URLs.
+- Share workspace navigation through SiteNavigation, hide it during gameplay, and prioritize salon lists over creation dialogs to preserve page organization.
+- Defer scenarios to narrator-checked preparation; keep catalog and environment previews browser-safe to avoid Phaser in SSR.
