@@ -139,7 +139,9 @@ function RoomPage() {
   const { game, players, me } = d;
   const isNarr = me.role === "narrator";
   const turn = d.combat ? { ...salonTurn(game, players, me.user_id), isMine: !!d.combat.isMine } : salonTurn(game, players, me.user_id);
-  const inviteUrl = typeof window !== "undefined" ? `${window.location.origin}/rejoindre/${game.code}` : "";
+  // Preview/editor origins require Lovable workspace access; invitations always target the public site.
+  const inviteOrigin = typeof window === "undefined" ? "" : /(^|\.)lovable(project)?\.(app|dev)$/.test(window.location.hostname) && /preview|lovableproject|-dev\./.test(window.location.hostname) ? "https://bastion-roleplay.lovable.app" : window.location.origin;
+  const inviteUrl = inviteOrigin ? `${inviteOrigin}/rejoindre/${game.code}` : "";
   const textClass = settings.textSize === "grand" ? "text-[17px]" : settings.textSize === "tres-grand" ? "text-[19px]" : "text-base";
   const narr = (action: any, extra: Record<string, unknown> = {}, ok?: string) =>
     run(action + String(extra["targetUserId"] ?? ""), () => sNarr({ data: { gameId: game.id, action, ...extra } as any }), ok);
