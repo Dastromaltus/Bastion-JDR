@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { loadCharacter } from "@/lib/character";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getRoomPreview, joinRoom } from "@/lib/rooms.functions";
@@ -33,6 +35,7 @@ function JoinPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => { supabase.auth.getUser().then(async ({ data }) => { const c = data.user && await loadCharacter(data.user.id); if (c) { setName((n) => n || c.name); setRace(c.race); } }); }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

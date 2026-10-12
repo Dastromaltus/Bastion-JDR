@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BookOpen, Castle, LogOut, Map, Swords, Users } from "lucide-react";
+import { BookOpen, Castle, LogOut, Map, Swords, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ const destinations = [
   { to: "/salons", label: "Mes salons", icon: Users },
   { to: "/campagnes", label: "Mes campagnes", icon: Map },
   { to: "/operations", label: "Opérations", icon: Swords },
+  { to: "/personnage", label: "Mon personnage", icon: User },
   { to: "/", label: "Règles du jeu", icon: BookOpen },
 ] as const;
 

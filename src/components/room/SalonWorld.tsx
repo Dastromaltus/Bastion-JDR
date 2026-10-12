@@ -62,7 +62,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   return <section className="space-y-3" aria-label="Exploration en vue de dessus">
     <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-pixel text-xl">{name ?? zoneLabel(here)}</h2><span className="text-xs text-muted-foreground">{participants.length} participant(s)</span></div>
     <div ref={view} tabIndex={0} role="group" aria-label="Carte du salon, vue de dessus" className="salon-world relative overflow-hidden border-2 border-foreground bg-game outline-none focus-visible:ring-2 focus-visible:ring-ring" onKeyDown={(event) => {
-      const keys: Record<string, WorldDirection> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
+      const keys: Record<string, WorldDirection> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", z: "up", s: "down", q: "left", d: "right", Z: "up", S: "down", Q: "left", D: "right" };
       const direction = keys[event.key];
       if (direction && enabled) { event.preventDefault(); void step(direction); }
     }}>
@@ -75,7 +75,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
         <div className="min-w-0"><p className="break-words font-bold">{p.display_name}{p.id === d.me.id ? " · toi" : ""}</p><p className="text-xs text-muted-foreground">{p.role === "narrator" ? "Narrateur · observe la carte" : `${p.race} · ${zoneLabel(p.current_zone ?? "entree")}${(p.current_zone ?? "entree") === here ? " · ici" : ""}`}</p></div>
       </li>)}
     </ul>
-    {canMove && <div className="flex items-center justify-between gap-3"><p key={`${turn.active?.id}-${message}`} role="status" className="anim-enter min-w-0 text-sm text-muted-foreground">{!turn.isMine ? turn.message : busy ? "Déplacement…" : message || "C’est à ton tour !"}</p><div className="grid shrink-0 grid-cols-3 grid-rows-3 gap-1">
+    {canMove && <div className="flex items-center justify-between gap-3"><p key={`${turn.active?.id}-${message}`} role="status" className="anim-enter min-w-0 text-sm text-muted-foreground">{!turn.isMine ? turn.message : busy ? "Déplacement…" : message || "C’est à ton tour !"}</p><div className="grid shrink-0 grid-cols-3 grid-rows-3 gap-1 lg:hidden">
       {([["up", "Monter", ChevronUp, "col-start-2"], ["left", "Gauche", ChevronLeft, "col-start-1 row-start-2"], ["right", "Droite", ChevronRight, "col-start-3 row-start-2"], ["down", "Descendre", ChevronDown, "col-start-2 row-start-3"]] as const).map(([dir, label, Icon, cls]) => <Button key={dir} variant={movingDirection === dir ? "default" : "secondary"} size="icon" aria-label={label} title={label} disabled={busy || !ready || !enabled} className={`h-11 w-11 ${cls} ${movingDirection === dir ? "anim-pop" : ""}`} onClick={() => void step(dir)}><Icon /></Button>)}
     </div></div>}
   </section>;

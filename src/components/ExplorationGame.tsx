@@ -164,7 +164,7 @@ export function ExplorationGame() {
 
   useEffect(() => {
     const keyHandler = (event: KeyboardEvent) => {
-      const directions: Record<string, Direction> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
+      const directions: Record<string, Direction> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", z: "up", s: "down", q: "left", d: "right", Z: "up", S: "down", Q: "left", D: "right" };
       const direction = directions[event.key];
       if (direction && !encounter) { event.preventDefault(); void handleMove(direction); }
     };
@@ -208,7 +208,7 @@ export function ExplorationGame() {
         <div className="game-viewport"><div ref={mountRef} className="game-canvas" /></div>
         <div className="grid gap-3 border-t border-game-line p-4 md:grid-cols-[1fr_auto] md:items-center">
           <div className="retro-dialog"><span className="text-primary">›</span> {message}</div>
-          <div className="grid grid-cols-3 grid-rows-3 gap-1 justify-self-center">
+          <div className="grid grid-cols-3 grid-rows-3 gap-1 justify-self-center lg:hidden">
             <Button aria-label="Monter" title="Monter" variant="game" size="gameIcon" className="col-start-2" onClick={() => void handleMove("up")}><ChevronUp /></Button>
             <Button aria-label="Gauche" title="Gauche" variant="game" size="gameIcon" className="col-start-1 row-start-2" onClick={() => void handleMove("left")}><ChevronLeft /></Button>
             <Button aria-label="Droite" title="Droite" variant="game" size="gameIcon" className="col-start-3 row-start-2" onClick={() => void handleMove("right")}><ChevronRight /></Button>
