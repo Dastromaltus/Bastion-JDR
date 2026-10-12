@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { loadCharacter } from "@/lib/character";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +32,7 @@ const field = "h-11 rounded-none";
 
 function SalonsPage() {
   const navigate = useNavigate();
+  useEffect(() => { supabase.auth.getUser().then(async ({ data }) => { if (data.user && !(await loadCharacter(data.user.id))) navigate({ to: "/personnage" }); }); }, [navigate]);
   const qc = useQueryClient();
   const list = useServerFn(listMyRooms);
   const create = useServerFn(createRoom);
