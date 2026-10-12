@@ -20,4 +20,4 @@
 - [x] Defer scenario selection to narrator preparation; verified creation and persisted selection in a real salon.
 - [x] Add selectable enemy, treasure and environment previews; verified map gallery and both catalogues visually.
 - [x] Suspend threat budgets throughout preparation and publication; 10 tests passed and authenticated placements, publication and reload succeeded. Ownership checks retained; new multi-account isolation checks not performed.
-- [ ] Make gameplay more lively with confirmed movement feedback, clearer active turns and animated combat dice; verify reduced motion and a real salon.
+- [x] Add walking motion for confirmed positions, directional action feedback, active-turn highlights, animated server combat dice and mob health feedback. Twenty tests passed; real salon and active solo canvas checked without runtime errors, with zero CSS animations in reduced-motion mode. Full multiplayer combat remains untested.
