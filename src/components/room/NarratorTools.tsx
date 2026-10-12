@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { TRACKS, SFX } from "@/lib/ambience-tracks";
-import { ZONES, zoneLabel, TRIGGER_LABEL, ENEMY_STATUS_LABEL, THREAT_PER_PLAYER } from "@/lib/races";
+import { ZONES, zoneLabel, TRIGGER_LABEL, ENEMY_STATUS_LABEL } from "@/lib/races";
 import {
   setAmbience, getNarratorCatalog, placeEnemy, enemyAction, placeTreasure, removeTreasure, createCustomEnemy, createCustomTreasure, exploreAction, attackEnemy,
 } from "@/lib/narrator.functions";
 import type { AmbienceRow } from "./Ambience";
 import { salonTurn } from "@/lib/turn-order";
 import { HealthFill } from "./MotionBits";
+import { CatalogArtwork } from "@/components/operations/CatalogArtwork";
 
 const SEL = "h-11 w-full border border-input bg-background px-2 focus-visible:outline-2 focus-visible:outline-primary";
 const RARITY: Record<string, string> = { commun: "Commun", rare: "Rare", epique: "Épique", legendaire: "Légendaire" };
@@ -98,12 +99,6 @@ export function EnemyPanel({ d, initialZone }: { d: any; initialZone?: string | 
   const filtered = list.filter((e: any) => !category || e.category === category);
   const selected = list.find((e: any) => e.id === enemyId);
   const s = stats ?? (selected ? { speed: selected.speed, strength: selected.strength, endurance: selected.endurance } : null);
-  const adventurers = d.players.filter((p: any) => p.role === "adventurer").length;
-  const budget = adventurers * THREAT_PER_PLAYER;
-  const used = d.enemies.reduce((a: number, e: any) => a + e.threat_cost, 0);
-  const left = budget - used;
-  const tooExpensive = !!selected && selected.threat_cost > left;
-
   const statInput = (k: "speed" | "strength" | "endurance", label: string) => (
     <label className="text-xs font-bold uppercase">{label}
       <select className={SEL} value={s?.[k] ?? 1} disabled={!s} onChange={(e) => setStats({ ...(s as any), [k]: Number(e.target.value) })}>
@@ -114,18 +109,10 @@ export function EnemyPanel({ d, initialZone }: { d: any; initialZone?: string | 
 
   return (
     <div className="space-y-4">
-      <div>
-        <div className="flex justify-between text-xs font-black uppercase"><span>Budget de menace</span><span>{Math.max(0, left)} / {budget} restants</span></div>
-        <div className="mt-1 h-3 w-full border border-foreground bg-muted" role="meter" aria-valuemin={0} aria-valuemax={budget} aria-valuenow={used} aria-label="Menace utilisée">
-          <div className="h-full bg-primary transition-all" style={{ width: `${budget ? Math.min(100, (used / budget) * 100) : 0}%` }} />
-        </div>
-        <p className="mt-1 text-[11px] text-muted-foreground">{THREAT_PER_PLAYER} points par aventurier ({adventurers}).</p>
-      </div>
-
       {cat.isLoading && <p className="text-sm">Chargement du catalogue…</p>}
       {cat.error && <p role="alert" className="text-sm font-bold text-primary">Catalogue indisponible. <button className="underline" onClick={() => cat.refetch()}>Réessayer</button></p>}
       {cat.data && (
-        <form className="grid gap-2" onSubmit={(e) => { e.preventDefault(); if (!selected || !s) { toast.error("Choisis un ennemi."); return; } if (tooExpensive) { toast.error(`Budget dépassé : il reste ${left} point(s), ${selected.name} en coûte ${selected.threat_cost}.`); return; }
+        <form className="grid gap-2" onSubmit={(e) => { e.preventDefault(); if (!selected || !s) { toast.error("Choisis un ennemi."); return; }
           void run("place", () => place({ data: { gameId, catalogId: selected.id, zone, trigger: trigger as any, ...s } }), `${selected.name} placé en secret`).then((ok) => { if (ok) { setEnemyId(""); setStats(null); } }); }}>
           <div className="grid grid-cols-2 gap-2">
             <label className="text-xs font-bold uppercase">Catégorie
@@ -136,13 +123,13 @@ export function EnemyPanel({ d, initialZone }: { d: any; initialZone?: string | 
             <label className="text-xs font-bold uppercase">Ennemi
               <select className={SEL} value={enemyId} onChange={(e) => { setEnemyId(e.target.value); setStats(null); }}>
                 <option value="">Choisir…</option>
-                {filtered.map((e: any) => <option key={e.id} value={e.id}>{e.icon} {e.name} — menace {e.threat_cost}{e.game_id ? " (perso)" : ""}</option>)}
+                {filtered.map((e: any) => <option key={e.id} value={e.id}>{e.icon} {e.name}{e.game_id ? " (perso)" : ""}</option>)}
               </select>
             </label>
           </div>
           {selected && s && (
             <div className="border-2 border-foreground p-2">
-              <p className="text-sm"><b>{selected.icon} {selected.name}</b> · {selected.category} — {selected.ability}</p>
+              <CatalogArtwork kind="mob" item={selected} /><p className="text-sm"><b>{selected.icon} {selected.name}</b> · {selected.category} — {selected.ability}</p>
               {selected.description && <p className="text-xs text-muted-foreground">{selected.description}</p>}
               <div className="mt-2 grid grid-cols-4 gap-2">{statInput("speed", "Vit")}{statInput("strength", "For")}{statInput("endurance", "End")}<Stat label="PV" value={10 + 2 * s.endurance} /></div>
             </div>
@@ -155,8 +142,7 @@ export function EnemyPanel({ d, initialZone }: { d: any; initialZone?: string | 
               <select className={SEL} value={trigger} onChange={(e) => setTrigger(e.target.value)}>{Object.entries(TRIGGER_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
             </label>
           </div>
-          {tooExpensive && <p role="alert" className="text-sm font-bold text-primary">Budget insuffisant : il reste {left} point(s), {selected.name} en coûte {selected.threat_cost}.</p>}
-          <Button disabled={busy === "place" || !selected || tooExpensive} className="min-h-11 rounded-none font-black uppercase">{busy === "place" ? "Placement…" : "Placer l'ennemi"}</Button>
+          <Button disabled={busy === "place" || !selected} className="min-h-11 rounded-none font-black uppercase">{busy === "place" ? "Placement…" : "Placer l'ennemi"}</Button>
         </form>
       )}
 
@@ -191,7 +177,7 @@ export function EnemyPanel({ d, initialZone }: { d: any; initialZone?: string | 
           </div>
           <Input maxLength={120} className="h-11 rounded-none" placeholder="Capacité spéciale" value={c.ability} onChange={(e) => setC({ ...c, ability: e.target.value })} />
           <div className="grid grid-cols-4 gap-2">
-            {([["speed", "Vit"], ["strength", "For"], ["endurance", "End"], ["threatCost", "Menace"]] as const).map(([k, l]) => (
+            {([["speed", "Vit"], ["strength", "For"], ["endurance", "End"]] as const).map(([k, l]) => (
               <label key={k} className="text-xs font-bold uppercase">{l}<select className={SEL} value={c[k]} onChange={(e) => setC({ ...c, [k]: Number(e.target.value) })}>{[1, 2, 3, 4, 5].map((n) => <option key={n}>{n}</option>)}</select></label>
             ))}
           </div>
@@ -251,6 +237,7 @@ export function TreasurePanel({ d }: { d: any }) {
               </select>
             </label>
           </div>
+          {selected && <CatalogArtwork kind="treasure" item={selected} />}
           {selected && <p className="border-2 border-foreground p-2 text-sm"><b>{selected.name}</b> · {TYPE[selected.type]} · {RARITY[selected.rarity]} · {selected.value} cr<br />Effet : {selected.effect || "—"}</p>}
           <label className="text-xs font-bold uppercase">Placer
             <select className={SEL} value={where} onChange={(e) => setWhere(e.target.value)}>

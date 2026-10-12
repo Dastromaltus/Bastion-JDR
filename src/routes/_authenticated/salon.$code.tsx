@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   getRoom, narratorAction, leaveRoom, updateCharacter, rollCheck, inventoryAction, narratorAddItem, sendSignal,
 } from "@/lib/rooms.functions";
-import { RACE_NAMES, ROLE_LABEL, STATUS_LABEL, scenarioLabel } from "@/lib/races";
+import { RACE_NAMES, SCENARIOS, ROLE_LABEL, STATUS_LABEL, scenarioLabel } from "@/lib/races";
 import { ReportButton } from "@/components/ReportButton";
 import { useSettings, vibrate, type GameSettings } from "@/components/room/useSettings";
 import { useAmbience, SoundGate, PersonalAmbience } from "@/components/room/Ambience";
@@ -341,6 +341,8 @@ function NarratorPanel({ d, narr, busy, refetch }: { d: any; narr: any; busy: st
   return (
     <section className="space-y-4 border-2 border-primary p-4">
       <p className="section-label">Commandes du narrateur</p>
+      {game.status === "waiting" && <div className="flex flex-wrap items-end gap-3"><label className="min-w-0 flex-1 text-sm font-bold">Scénario<select aria-label="Scénario du salon" className="mt-1 h-11 w-full border border-input bg-background px-2" value={game.scenario} disabled={!!busy} onChange={(e) => narr("scenario", { scenario: e.target.value }, "Scénario enregistré")}><option value="a-definir" disabled>À définir</option>{SCENARIOS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</select></label><Button asChild variant="outline" className="min-h-11"><Link to="/campagnes">Concevoir une campagne</Link></Button></div>}
+
       <div className="flex flex-wrap gap-2">
         {game.status === "waiting" && (
           <>

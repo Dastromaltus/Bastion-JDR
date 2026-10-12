@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { ZONES, ZONE_KEYS, zoneLabel, THREAT_PER_PLAYER, inventoryCategory } from "./races";
+import { ZONES, ZONE_KEYS, zoneLabel, inventoryCategory } from "./races";
 import { TRACK_KEYS, SFX_KEYS } from "./ambience-tracks";
 
 type Ctx = { userId: string; supabase: any };
@@ -132,16 +132,6 @@ export const createCustomTreasure = createServerFn({ method: "POST" })
 
 /* ---------------- Enemies ---------------- */
 
-async function threatUsage(gameId: string) {
-  const db = await admin();
-  const [{ data: enemies }, { count }] = await Promise.all([
-    db.from("game_enemies").select("threat_cost").eq("game_id", gameId),
-    db.from("game_players").select("id", { count: "exact", head: true }).eq("game_id", gameId).eq("role", "adventurer"),
-  ]);
-  const used = (enemies ?? []).reduce((a: number, e: any) => a + e.threat_cost, 0);
-  return { used, budget: (count ?? 0) * THREAT_PER_PLAYER };
-}
-
 export const placeEnemy = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
@@ -158,10 +148,6 @@ export const placeEnemy = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: cat } = await db.from("enemy_catalog").select("*").eq("id", data.catalogId).maybeSingle();
     if (!cat || (cat.game_id && cat.game_id !== data.gameId)) throw new Error("Cet ennemi n'est pas dans ton catalogue.");
-    const { used, budget } = await threatUsage(data.gameId);
-    if (budget === 0) throw new Error("Aucun aventurier dans le salon : budget de menace nul.");
-    if (used + cat.threat_cost > budget)
-      throw new Error(`Budget de menace dépassé : ${cat.name} coûte ${cat.threat_cost}, il ne reste que ${budget - used} point(s) sur ${budget}.`);
     const hp = 10 + 2 * data.endurance;
     const { error } = await db.from("game_enemies").insert({
       game_id: data.gameId, catalog_id: cat.id, name: cat.name, category: cat.category, icon: cat.icon, ability: cat.ability,

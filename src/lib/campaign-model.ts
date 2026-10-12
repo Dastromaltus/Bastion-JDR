@@ -14,8 +14,6 @@ export function campaignIssues(c: Campaign, operations: any[], enemies: any[]) {
     if (!s.objective.trim() || !seen.has(s.objective_room)) issues.push(`Étape ${i + 1} : objectif impossible ou manquant.`);
     if (!seen.has(s.exit_room)) issues.push(`Étape ${i + 1} : map sans sortie accessible.`);
     if (s.placements.some((p) => !op.rooms.some((r: any) => r.key === p.room_key))) issues.push(`Étape ${i + 1} : placement hors de la map.`);
-    const used = s.placements.filter((p) => p.kind === "mob").reduce((sum, p) => sum + (enemies.find((e) => e.id === p.catalog_id)?.threat_cost ?? 0), 0);
-    if (used > c.recommended_players * 3) issues.push(`Étape ${i + 1} : menace ${used}/${c.recommended_players * 3}.`);
   });
   return issues;
 }

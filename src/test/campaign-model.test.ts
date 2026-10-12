@@ -6,7 +6,7 @@ const ops = [{ id: "t", rooms: [{ key: "a", connections: ["b"] }, { key: "b", co
 describe("campaign validation and preview", () => {
   it("accepts a connected objective and exit", () => expect(campaignIssues(document, ops, [])).toEqual([]));
   it("blocks inaccessible rooms", () => expect(campaignIssues(document, [{ id: "t", rooms: [{ key: "a", connections: [] }, { key: "b", connections: [] }] }], [])).toContain("Étape 1 : salle inaccessible."));
-  it("blocks over-budget mobs", () => expect(campaignIssues({ ...document, stages: [{ ...document.stages[0], placements: Array.from({ length: 4 }, () => placement) }] } as Campaign, ops, [{ id: "e", threat_cost: 3 }])).toContain("Étape 1 : menace 12/9."));
+  it("accepts placements without a threat budget", () => expect(campaignIssues({ ...document, stages: [{ ...document.stages[0], placements: Array.from({ length: 4 }, () => placement) }] } as Campaign, ops, [{ id: "e", threat_cost: 3 }])).toEqual([]));
   it("removes hidden mobs and treasures from player preview", () => expect(playerPlacements([placement, { ...placement, id: "t", kind: "treasure" }, { ...placement, id: "v", hidden: false }]).map((p) => p.id)).toEqual(["v"]));
   it("rejects a missing exit", () => expect(campaignIssues({ ...document, stages: [{ ...document.stages[0], exit_room: "missing" }] } as Campaign, ops, [])).toContain("Étape 1 : map sans sortie accessible."));
 });
