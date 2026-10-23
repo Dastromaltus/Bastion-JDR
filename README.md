@@ -1,4 +1,5 @@
 Bastion est une application web de jeu de rôle inspirée des dungeon crawlers et des jeux de plateau. Elle sert d’outil numérique pour préparer, animer et équilibrer des parties de Bastion, un JDR de 3 à 5 joueurs où des aventuriers affrontent les événements, lieux et ennemis incarnés par un narrateur.
+<img width="1847" height="834" alt="image" src="https://github.com/user-attachments/assets/54fb0d7c-27c2-4058-8234-c95a32ca16b9" />
 
 # Concept du jeu
 Les joueurs incarnent des aventuriers issus de races aux styles de jeu différents :
