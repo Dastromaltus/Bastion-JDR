@@ -59,7 +59,7 @@ export class WorldScene extends Phaser.Scene {
   }
   sync(actors: WorldActor[]) {
     const ids = new Set(actors.map((a) => a.id));
-    for (const [id, node] of this.actors) if (!ids.has(id)) { node.destroy(); this.actors.delete(id); }
+    for (const [id, node] of this.actors) if (!ids.has(id)) { if ((this.cameras.main as any)._follow === node) this.cameras.main.stopFollow(); node.destroy(); this.actors.delete(id); }
     const reduced = motionDisabled();
     const hurt = actors.filter((a) => a.sprite !== "zombie" && a.hp !== undefined && (this.prev.get(a.id)?.hp ?? a.hp) > a.hp);
     for (const actor of actors) {
