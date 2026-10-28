@@ -54,7 +54,7 @@ function Index() {
         <div className="absolute inset-0 bg-hero-overlay" />
         <div id="top" data-motion-enter className="relative z-10 flex min-h-[74vh] max-w-7xl flex-col justify-end px-5 pb-12 pt-20 md:px-10 md:pb-16">
           <p className="mb-4 flex items-center gap-3 text-xs font-black uppercase text-primary"><span className="h-px w-10 bg-primary" /> Dungeon crawler asymétrique</p>
-          <h1 className="font-display"><img src={bastionLogo} alt="Bastion" className="anim-pop w-[min(88vw,32rem)] [image-rendering:pixelated]" /></h1>
+          <h1 className="font-display"><img src={bastionLogo} alt="Bastion" className="anim-pop w-[min(72vw,22rem)] [image-rendering:pixelated]" /></h1>
           <div className="mt-8 grid gap-8 border-t border-foreground/40 pt-6 md:grid-cols-[1fr_auto] md:items-end">
             <div>
               <p className="max-w-xl text-lg font-medium leading-relaxed md:text-xl">Les aventuriers avancent. Le narrateur prépare l’inconnu. <span className="text-primary">La forteresse ne pardonne rien.</span></p>
