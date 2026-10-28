@@ -39,6 +39,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const activeId = d.combat?.current?.id ?? turn.active?.id;
   const actors: WorldActor[] = participants.map((actor) => ({ ...actor, name: `${actor.id === activeId ? "▶ " : ""}${actor.name}`, hp: d.players.find((p: any) => p.id === actor.id)?.hp }));
    d.enemies.filter((e: any) => (e.status === "revele" || (d.me.role === "narrator" && e.status === "cache") || (e.status === "vaincu" && isZombie(e.name))) && e.zone === here).forEach((e: any, i: number) => actors.push({ id: e.id, name: e.status === "vaincu" ? "" : `${e.id === d.controlledEnemyId ? '▶ ' : ''}${e.status === 'cache' ? '? ' : ''}${e.name}`, x: e.tile_x ?? 16 + i % 4, y: e.tile_y ?? 9, frame: 12, hp: e.hp, ...(isZombie(e.name) ? { sprite: "zombie" as const } : {}), ...(e.status === "vaincu" ? { dead: true } : {}) }));
+  if (d.me.role === "narrator") (d.treasures ?? []).filter((t: any) => t.status === "cache" && t.tile_x != null && t.zone === here).forEach((t: any) => actors.push({ id: t.id, name: `✦ ${t.name}`, x: t.tile_x, y: t.tile_y, frame: 0, sprite: "treasure" }));
   useEffect(() => {
     let disposed = false;
     import("./world-scene").then(({ createWorldGame }) => {
