@@ -54,10 +54,11 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   useEffect(() => {
     if (ready) game.current?.scene.getScene("SalonWorld").events.emit("map", grid);
   }, [ready, grid]);
-  const focusActor = participants.find((p) => p.id === (d.me.role === "adventurer" ? d.me.id : followed?.id)) ?? participants[0];
+  const controlledMob = d.controlledEnemyId ? actors.find((a) => a.id === d.controlledEnemyId) : undefined;
+  const focusActor = controlledMob ?? participants.find((p) => p.id === (d.me.role === "adventurer" ? d.me.id : followed?.id)) ?? participants[0];
   useEffect(() => {
     if (ready) game.current?.scene.getScene("SalonWorld").events.emit("focus", focusActor ?? grid.spawn);
-  }, [ready, focusActor?.x, focusActor?.y, grid]);
+  }, [ready, focusActor?.id, focusActor?.x, focusActor?.y, grid]);
   useEffect(() => {
     if (previousZone.current && previousZone.current !== here && !motionDisabled()) view.current?.animate(
       [{ opacity: 0.35, transform: "translateX(8px)" }, { opacity: 1, transform: "translateX(0)" }],

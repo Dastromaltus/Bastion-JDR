@@ -38,7 +38,10 @@ export class WorldScene extends Phaser.Scene {
     this.events.on("map", (grid: GridMap) => {
       grid.tiles.forEach((t, i) => { const img = this.scenery[i]; if (img) img.setVisible(t > 0).setFrame(Math.max(0, t - 1)); });
     });
-    this.events.on("focus", (p: { x: number; y: number }) => {
+    this.events.on("focus", (p: { id?: string; x: number; y: number }) => {
+      const target = p.id ? this.actors.get(p.id) : undefined;
+      if (target) { const lerp = motionDisabled() ? 1 : 0.15; this.cameras.main.startFollow(target, true, lerp, lerp); return; }
+      this.cameras.main.stopFollow();
       const cam = this.cameras.main, tx = p.x * 16 + 8, ty = p.y * 16 + 8;
       if (motionDisabled()) cam.centerOn(tx, ty); else cam.pan(tx, ty, 160, "Linear", true);
     });
@@ -56,7 +59,7 @@ export class WorldScene extends Phaser.Scene {
   }
   sync(actors: WorldActor[]) {
     const ids = new Set(actors.map((a) => a.id));
-    for (const [id, node] of this.actors) if (!ids.has(id)) { node.destroy(); this.actors.delete(id); }
+    for (const [id, node] of this.actors) if (!ids.has(id)) { if ((this.cameras.main as any)._follow === node) this.cameras.main.stopFollow(); node.destroy(); this.actors.delete(id); }
     const reduced = motionDisabled();
     const hurt = actors.filter((a) => a.sprite !== "zombie" && a.hp !== undefined && (this.prev.get(a.id)?.hp ?? a.hp) > a.hp);
     for (const actor of actors) {
