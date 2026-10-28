@@ -190,6 +190,13 @@
       "when": 1793203141120,
       "tag": "0026_map_sequence_music_intro",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1793205417835,
+      "tag": "0027_adventurer_damage_history",
+      "breakpoints": true
     }
   ]
 }
