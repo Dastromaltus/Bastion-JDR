@@ -1173,6 +1173,73 @@ export type Database = {
           },
         ]
       }
+      game_map_progress: {
+        Row: {
+          current_index: number
+          game_id: string
+          updated_at: string
+        }
+        Insert: {
+          current_index?: number
+          game_id: string
+          updated_at?: string
+        }
+        Update: {
+          current_index?: number
+          game_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_map_progress_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: true
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_map_sequence: {
+        Row: {
+          game_id: string
+          id: string
+          name: string
+          position: number
+          source: string
+          spawn_x: number
+          spawn_y: number
+          tiles: number[]
+        }
+        Insert: {
+          game_id: string
+          id?: string
+          name: string
+          position: number
+          source: string
+          spawn_x: number
+          spawn_y: number
+          tiles: number[]
+        }
+        Update: {
+          game_id?: string
+          id?: string
+          name?: string
+          position?: number
+          source?: string
+          spawn_x?: number
+          spawn_y?: number
+          tiles?: number[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_map_sequence_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_messages: {
         Row: {
           author_name: string

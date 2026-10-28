@@ -62,31 +62,88 @@ export const deleteMyMap = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+async function assertNarrator(supabase: any, gameId: string, userId: string) {
+  const { data: me } = await supabase.from("game_players").select("role").eq("game_id", gameId).eq("user_id", userId).maybeSingle();
+  if (me?.role !== "narrator") throw new Error("Seul le narrateur de ce salon peut changer la carte.");
+}
+
+async function resolveMap(supabase: any, userId: string, ref: { prebuilt?: string | undefined; mapId?: string | undefined }): Promise<{ map: GridMap; source: string }> {
+  let map: GridMap | undefined; let source = "";
+  if (ref.mapId) {
+    const { data: m } = await supabase.from("custom_maps").select("name, tiles, spawn_x, spawn_y").eq("id", ref.mapId).eq("owner_id", userId).maybeSingle();
+    if (m) { map = { name: m.name, tiles: m.tiles, spawn: { x: m.spawn_x, y: m.spawn_y } }; source = `custom:${ref.mapId}`; }
+  } else if (ref.prebuilt && PREBUILT_MAPS[ref.prebuilt]) { map = PREBUILT_MAPS[ref.prebuilt]; source = `prebuilt:${ref.prebuilt}`; }
+  if (!map) throw new Error("Carte introuvable.");
+  const err = validateGrid(map.tiles, map.spawn);
+  if (err) throw new Error(err);
+  return { map, source };
+}
+
+async function installMap(gameId: string, userId: string, map: GridMap, source: string, label = "Nouvelle carte") {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { error } = await supabaseAdmin.from("game_world_maps").upsert({ game_id: gameId, name: map.name, source, tiles: map.tiles, spawn_x: map.spawn.x, spawn_y: map.spawn.y, updated_at: new Date().toISOString() });
+  if (error) throw new Error("Chargement de la carte impossible.");
+  await supabaseAdmin.from("game_players").update({ world_x: map.spawn.x, world_y: map.spawn.y }).eq("game_id", gameId).eq("role", "adventurer");
+  const { data: mobs } = await supabaseAdmin.from("game_enemies").select("id, tile_x, tile_y").eq("game_id", gameId).neq("status", "vaincu");
+  for (const m of mobs ?? []) {
+    const p = nearestWalkable(map, Math.min(GRID - 1, m.tile_x ?? map.spawn.x), Math.min(GRID - 1, m.tile_y ?? map.spawn.y));
+    if (p.x !== m.tile_x || p.y !== m.tile_y) await supabaseAdmin.from("game_enemies").update({ tile_x: p.x, tile_y: p.y }).eq("id", m.id);
+  }
+  await supabaseAdmin.from("game_events").insert({ game_id: gameId, actor_id: userId, kind: "carte", message: `${label} : ${map.name}.`, payload: {}, important: true, secret: false });
+}
+
 /** Narrator-only: copy a prebuilt or personal map into the salon and move adventurers to its start. */
 export const loadSalonMap = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ gameId: z.string().uuid(), prebuilt: z.string().max(40).optional(), mapId: z.string().uuid().optional() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { data: me } = await context.supabase.from("game_players").select("role").eq("game_id", data.gameId).eq("user_id", context.userId).maybeSingle();
-    if (me?.role !== "narrator") throw new Error("Seul le narrateur de ce salon peut changer la carte.");
-    let map: GridMap | undefined; let source = "";
-    if (data.mapId) {
-      const { data: m } = await context.supabase.from("custom_maps").select("name, tiles, spawn_x, spawn_y").eq("id", data.mapId).eq("owner_id", context.userId).maybeSingle();
-      if (m) { map = { name: m.name, tiles: m.tiles, spawn: { x: m.spawn_x, y: m.spawn_y } }; source = `custom:${data.mapId}`; }
-    } else if (data.prebuilt && PREBUILT_MAPS[data.prebuilt]) { map = PREBUILT_MAPS[data.prebuilt]; source = `prebuilt:${data.prebuilt}`; }
-    if (!map) throw new Error("Carte introuvable.");
-    const err = validateGrid(map.tiles, map.spawn);
-    if (err) throw new Error(err);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("game_world_maps").upsert({ game_id: data.gameId, name: map.name, source, tiles: map.tiles, spawn_x: map.spawn.x, spawn_y: map.spawn.y, updated_at: new Date().toISOString() });
-    if (error) throw new Error("Chargement de la carte impossible.");
-    await supabaseAdmin.from("game_players").update({ world_x: map.spawn.x, world_y: map.spawn.y }).eq("game_id", data.gameId).eq("role", "adventurer");
-    // Keep mobs on walkable cells of the new map.
-    const { data: mobs } = await supabaseAdmin.from("game_enemies").select("id, tile_x, tile_y").eq("game_id", data.gameId).neq("status", "vaincu");
-    for (const m of mobs ?? []) {
-      const p = nearestWalkable(map, Math.min(GRID - 1, m.tile_x ?? map.spawn.x), Math.min(GRID - 1, m.tile_y ?? map.spawn.y));
-      if (p.x !== m.tile_x || p.y !== m.tile_y) await supabaseAdmin.from("game_enemies").update({ tile_x: p.x, tile_y: p.y }).eq("id", m.id);
-    }
-    await supabaseAdmin.from("game_events").insert({ game_id: data.gameId, actor_id: context.userId, kind: "carte", message: `Nouvelle carte : ${map.name}.`, payload: {}, important: true, secret: false });
+    await assertNarrator(context.supabase, data.gameId, context.userId);
+    const { map, source } = await resolveMap(context.supabase, context.userId, data);
+    await installMap(data.gameId, context.userId, map, source);
     return { name: map.name };
+  });
+
+const refSchema = z.object({ prebuilt: z.string().max(40).optional(), mapId: z.string().uuid().optional() });
+
+/** Narrator-only: ordered list of maps for the salon and the current step. */
+export const getMapSequence = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ gameId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertNarrator(context.supabase, data.gameId, context.userId);
+    const { data: rows } = await context.supabase.from("game_map_sequence").select("position, name, source").eq("game_id", data.gameId).order("position");
+    const { data: prog } = await context.supabase.from("game_map_progress").select("current_index").eq("game_id", data.gameId).maybeSingle();
+    return { items: (rows ?? []).map((r: any) => ({ name: r.name as string, source: r.source as string })), current: (prog?.current_index as number | undefined) ?? -1 };
+  });
+
+export const saveMapSequence = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ gameId: z.string().uuid(), items: z.array(refSchema).max(12) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertNarrator(context.supabase, data.gameId, context.userId);
+    const resolved = [];
+    for (const ref of data.items) resolved.push(await resolveMap(context.supabase, context.userId, ref));
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("game_map_sequence").delete().eq("game_id", data.gameId);
+    if (resolved.length) {
+      const { error } = await supabaseAdmin.from("game_map_sequence").insert(resolved.map((r, i) => ({ game_id: data.gameId, position: i, name: r.map.name, source: r.source, tiles: r.map.tiles, spawn_x: r.map.spawn.x, spawn_y: r.map.spawn.y })));
+      if (error) throw new Error("Enregistrement de l'ordre impossible.");
+    }
+    await supabaseAdmin.from("game_map_progress").upsert({ game_id: data.gameId, current_index: -1, updated_at: new Date().toISOString() });
+    return { count: resolved.length };
+  });
+
+/** Narrator-only: install the map at `index` of the sequence (next step). */
+export const goToSequenceMap = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ gameId: z.string().uuid(), index: z.number().int().min(0).max(11) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertNarrator(context.supabase, data.gameId, context.userId);
+    const { data: row } = await context.supabase.from("game_map_sequence").select("name, source, tiles, spawn_x, spawn_y").eq("game_id", data.gameId).eq("position", data.index).maybeSingle();
+    if (!row) throw new Error("Aucune carte à cette étape.");
+    const map: GridMap = { name: row.name, tiles: row.tiles, spawn: { x: row.spawn_x, y: row.spawn_y } };
+    await installMap(data.gameId, context.userId, map, row.source, `Carte ${data.index + 1}`);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("game_map_progress").upsert({ game_id: data.gameId, current_index: data.index, updated_at: new Date().toISOString() });
+    return { name: map.name, index: data.index };
   });

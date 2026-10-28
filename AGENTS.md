@@ -32,3 +32,4 @@
 - Share workspace navigation through SiteNavigation, hide it during gameplay, and prioritize salon lists over creation dialogs to preserve page organization.
 - Defer scenarios to narrator-checked preparation; keep catalog and environment previews browser-safe to avoid Phaser in SSR.
 - All salon maps are 40×40 grids of codes from src/lib/map-grid.ts (sprites in map-sprites asset); personal maps live in owner-only custom_maps and are copied into game_world_maps by the narrator-checked loadSalonMap, so movement and mob collisions are validated server-side against the salon's own copy.
+- Salon map order lives in narrator-only game_map_sequence (map copies) plus member-readable game_map_progress; the active map is still game_world_maps, installed only by narrator-checked functions in src/lib/maps.functions.ts, so players never read upcoming maps.
