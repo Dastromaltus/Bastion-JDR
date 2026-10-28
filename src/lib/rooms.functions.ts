@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { RACES, RACE_NAMES, hpFor, SCENARIOS, type RaceName } from "./races";
+import { RACES, RACE_NAMES, hpFor, type RaceName } from "./races";
 import { startDungeonIfAny, openDungeon } from "./operations.functions";
 
 const CODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -101,7 +101,6 @@ export const createRoom = createServerFn({ method: "POST" })
         name: z.string().trim().min(1, "Nom du salon requis").max(60),
         maxPlayers: z.number().int().min(3).max(5),
         password: z.string().max(64).optional(),
-        scenario: z.enum(SCENARIOS.map((s) => s.key) as [string, ...string[]]).optional(),
         displayName: nameSchema,
       })
       .parse(d),
@@ -279,10 +278,9 @@ export const narratorAction = createServerFn({ method: "POST" })
     z
       .object({
         gameId: z.string().uuid(),
-        action: z.enum(["kick", "lock", "unlock", "start", "finish", "transfer", "scenario"]),
+        action: z.enum(["kick", "lock", "unlock", "start", "finish", "transfer"]),
         targetUserId: z.string().uuid().optional(),
         result: z.enum(["victoire", "defaite"]).optional(),
-        scenario: z.enum(SCENARIOS.map((s) => s.key) as [string, ...string[]]).optional(),
       })
       .parse(d),
   )
@@ -293,13 +291,6 @@ export const narratorAction = createServerFn({ method: "POST" })
       ? (await db.from("game_players").select("*").eq("game_id", data.gameId).eq("user_id", data.targetUserId).maybeSingle()).data
       : null;
     switch (data.action) {
-      case "scenario": {
-        if (!data.scenario) throw new Error("Choisis un scénario.");
-        const { data: updated, error } = await db.from("games").update({ scenario: data.scenario }).eq("id", data.gameId).eq("status", "waiting").select("id").maybeSingle();
-        if (error || !updated) throw new Error("Le scénario se choisit avant le lancement.");
-        await logEvent(data.gameId, context.userId, "scenario", `Scénario choisi : ${SCENARIOS.find((s) => s.key === data.scenario)?.label}.`, {}, true);
-        break;
-      }
       case "kick": {
         if (!target || target.user_id === context.userId) throw new Error("Joueur introuvable.");
         await db.from("game_players").delete().eq("id", target.id);

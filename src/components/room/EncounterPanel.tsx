@@ -42,7 +42,7 @@ export function EncounterPanel({ d }: { d: any }) {
   return (
     <div className="space-y-4">
       <form onSubmit={go} className="space-y-3">
-        <label className="block text-xs font-black uppercase">Scénario
+        <label className="block text-xs font-black uppercase">Situation
           <Textarea required value={scenario} onChange={(e) => setScenario(e.target.value)} rows={3} maxLength={1500} placeholder="Ex. : le groupe doit couper l'alarme de la fonderie avant l'arrivée des renforts…" className="mt-1 rounded-none font-normal normal-case" />
         </label>
         <label className="block text-xs font-black uppercase">Groupe d'aventuriers
