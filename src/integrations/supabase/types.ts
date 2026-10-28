@@ -1416,6 +1416,8 @@ export type Database = {
           placement: string
           rarity: string
           status: string
+          tile_x: number | null
+          tile_y: number | null
           type: string
           value: number
           zone: string | null
@@ -1433,6 +1435,8 @@ export type Database = {
           placement: string
           rarity: string
           status?: string
+          tile_x?: number | null
+          tile_y?: number | null
           type: string
           value?: number
           zone?: string | null
@@ -1450,6 +1454,8 @@ export type Database = {
           placement?: string
           rarity?: string
           status?: string
+          tile_x?: number | null
+          tile_y?: number | null
           type?: string
           value?: number
           zone?: string | null

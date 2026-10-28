@@ -65,7 +65,9 @@ export class WorldScene extends Phaser.Scene {
       const slot = sharing.findIndex((a) => a.id === actor.id);
       const x = Phaser.Math.Clamp(actor.x * 16 + 8 + (slot - (sharing.length - 1) / 2) * 16, 8, map.width * 16 - 8), y = actor.y * 16 + 8;
       if (!node) {
-        const sprite = actor.sprite === "zombie"
+        const sprite = actor.sprite === "treasure"
+          ? this.add.text(0, -1, "✦", { fontFamily: "monospace", fontSize: "12px", color: "#ffd84a" }).setOrigin(0.5)
+          : actor.sprite === "zombie"
           ? this.add.sprite(0, -6, "zombie", actor.dead ? Z_DIE_LAST : 0)
           : this.add.image(0, -2, "world-tiles", actor.frame);
         if (sprite instanceof Phaser.GameObjects.Sprite && !actor.dead && !reduced) sprite.play("z-idle");
@@ -76,7 +78,7 @@ export class WorldScene extends Phaser.Scene {
         if (!reduced) this.tweens.add({ targets: sprite, alpha: { from: 0, to: 1 }, scale: { from: 0.88, to: 1 }, duration: actor.frame === 12 ? 200 : 160, ease: "Linear" });
       } else {
         const sprite = node.list[0];
-        if (sprite instanceof Phaser.GameObjects.Image && actor.sprite !== "zombie") sprite.setFrame(actor.frame);
+        if (sprite instanceof Phaser.GameObjects.Image && !actor.sprite) sprite.setFrame(actor.frame);
         const label = node.list[1];
         if (label instanceof Phaser.GameObjects.Text) label.setText(actor.name);
         this.tweens.killTweensOf(node);
