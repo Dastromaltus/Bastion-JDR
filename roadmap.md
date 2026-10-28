@@ -29,3 +29,5 @@
 - [x] Replace prebuilt-campaign offerings with ready-to-play 40×40 maps containing mobs, treasures and music.
 - [x] Verify map content and regressions: 29 focused tests pass.
 - [ ] Add a ready map to a salon and launch it in a signed-in game — blocked until preview sign-in.
+- [ ] Add custom enemy authoring directly to Mes cartes and install saved overlays into salons.
+- [ ] Paint impassable barriers with the selected block texture and verify collisions and persistence.
