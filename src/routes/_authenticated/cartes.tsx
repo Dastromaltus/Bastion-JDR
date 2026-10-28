@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Brush, Eraser, Flag, PaintBucket, Plus, Trash2 } from "lucide-react";
+import { Brush, Eraser, Flag, OctagonX, PaintBucket, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/cartes")({
   component: MapsPage,
 });
 
-type Tool = "brush" | "fill" | "erase" | "spawn";
+type Tool = "brush" | "block" | "fill" | "erase" | "spawn";
 type Draft = GridMap & { id?: string };
 
 function blank(): Draft {
@@ -56,7 +56,7 @@ function MapsPage() {
       while (stack.length) { const [cx, cy] = stack.pop()!; if (cx! < 0 || cy! < 0 || cx! >= GRID || cy! >= GRID || tiles[cy! * GRID + cx!] !== from) continue; tiles[cy! * GRID + cx!] = to; stack.push([cx! + 1, cy!], [cx! - 1, cy!], [cx!, cy! + 1], [cx!, cy! - 1]); }
       setDraft({ ...draft, tiles }); return;
     }
-    const v = tool === "erase" ? 0 : sprite;
+    const v = tool === "block" ? 0 : tool === "erase" ? 6 : sprite;
     if (draft.tiles[y * GRID + x] === v) return;
     setDraft((d) => d && { ...d, tiles: d.tiles.map((t, i) => (i === y * GRID + x ? v : t)) });
   }
@@ -81,7 +81,7 @@ function MapsPage() {
     await qc.invalidateQueries({ queryKey: ["my-maps"] });
   }
 
-  const tools: [Tool, string, typeof Brush][] = [["brush", "Pinceau", Brush], ["fill", "Remplir", PaintBucket], ["erase", "Gomme", Eraser], ["spawn", "Départ", Flag]];
+  const tools: [Tool, string, typeof Brush][] = [["brush", "Pinceau", Brush], ["block", "Barrière", OctagonX], ["fill", "Remplir", PaintBucket], ["erase", "Gomme", Eraser], ["spawn", "Départ", Flag]];
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 md:px-10">
@@ -129,18 +129,18 @@ function MapsPage() {
             <label className="block text-xs font-black uppercase">Nom
               <Input value={draft.name} maxLength={60} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="mt-1 h-11 rounded-none font-normal normal-case" />
             </label>
-            <div role="radiogroup" aria-label="Outil" className="grid grid-cols-4 border-2 border-foreground">
+            <div role="radiogroup" aria-label="Outil" className="grid grid-cols-5 border-2 border-foreground">
               {tools.map(([k, l, Icon]) => <button key={k} role="radio" aria-checked={tool === k} onClick={() => setTool(k)} className={`flex min-h-11 flex-col items-center justify-center text-[10px] font-black uppercase ${tool === k ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}><Icon className="size-4" />{l}</button>)}
             </div>
             <div role="radiogroup" aria-label="Décor" className="grid grid-cols-2 gap-2">
-              {SPRITES.map((s) => <button key={s.code} role="radio" aria-checked={sprite === s.code} onClick={() => { setSprite(s.code); if (tool === "erase" || tool === "spawn") setTool("brush"); }} className={`flex min-h-11 items-center gap-2 border-2 p-1 text-left text-xs ${sprite === s.code ? "border-primary bg-secondary" : "border-foreground/30"}`}>
+              {SPRITES.map((s) => <button key={s.code} role="radio" aria-checked={sprite === s.code} onClick={() => { setSprite(s.code); if (tool !== "brush" && tool !== "fill") setTool("brush"); }} className={`flex min-h-11 items-center gap-2 border-2 p-1 text-left text-xs ${sprite === s.code ? "border-primary bg-secondary" : "border-foreground/30"}`}>
                 <SpriteSwatch code={s.code} /><span><b>{s.label}</b><br /><span className="opacity-70">{s.walk ? "Praticable" : "Bloquant"}</span></span>
               </button>)}
             </div>
             {msg && <p role="status" className="anim-enter text-sm font-bold">{msg}</p>}
             <Button onClick={submit} disabled={busy} className="h-11 w-full rounded-none font-black uppercase">{busy ? <span className="anim-loading">Enregistrement…</span> : "Enregistrer"}</Button>
             <Button variant="outline" onClick={() => { setDraft(null); setMsg(null); }} className="h-11 w-full rounded-none">Retour à mes cartes</Button>
-            <p className="text-xs text-muted-foreground">Le carré blanc marque le point de départ des aventuriers. Les cases vides sont infranchissables.</p>
+            <p className="text-xs text-muted-foreground">Le carré blanc marque le point de départ des aventuriers. L'outil « Barrière » entoure des zones infranchissables (cases sombres) : ni les aventuriers ni les mobs ne peuvent les traverser. La gomme remet le sol clair.</p>
           </aside>
         </section>
       )}
