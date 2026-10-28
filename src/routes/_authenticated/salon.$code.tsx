@@ -26,6 +26,7 @@ import { OperationSection } from "@/components/operations/OperationPanel";
 import { getSalonDungeon } from "@/lib/operations.functions";
 import { SalonWorld } from "@/components/room/SalonWorld";
 import { MobControl } from "@/components/room/MobControl";
+import { HealthPanel } from "@/components/room/HealthPanel";
 import { TurnBanner } from "@/components/room/TurnBanner";
 import { salonTurn } from "@/lib/turn-order";
 import { AnimatedCount, DiceResult, HealthFill, RollingDice } from "@/components/room/MotionBits";
@@ -208,6 +209,7 @@ function RoomPage() {
           </ul>
         </section>
 
+        {game.status !== "waiting" && <HealthPanel gameId={game.id} players={players} />}
         <MobControl d={d} onChange={() => room.refetch()} />
         <OperationSection d={d} onChange={() => room.refetch()} />
         {game.status === "playing" && !dungeonQ.isPending && !dungeonQ.data && <SalonWorld d={d} onChange={() => room.refetch()} />}
