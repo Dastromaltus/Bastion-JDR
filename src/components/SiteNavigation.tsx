@@ -27,7 +27,7 @@ export function SiteNavigation() {
     <header className="border-b-2 border-foreground bg-background px-4 py-4 md:px-10">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
         <Link to="/" aria-label="Bastion — accueil" className="flex min-h-11 items-center gap-3 font-display text-base uppercase">
-          <Castle className="size-6 text-primary" aria-hidden="true" />Bastion<span className="text-primary">.</span>
+          <img src={bastionEmblem} alt="" aria-hidden="true" className="size-9 shrink-0" loading="lazy" />Bastion<span className="text-primary">.</span>
         </Link>
         <Button variant="ghost" className="min-h-11" asChild={!workspace} onClick={workspace ? signOut : undefined}>
           {workspace ? <><LogOut aria-hidden="true" /><span>Déconnexion</span></> : <Link to="/salons"><Users aria-hidden="true" />Jouer</Link>}
