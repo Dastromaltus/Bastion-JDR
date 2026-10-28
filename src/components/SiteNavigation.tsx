@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BookOpen, Castle, LogOut, Map, Swords, User, Users } from "lucide-react";
+import { BookOpen, LogOut, Map, Swords, User, Users } from "lucide-react";
+import bastionEmblem from "@/assets/bastion-emblem.png";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
