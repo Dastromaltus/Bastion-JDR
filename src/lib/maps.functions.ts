@@ -67,7 +67,7 @@ async function assertNarrator(supabase: any, gameId: string, userId: string) {
   if (me?.role !== "narrator") throw new Error("Seul le narrateur de ce salon peut changer la carte.");
 }
 
-async function resolveMap(supabase: any, userId: string, ref: { prebuilt?: string; mapId?: string }): Promise<{ map: GridMap; source: string }> {
+async function resolveMap(supabase: any, userId: string, ref: { prebuilt?: string | undefined; mapId?: string | undefined }): Promise<{ map: GridMap; source: string }> {
   let map: GridMap | undefined; let source = "";
   if (ref.mapId) {
     const { data: m } = await supabase.from("custom_maps").select("name, tiles, spawn_x, spawn_y").eq("id", ref.mapId).eq("owner_id", userId).maybeSingle();
