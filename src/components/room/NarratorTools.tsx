@@ -16,6 +16,7 @@ import type { AmbienceRow } from "./Ambience";
 import { salonTurn } from "@/lib/turn-order";
 import { HealthFill } from "./MotionBits";
 import { CatalogArtwork } from "@/components/operations/CatalogArtwork";
+import { CellPicker } from "./CellPicker";
 
 const SEL = "h-11 w-full border border-input bg-background px-2 focus-visible:outline-2 focus-visible:outline-primary";
 const RARITY: Record<string, string> = { commun: "Commun", rare: "Rare", epique: "Épique", legendaire: "Légendaire" };
@@ -89,6 +90,7 @@ export function EnemyPanel({ d, initialZone }: { d: any; initialZone?: string | 
   const [enemyId, setEnemyId] = useState("");
   const [zone, setZone] = useState<string>(initialZone ?? ZONES[1].key);
   const [trigger, setTrigger] = useState("entree");
+  const [cell, setCell] = useState<{ x: number; y: number } | null>(null);
   const [stats, setStats] = useState<{ speed: number; strength: number; endurance: number } | null>(null);
   const [moving, setMoving] = useState<Record<string, string>>({});
   const [showCustom, setShowCustom] = useState(false);
@@ -113,7 +115,7 @@ export function EnemyPanel({ d, initialZone }: { d: any; initialZone?: string | 
       {cat.error && <p role="alert" className="text-sm font-bold text-primary">Catalogue indisponible. <button className="underline" onClick={() => cat.refetch()}>Réessayer</button></p>}
       {cat.data && (
         <form className="grid gap-2" onSubmit={(e) => { e.preventDefault(); if (!selected || !s) { toast.error("Choisis un ennemi."); return; }
-          void run("place", () => place({ data: { gameId, catalogId: selected.id, zone, trigger: trigger as any, ...s } }), `${selected.name} placé en secret`).then((ok) => { if (ok) { setEnemyId(""); setStats(null); } }); }}>
+          void run("place", () => place({ data: { gameId, catalogId: selected.id, zone, trigger: trigger as any, ...s, ...(cell ?? {}) } }), `${selected.name} placé en secret`).then((ok) => { if (ok) { setEnemyId(""); setStats(null); setCell(null); } }); }}>
           <div className="grid grid-cols-2 gap-2">
             <label className="text-xs font-bold uppercase">Catégorie
               <select className={SEL} value={category} onChange={(e) => { setCategory(e.target.value); setEnemyId(""); setStats(null); }}>
@@ -142,6 +144,7 @@ export function EnemyPanel({ d, initialZone }: { d: any; initialZone?: string | 
               <select className={SEL} value={trigger} onChange={(e) => setTrigger(e.target.value)}>{Object.entries(TRIGGER_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
             </label>
           </div>
+          <CellPicker d={d} value={cell} onChange={setCell} glyph={selected?.icon || "☠"} />
           <Button disabled={busy === "place" || !selected} className="min-h-11 rounded-none font-black uppercase">{busy === "place" ? "Placement…" : "Placer l'ennemi"}</Button>
         </form>
       )}
@@ -202,6 +205,7 @@ export function TreasurePanel({ d }: { d: any }) {
   const [tid, setTid] = useState("");
   const [where, setWhere] = useState("zone:" + ZONES[1].key);
   const [showCustom, setShowCustom] = useState(false);
+  const [cell, setCell] = useState<{ x: number; y: number } | null>(null);
   const [c, setC] = useState({ name: "", type: "consommable", rarity: "commun", effect: "", value: 10 });
   const list = (cat.data?.treasures ?? []).filter((t: any) => !rarity || t.rarity === rarity);
   const selected = (cat.data?.treasures ?? []).find((t: any) => t.id === tid);
@@ -213,10 +217,10 @@ export function TreasurePanel({ d }: { d: any }) {
     if (!selected) { toast.error("Choisis un trésor."); return; }
     const [kind, ref] = where.split(":");
     const payload: any = { gameId, catalogId: selected.id, placement: kind };
-    if (kind === "zone" || kind === "coffre") payload.zone = ref;
+    if (kind === "zone" || kind === "coffre") { payload.zone = ref; if (cell) Object.assign(payload, cell); }
     if (kind === "ennemi") payload.enemyId = ref;
     if (kind === "direct") payload.targetUserId = ref;
-    void run("tplace", () => place({ data: payload }), kind === "direct" ? "Trésor remis" : "Trésor caché").then((ok) => { if (ok) setTid(""); });
+    void run("tplace", () => place({ data: payload }), kind === "direct" ? "Trésor remis" : "Trésor caché").then((ok) => { if (ok) { setTid(""); setCell(null); } });
   }
 
   return (
@@ -247,6 +251,7 @@ export function TreasurePanel({ d }: { d: any }) {
               {adventurers.length > 0 && <optgroup label="Donner directement à un joueur">{adventurers.map((p: any) => <option key={p.user_id} value={"direct:" + p.user_id}>{p.display_name}</option>)}</optgroup>}
             </select>
           </label>
+          {(where.startsWith("zone") || where.startsWith("coffre")) && <CellPicker d={d} value={cell} onChange={setCell} glyph="✦" />}
           <Button disabled={busy === "tplace" || !selected} className="min-h-11 rounded-none font-black uppercase">{busy === "tplace" ? "…" : where.startsWith("direct") ? "Donner au joueur" : "Placer le trésor"}</Button>
         </form>
       )}
