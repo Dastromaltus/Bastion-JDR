@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { suggestEncounter, type Encounter } from "@/lib/encounter.functions";
+import { placeEncounter, suggestEncounter, type Encounter } from "@/lib/encounter.functions";
 
 function defaultParty(d: any) {
   const adv = (d.players ?? []).filter((p: any) => p.role !== "narrator");
@@ -17,11 +17,24 @@ export function EncounterPanel({ d }: { d: any }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enc, setEnc] = useState<Encounter | null>(null);
+  const place = useServerFn(placeEncounter);
+  const [placing, setPlacing] = useState(false);
+  const [placed, setPlaced] = useState<string | null>(null);
+
+  async function doPlace() {
+    if (!enc) return;
+    setPlacing(true); setError(null); setPlaced(null);
+    try {
+      const r = await place({ data: { gameId: d.game.id, zone: enc.zone, enemies: enc.enemies.slice(0, 6).map((e) => ({ name: e.name, count: Math.min(4, Math.max(1, Math.round(e.count))) })), treasures: (enc.treasures ?? []).slice(0, 4).map((t) => ({ name: t.name })) } });
+      setPlaced(`Placé dans ${r.zone} : ${r.enemies} ennemi(s) caché(s), ${r.treasures} trésor(s).${r.skipped.length ? ` Ignorés (hors catalogue) : ${r.skipped.join(", ")}.` : ""}`);
+    } catch (err) { setError(err instanceof Error ? err.message : "Placement impossible."); }
+    finally { setPlacing(false); }
+  }
 
   async function go(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true); setError(null);
-    try { setEnc((await suggest({ data: { gameId: d.game.id, scenario, party } })).encounter); }
+    try { setPlaced(null); setEnc((await suggest({ data: { gameId: d.game.id, scenario, party } })).encounter); }
     catch (err) { setError(err instanceof Error ? err.message : "Échec, réessaie."); }
     finally { setBusy(false); }
   }
@@ -39,7 +52,7 @@ export function EncounterPanel({ d }: { d: any }) {
         <Button type="submit" disabled={busy} className="h-11 w-full rounded-none font-black uppercase">
           {busy ? <span className="anim-loading">Réflexion…</span> : "Proposer une rencontre"}
         </Button>
-        <p className="text-xs opacity-70">Proposition générée par IA, visible uniquement par toi. Rien n'est placé automatiquement.</p>
+        <p className="text-xs opacity-70">Proposition générée par IA, visible uniquement par toi. Rien n'est placé tant que tu ne cliques pas sur « Placer sur la carte ».</p>
       </form>
 
       {enc && (
@@ -55,8 +68,18 @@ export function EncounterPanel({ d }: { d: any }) {
             <h4 className="text-xs font-black uppercase">Ennemis</h4>
             <ul className="mt-1 space-y-1 text-sm">{enc.enemies.map((e, i) => <li key={i} className="border border-foreground/30 p-2"><b>{e.count}× {e.name}</b> · {e.role}<br /><span className="opacity-80">{e.tactic}</span></li>)}</ul>
           </div>
+          {!!enc.treasures?.length && (
+            <div>
+              <h4 className="text-xs font-black uppercase">Trésors</h4>
+              <ul className="mt-1 list-disc space-y-1 pl-5 text-sm">{enc.treasures.map((t, i) => <li key={i}><b>{t.name}</b> — {t.reason}</li>)}</ul>
+            </div>
+          )}
           <p className="text-sm"><b>Rebondissement :</b> {enc.twist}</p>
           <p className="text-sm"><b>Équilibrage :</b> {enc.balance}</p>
+          <Button type="button" onClick={doPlace} disabled={placing || !!placed} className="h-11 w-full rounded-none font-black uppercase">
+            {placing ? <span className="anim-loading">Placement…</span> : placed ? "Rencontre placée" : "Placer sur la carte"}
+          </Button>
+          {placed && <p role="status" className="anim-enter text-sm font-bold">{placed}</p>}
         </article>
       )}
     </div>
