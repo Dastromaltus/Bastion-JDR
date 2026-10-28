@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
 import { CatalogArtwork } from "@/components/operations/CatalogArtwork";
 import { blockedMapEnemies, placeMapEnemy } from "@/lib/map-enemies";
-import { cellWalkable, CELLS, GRID, PREBUILT_MAPS, SPRITES, validateGrid, type GridMap } from "@/lib/map-grid";
+import { CELLS, GRID, PREBUILT_MAPS, SPRITES, validateGrid, type GridMap } from "@/lib/map-grid";
 import { deleteMyMap, listMapEnemyCatalog, listMyMaps, saveMyMap, type MapEnemy } from "@/lib/maps.functions";
 
 export const Route = createFileRoute("/_authenticated/cartes")({
@@ -154,7 +154,7 @@ function MapsPage() {
             <ul className="mt-2 divide-y divide-border">
               {(draft.enemies ?? []).map((e, i) => <li key={`${e.x}:${e.y}`} className="flex min-h-11 items-center justify-between gap-2 text-sm">
                 <span>{catalog.data?.find((c) => c.id === e.catalogId)?.name ?? "Ennemi"} · Col. {e.x + 1}, lig. {e.y + 1}</span>
-                <Button variant="ghost" size="icon" aria-label={`Retirer l'ennemi ${i + 1}`} className="size-11 shrink-0" disabled={busy} onClick={() => setDraft({ ...draft, enemies: draft.enemies?.filter((_, n) => n !== i) })}><Trash2 /></Button>
+                <Button variant="ghost" size="icon" aria-label={`Retirer l'ennemi ${i + 1}`} className="size-11 shrink-0" disabled={busy} onClick={() => setDraft({ ...draft, enemies: (draft.enemies ?? []).filter((_, n) => n !== i) })}><Trash2 /></Button>
               </li>)}
             </ul>
           </div>
