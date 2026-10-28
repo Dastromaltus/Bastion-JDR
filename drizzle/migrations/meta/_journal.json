@@ -183,6 +183,13 @@
       "when": 1793201537255,
       "tag": "0025_map_enemy_placements",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793203141120,
+      "tag": "0026_map_sequence_music_intro",
+      "breakpoints": true
     }
   ]
 }
