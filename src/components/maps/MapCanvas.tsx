@@ -46,7 +46,7 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers }: {
     const css = getComputedStyle(document.documentElement);
     for (const m of markers ?? []) {
       c.fillStyle = m.selected ? css.getPropertyValue("--world-label").trim() || "#fff" : "rgba(0,0,0,0.55)";
-      c.fillRect(m.x * 16, m.y * 16, 16, 16);
+      if (!m.zombie || m.selected || !zReady) c.fillRect(m.x * 16, m.y * 16, 16, 16);
       if (m.zombie && zReady && zombieImg) { c.drawImage(zombieImg, 0, 0, 32, 32, m.x * 16 - 8, m.y * 16 - 10, 32, 32); continue; }
       c.fillStyle = m.selected ? css.getPropertyValue("--world-label-bg").trim() || "#111" : "#fff";
       c.font = "12px monospace"; c.textAlign = "center"; c.textBaseline = "middle";
