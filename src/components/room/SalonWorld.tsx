@@ -7,7 +7,7 @@ import { getSalonMap } from "@/lib/maps.functions";
 import { useQuery } from "@tanstack/react-query";
 import { PREBUILT_MAPS, DEFAULT_MAP_KEY } from "@/lib/map-grid";
 import { type WorldDirection } from "@/lib/world-map";
-import { participantActors, type WorldActor } from "@/lib/world-actors";
+import { isZombie, participantActors, type WorldActor } from "@/lib/world-actors";
 import { zoneLabel } from "@/lib/races";
 import { salonTurn } from "@/lib/turn-order";
 import type Phaser from "phaser";
@@ -37,8 +37,8 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const grid = mapQ.data ?? PREBUILT_MAPS[DEFAULT_MAP_KEY]!;
   const participants = participantActors(d.players, here, d.me.id, grid);
   const activeId = d.combat?.current?.id ?? turn.active?.id;
-  const actors: WorldActor[] = participants.map((actor) => ({ ...actor, name: `${actor.id === activeId ? "▶ " : ""}${actor.name}` }));
-   d.enemies.filter((e: any) => (e.status === "revele" || (d.me.role === "narrator" && e.status === "cache")) && e.zone === here).forEach((e: any, i: number) => actors.push({ id: e.id, name: `${e.id === d.controlledEnemyId ? '▶ ' : ''}${e.status === 'cache' ? '? ' : ''}${e.name}`, x: e.tile_x ?? 16 + i % 4, y: e.tile_y ?? 9, frame: 12 }));
+  const actors: WorldActor[] = participants.map((actor) => ({ ...actor, name: `${actor.id === activeId ? "▶ " : ""}${actor.name}`, hp: d.players.find((p: any) => p.id === actor.id)?.hp }));
+   d.enemies.filter((e: any) => (e.status === "revele" || (d.me.role === "narrator" && e.status === "cache") || (e.status === "vaincu" && isZombie(e.name))) && e.zone === here).forEach((e: any, i: number) => actors.push({ id: e.id, name: e.status === "vaincu" ? "" : `${e.id === d.controlledEnemyId ? '▶ ' : ''}${e.status === 'cache' ? '? ' : ''}${e.name}`, x: e.tile_x ?? 16 + i % 4, y: e.tile_y ?? 9, frame: 12, hp: e.hp, ...(isZombie(e.name) ? { sprite: "zombie" as const } : {}), ...(e.status === "vaincu" ? { dead: true } : {}) }));
   useEffect(() => {
     let disposed = false;
     import("./world-scene").then(({ createWorldGame }) => {
