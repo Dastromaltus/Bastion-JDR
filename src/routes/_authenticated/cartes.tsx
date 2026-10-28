@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Brush, Eraser, Flag, PaintBucket, Plus, Trash2 } from "lucide-react";
+import { Brush, Eraser, Flag, OctagonX, PaintBucket, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/cartes")({
   component: MapsPage,
 });
 
-type Tool = "brush" | "fill" | "erase" | "spawn";
+type Tool = "brush" | "block" | "fill" | "erase" | "spawn";
 type Draft = GridMap & { id?: string };
 
 function blank(): Draft {
