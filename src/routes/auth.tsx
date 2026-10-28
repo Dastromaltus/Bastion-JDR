@@ -38,13 +38,22 @@ function AuthPage() {
   const target = safePath(redirect);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        const stored = sessionStorage.getItem("bastion-after-auth");
-        sessionStorage.removeItem("bastion-after-auth");
-        navigate({ to: safePath(stored ?? redirect) });
-      }
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
+      const stored = sessionStorage.getItem("bastion-after-auth");
+      sessionStorage.removeItem("bastion-after-auth");
+      navigate({ to: safePath(stored ?? redirect) });
+    };
+    // The session can arrive after mount when returning from Google.
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) go();
     });
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) go();
+    });
+    return () => sub.subscription.unsubscribe();
   }, [navigate, redirect]);
 
   async function submit(e: React.FormEvent) {
@@ -70,10 +79,23 @@ function AuthPage() {
 
   async function google() {
     setError(null);
+    setLoading(true);
     sessionStorage.setItem("bastion-after-auth", target);
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
-    if (r.error) setError("Connexion Google impossible. Réessaie.");
-    else if (!("redirected" in r && r.redirected)) navigate({ to: target });
+    try {
+      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/auth` });
+      if (r.error) {
+        sessionStorage.removeItem("bastion-after-auth");
+        const msg = String((r.error as { message?: string }).message ?? "");
+        setError(/closed|cancel/i.test(msg) ? "Connexion Google annulée." : "Connexion Google impossible. Réessaie.");
+        console.error("Google sign-in error", r.error);
+        return;
+      }
+      if ("redirected" in r && r.redirected) return;
+      const { data } = await supabase.auth.getSession();
+      if (data.session) navigate({ to: target });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
