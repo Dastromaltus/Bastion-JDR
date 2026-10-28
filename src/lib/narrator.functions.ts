@@ -132,6 +132,15 @@ export const createCustomTreasure = createServerFn({ method: "POST" })
 
 /* ---------------- Enemies ---------------- */
 
+/** Validates a narrator-chosen map cell against the salon's own 40×40 map. */
+async function checkedCell(context: any, gameId: string, x?: number, y?: number) {
+  if (x === undefined || y === undefined) return null;
+  const { salonGrid } = await import("./maps.functions");
+  const { cellWalkable } = await import("./map-grid");
+  if (!cellWalkable(await salonGrid(context.supabase, gameId), x, y)) throw new Error("Cette case est un mur ou une barrière.");
+  return { x, y };
+}
+
 export const placeEnemy = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
@@ -139,6 +148,7 @@ export const placeEnemy = createServerFn({ method: "POST" })
       gameId: uuid, catalogId: uuid, zone,
       trigger: z.enum(["entree", "porte", "manuel"]),
       speed: stat, strength: stat, endurance: stat,
+      x: z.number().int().min(0).max(39).optional(), y: z.number().int().min(0).max(39).optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -149,7 +159,9 @@ export const placeEnemy = createServerFn({ method: "POST" })
     const { data: cat } = await db.from("enemy_catalog").select("*").eq("id", data.catalogId).maybeSingle();
     if (!cat || (cat.game_id && cat.game_id !== data.gameId)) throw new Error("Cet ennemi n'est pas dans ton catalogue.");
     const hp = 10 + 2 * data.endurance;
+    const cell = await checkedCell(context, data.gameId, data.x, data.y);
     const { error } = await db.from("game_enemies").insert({
+      ...(cell ? { tile_x: cell.x, tile_y: cell.y } : {}),
       game_id: data.gameId, catalog_id: cat.id, name: cat.name, category: cat.category, icon: cat.icon, ability: cat.ability,
       speed: data.speed, strength: data.strength, endurance: data.endurance, hp, max_hp: hp, threat_cost: cat.threat_cost,
       zone: data.zone, trigger: data.trigger,
@@ -249,6 +261,7 @@ export const placeTreasure = createServerFn({ method: "POST" })
       gameId: uuid, catalogId: uuid,
       placement: z.enum(["zone", "coffre", "ennemi", "direct"]),
       zone: zone.optional(), enemyId: uuid.optional(), targetUserId: uuid.optional(),
+      x: z.number().int().min(0).max(39).optional(), y: z.number().int().min(0).max(39).optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -262,6 +275,8 @@ export const placeTreasure = createServerFn({ method: "POST" })
     if (data.placement === "zone" || data.placement === "coffre") {
       if (!data.zone) throw new Error("Choisis une zone.");
       row.zone = data.zone;
+      const cell = await checkedCell(context, data.gameId, data.x, data.y);
+      if (cell) { row.tile_x = cell.x; row.tile_y = cell.y; }
     }
     if (data.placement === "ennemi") {
       if (!data.enemyId) throw new Error("Choisis un ennemi placé.");
