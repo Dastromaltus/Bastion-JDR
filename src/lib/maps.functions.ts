@@ -97,6 +97,13 @@ async function resolveMap(supabase: any, userId: string, ref: { prebuilt?: strin
 
 async function installMap(gameId: string, userId: string, map: GridMap, source: string, label = "Nouvelle carte", enemies: MapEnemy[] = [], treasures: MapEnemy[] = []) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const invalidGrid = validateGrid(map.tiles, map.spawn);
+  if (invalidGrid) throw new Error(invalidGrid);
+  for (const [table, placements] of [["enemy_catalog", enemies], ["treasure_catalog", treasures]] as const) {
+    if (!placements.length) continue;
+    const { data: catalogue, error } = await supabaseAdmin.from(table).select("id,game_id").in("id", placements.map((p) => p.catalogId));
+    if (error || placements.some((p) => !cellWalkable(map, p.x, p.y) || !catalogue?.some((c: any) => c.id === p.catalogId && (!c.game_id || c.game_id === gameId)))) throw new Error("Un élément de la carte est inconnu ou sur une case bloquée.");
+  }
   const { data: existingMap } = await supabaseAdmin.from("game_world_maps").select("source").eq("game_id", gameId).maybeSingle();
   // Only remove overlays authored by the outgoing map, never manually placed content or inventory.
   if (existingMap) {
@@ -105,6 +112,9 @@ async function installMap(gameId: string, userId: string, map: GridMap, source: 
     await supabaseAdmin.from("game_treasures").delete().eq("game_id", gameId).not("map_source", "is", null).eq("status", "cache");
     await supabaseAdmin.from("game_enemies").delete().eq("game_id", gameId).not("map_source", "is", null);
   }
+  // Publish terrain before inserting mobs: collision triggers check the salon's current copy.
+  const { error: mapError } = await supabaseAdmin.from("game_world_maps").upsert({ game_id: gameId, name: map.name, source, tiles: map.tiles, spawn_x: map.spawn.x, spawn_y: map.spawn.y, updated_at: new Date().toISOString() });
+  if (mapError) throw new Error("Chargement de la carte impossible.");
   if (treasures.length) {
     const { data: adv } = await supabaseAdmin.from("game_players").select("current_zone").eq("game_id", gameId).eq("role", "adventurer").limit(1);
     const zone = adv?.[0]?.current_zone ?? "entree";
@@ -137,8 +147,6 @@ async function installMap(gameId: string, userId: string, map: GridMap, source: 
       if (enemyError) throw new Error("Impossible de placer les ennemis de cette carte dans le salon.");
     }
   }
-  const { error } = await supabaseAdmin.from("game_world_maps").upsert({ game_id: gameId, name: map.name, source, tiles: map.tiles, spawn_x: map.spawn.x, spawn_y: map.spawn.y, updated_at: new Date().toISOString() });
-  if (error) throw new Error("Chargement de la carte impossible.");
   await supabaseAdmin.from("game_players").update({ world_x: map.spawn.x, world_y: map.spawn.y }).eq("game_id", gameId).eq("role", "adventurer");
   const { data: mobs } = await supabaseAdmin.from("game_enemies").select("id, tile_x, tile_y").eq("game_id", gameId).neq("status", "vaincu");
   for (const m of mobs ?? []) {
