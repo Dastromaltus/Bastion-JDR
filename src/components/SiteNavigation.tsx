@@ -9,7 +9,7 @@ const destinations = [
   { to: "/salons", label: "Mes salons", icon: Users },
   { to: "/campagnes", label: "Mes campagnes", icon: Map },
   { to: "/cartes", label: "Mes cartes", icon: Grid3x3 },
-  { to: "/operations", label: "Opérations", icon: Swords },
+  { to: "/operations", label: "Cartes prêtes à jouer", icon: Swords },
   { to: "/personnage", label: "Mon personnage", icon: User },
   { to: "/", label: "Règles du jeu", icon: BookOpen },
 ] as const;

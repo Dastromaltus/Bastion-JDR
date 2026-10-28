@@ -4,13 +4,15 @@ import { cellWalkable, GRID, type GridMap } from "./map-grid";
 export const MAX_STEPS = 12;
 export const MAX_MOBS = 60;
 export type StepMob = { catalogId: string; x: number; y: number };
-export type ScenarioStep = GridMap & { source: string; enemies: StepMob[]; track: string | null; intro: string };
+export type ScenarioStep = GridMap & { source: string; enemies: StepMob[]; treasures?: StepMob[]; track: string | null; intro: string };
 
 export function moveStep<T>(list: T[], i: number, dir: -1 | 1): T[] {
   const j = i + dir;
   if (j < 0 || j >= list.length) return list;
   const n = [...list];
-  [n[i], n[j]] = [n[j]!, n[i]!];
+  const a = n[i], b = n[j];
+  if (a === undefined || b === undefined) return list;
+  [n[i], n[j]] = [b, a];
   return n;
 }
 
@@ -30,5 +32,5 @@ export function paintTile(step: ScenarioStep, x: number, y: number, code: number
   const tiles = [...step.tiles];
   tiles[y * GRID + x] = code;
   const next = { ...step, tiles };
-  return { ...next, enemies: next.enemies.filter((e) => cellWalkable(next, e.x, e.y)) };
+  return { ...next, enemies: next.enemies.filter((e) => cellWalkable(next, e.x, e.y)), treasures: (next.treasures ?? []).filter((e) => cellWalkable(next, e.x, e.y)) };
 }

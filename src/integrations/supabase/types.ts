@@ -930,6 +930,7 @@ export type Database = {
           hp: number
           icon: string
           id: string
+          map_source: string | null
           max_hp: number
           name: string
           overheated: boolean
@@ -953,6 +954,7 @@ export type Database = {
           hp: number
           icon?: string
           id?: string
+          map_source?: string | null
           max_hp: number
           name: string
           overheated?: boolean
@@ -976,6 +978,7 @@ export type Database = {
           hp?: number
           icon?: string
           id?: string
+          map_source?: string | null
           max_hp?: number
           name?: string
           overheated?: boolean
@@ -1215,6 +1218,7 @@ export type Database = {
           spawn_y: number
           tiles: number[]
           track: string | null
+          treasures: Json
         }
         Insert: {
           enemies?: Json
@@ -1228,6 +1232,7 @@ export type Database = {
           spawn_y: number
           tiles: number[]
           track?: string | null
+          treasures?: Json
         }
         Update: {
           enemies?: Json
@@ -1241,6 +1246,7 @@ export type Database = {
           spawn_y?: number
           tiles?: number[]
           track?: string | null
+          treasures?: Json
         }
         Relationships: [
           {
@@ -1424,6 +1430,7 @@ export type Database = {
           found_by: string | null
           game_id: string
           id: string
+          map_source: string | null
           name: string
           placement: string
           rarity: string
@@ -1443,6 +1450,7 @@ export type Database = {
           found_by?: string | null
           game_id: string
           id?: string
+          map_source?: string | null
           name: string
           placement: string
           rarity: string
@@ -1462,6 +1470,7 @@ export type Database = {
           found_by?: string | null
           game_id?: string
           id?: string
+          map_source?: string | null
           name?: string
           placement?: string
           rarity?: string

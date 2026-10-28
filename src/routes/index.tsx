@@ -29,7 +29,7 @@ const races = [
 ];
 
 const salonSteps = [
-  { icon: <Users size={28} />, title: "01 · Monte ton salon", text: "Choisis un nom, le nombre de joueurs (3 à 5) et le scénario. Un mot de passe optionnel protège l’entrée, et le salon peut rester en attente jusqu’à la partie." },
+  { icon: <Users size={28} />, title: "01 · Monte ton salon", text: "Choisis un nom, le nombre de joueurs (3 à 5) et prépare tes cartes. Un mot de passe optionnel protège l’entrée, et le salon peut rester en attente jusqu’à la partie." },
   { icon: <KeyRound size={28} />, title: "02 · Invite la table", text: "Partage le code à six caractères ou le lien d’invitation. Chaque aventurier rejoint en un clic, depuis son téléphone ou son ordinateur." },
   { icon: <Crown size={28} />, title: "03 · Incarne le narrateur", text: "Le créateur devient narrateur de son salon : il place ennemis, trésors et ambiance sonore, lance la partie — et peut transmettre sa couronne." },
 ];
@@ -57,7 +57,7 @@ function Index() {
           <div className="mt-8 grid gap-8 border-t border-foreground/40 pt-6 md:grid-cols-[1fr_auto] md:items-end">
             <div>
               <p className="max-w-xl text-lg font-medium leading-relaxed md:text-xl">Les aventuriers avancent. Le narrateur prépare l’inconnu. <span className="text-primary">La forteresse ne pardonne rien.</span></p>
-              <div className="mt-6 flex flex-wrap gap-3"><Button asChild className="h-auto min-h-12 rounded-none border-2 border-primary px-5 py-3 font-bold"><Link to="/salons"><Users />Créer ou rejoindre un salon</Link></Button><Button asChild variant="outline" className="h-auto min-h-12 rounded-none px-5 py-3 font-bold"><Link to="/operations"><Swords />Jouer en solo</Link></Button></div>
+              <div className="mt-6 flex flex-wrap gap-3"><Button asChild className="h-auto min-h-12 rounded-none border-2 border-primary px-5 py-3 font-bold"><Link to="/salons"><Users />Créer ou rejoindre un salon</Link></Button><Button asChild variant="outline" className="h-auto min-h-12 rounded-none px-5 py-3 font-bold"><Link to="/operations"><Swords />Cartes prêtes à jouer</Link></Button></div>
             </div>
             <a href="#concept" aria-label="Découvrir le jeu" className="flex h-14 w-14 items-center justify-center border-2 border-foreground transition-colors hover:border-primary hover:bg-primary"><ArrowDown size={24} /></a>
           </div>
