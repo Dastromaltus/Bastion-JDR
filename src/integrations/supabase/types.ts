@@ -1207,34 +1207,40 @@ export type Database = {
           enemies: Json
           game_id: string
           id: string
+          intro_text: string
           name: string
           position: number
           source: string
           spawn_x: number
           spawn_y: number
           tiles: number[]
+          track: string | null
         }
         Insert: {
           enemies?: Json
           game_id: string
           id?: string
+          intro_text?: string
           name: string
           position: number
           source: string
           spawn_x: number
           spawn_y: number
           tiles: number[]
+          track?: string | null
         }
         Update: {
           enemies?: Json
           game_id?: string
           id?: string
+          intro_text?: string
           name?: string
           position?: number
           source?: string
           spawn_x?: number
           spawn_y?: number
           tiles?: number[]
+          track?: string | null
         }
         Relationships: [
           {

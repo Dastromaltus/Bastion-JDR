@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { TRACK_KEYS } from "./ambience-tracks";
 import { cellWalkable, CELLS, DEFAULT_MAP_KEY, GRID, PREBUILT_MAPS, nearestWalkable, validateGrid, type GridMap } from "./map-grid";
 
 const tilesSchema = z.array(z.number().int().min(0).max(10)).length(CELLS);
@@ -137,39 +138,63 @@ export const getMapSequence = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ gameId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertNarrator(context.supabase, data.gameId, context.userId);
-    const { data: rows } = await context.supabase.from("game_map_sequence").select("position, name, source").eq("game_id", data.gameId).order("position");
+    const { data: rows } = await context.supabase.from("game_map_sequence").select("position, name, source, tiles, spawn_x, spawn_y, enemies, track, intro_text").eq("game_id", data.gameId).order("position");
     const { data: prog } = await context.supabase.from("game_map_progress").select("current_index").eq("game_id", data.gameId).maybeSingle();
-    return { items: (rows ?? []).map((r: any) => ({ name: r.name as string, source: r.source as string })), current: (prog?.current_index as number | undefined) ?? -1 };
+    return {
+      items: (rows ?? []).map((r: any) => ({ name: r.name as string, source: r.source as string, tiles: r.tiles as number[], spawn: { x: r.spawn_x as number, y: r.spawn_y as number }, enemies: (r.enemies ?? []) as MapEnemy[], track: (r.track ?? null) as string | null, intro: (r.intro_text ?? "") as string })),
+      current: (prog?.current_index as number | undefined) ?? -1,
+    };
   });
 
-export const saveMapSequence = createServerFn({ method: "POST" })
+const stepSchema = z.object({
+  name: z.string().trim().min(1).max(60), source: z.string().max(80), tiles: tilesSchema, spawn: z.object({ x: coord, y: coord }),
+  enemies: mapEnemies, track: z.enum(TRACK_KEYS).nullable(), intro: z.string().trim().max(1000),
+});
+
+/** Narrator-only: save every step (map copy, mobs, music, intro) of the salon's scenario at once. */
+export const saveScenario = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ gameId: z.string().uuid(), items: z.array(refSchema).max(12) }).parse(d))
+  .inputValidator((d) => z.object({ gameId: z.string().uuid(), steps: z.array(stepSchema).max(12) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertNarrator(context.supabase, data.gameId, context.userId);
-    const resolved = [];
-    for (const ref of data.items) resolved.push(await resolveMap(context.supabase, context.userId, ref));
+    data.steps.forEach((s, i) => {
+      const err = validateGrid(s.tiles, s.spawn);
+      if (err) throw new Error(`Étape ${i + 1} : ${err}`);
+      if (s.enemies.some((e) => !cellWalkable(s, e.x, e.y))) throw new Error(`Étape ${i + 1} : un mob est sur un mur ou une barrière.`);
+    });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("game_map_sequence").delete().eq("game_id", data.gameId);
-    if (resolved.length) {
-      const { error } = await supabaseAdmin.from("game_map_sequence").insert(resolved.map((r, i) => ({ game_id: data.gameId, position: i, name: r.map.name, source: r.source, tiles: r.map.tiles, spawn_x: r.map.spawn.x, spawn_y: r.map.spawn.y, enemies: r.enemies })));
-      if (error) throw new Error("Enregistrement de l'ordre impossible.");
+    const ids = [...new Set(data.steps.flatMap((s) => s.enemies.map((e) => e.catalogId)))];
+    if (ids.length) {
+      const { data: cats } = await supabaseAdmin.from("enemy_catalog").select("id, game_id").in("id", ids);
+      const ok = new Set((cats ?? []).filter((c: any) => !c.game_id || c.game_id === data.gameId).map((c: any) => c.id));
+      if (ids.some((id) => !ok.has(id))) throw new Error("Un mob du parcours est introuvable.");
     }
-    await supabaseAdmin.from("game_map_progress").upsert({ game_id: data.gameId, current_index: -1, updated_at: new Date().toISOString() });
-    return { count: resolved.length };
+    await supabaseAdmin.from("game_map_sequence").delete().eq("game_id", data.gameId);
+    if (data.steps.length) {
+      const { error } = await supabaseAdmin.from("game_map_sequence").insert(data.steps.map((s, i) => ({ game_id: data.gameId, position: i, name: s.name, source: s.source, tiles: s.tiles, spawn_x: s.spawn.x, spawn_y: s.spawn.y, enemies: s.enemies, track: s.track, intro_text: s.intro })));
+      if (error) throw new Error("Enregistrement du parcours impossible.");
+    }
+    const { data: prog } = await supabaseAdmin.from("game_map_progress").select("current_index").eq("game_id", data.gameId).maybeSingle();
+    const cur = (prog?.current_index as number | undefined) ?? -1;
+    await supabaseAdmin.from("game_map_progress").upsert({ game_id: data.gameId, current_index: cur < data.steps.length ? cur : -1, updated_at: new Date().toISOString() });
+    return { count: data.steps.length };
   });
 
-/** Narrator-only: install the map at `index` of the sequence (next step). */
+/** Narrator-only: install the map at `index` of the sequence (next step), with its music and intro text. */
 export const goToSequenceMap = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ gameId: z.string().uuid(), index: z.number().int().min(0).max(11) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertNarrator(context.supabase, data.gameId, context.userId);
-    const { data: row } = await context.supabase.from("game_map_sequence").select("name, source, tiles, spawn_x, spawn_y, enemies").eq("game_id", data.gameId).eq("position", data.index).maybeSingle();
+    const { data: row } = await context.supabase.from("game_map_sequence").select("name, source, tiles, spawn_x, spawn_y, enemies, track, intro_text").eq("game_id", data.gameId).eq("position", data.index).maybeSingle();
     if (!row) throw new Error("Aucune carte à cette étape.");
     const map: GridMap = { name: row.name, tiles: row.tiles, spawn: { x: row.spawn_x, y: row.spawn_y } };
-    await installMap(data.gameId, context.userId, map, row.source, `Carte ${data.index + 1}`, (row.enemies ?? []) as MapEnemy[]);
+    await installMap(data.gameId, context.userId, map, row.source, `Étape ${data.index + 1}`, (row.enemies ?? []) as MapEnemy[]);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("game_map_progress").upsert({ game_id: data.gameId, current_index: data.index, updated_at: new Date().toISOString() });
+    if (row.track) await supabaseAdmin.from("game_ambience").upsert({ game_id: data.gameId, track: row.track, state: "lecture", updated_at: new Date().toISOString() }, { onConflict: "game_id" });
+    if (row.intro_text) await supabaseAdmin.from("game_events").insert({ game_id: data.gameId, actor_id: userIdOrNull(context.userId), kind: "niveau", message: row.intro_text, payload: { step: data.index + 1 }, important: true, secret: false });
     return { name: map.name, index: data.index };
   });
+
+const userIdOrNull = (id: string) => id || null;
