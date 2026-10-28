@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Brush, Eraser, Flag, OctagonX, PaintBucket, Plus, Trash2 } from "lucide-react";
+import { Brush, Eraser, Flag, OctagonX, PaintBucket, Plus, Skull, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
-import { CELLS, GRID, PREBUILT_MAPS, SPRITES, validateGrid, type GridMap } from "@/lib/map-grid";
-import { deleteMyMap, listMyMaps, saveMyMap } from "@/lib/maps.functions";
+import { cellWalkable, CELLS, GRID, PREBUILT_MAPS, SPRITES, validateGrid, type GridMap } from "@/lib/map-grid";
+import { deleteMyMap, listMapEnemyCatalog, listMyMaps, saveMyMap, type MapEnemy } from "@/lib/maps.functions";
 
 export const Route = createFileRoute("/_authenticated/cartes")({
   staticData: { sitemap: false },
@@ -24,8 +24,8 @@ export const Route = createFileRoute("/_authenticated/cartes")({
   component: MapsPage,
 });
 
-type Tool = "brush" | "block" | "fill" | "erase" | "spawn";
-type Draft = GridMap & { id?: string };
+type Tool = "brush" | "block" | "fill" | "erase" | "spawn" | "enemy";
+type Draft = GridMap & { id?: string; enemies?: MapEnemy[] };
 
 function blank(): Draft {
   const tiles = Array<number>(CELLS).fill(6);
@@ -42,11 +42,25 @@ function MapsPage() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [tool, setTool] = useState<Tool>("brush");
   const [sprite, setSprite] = useState(6);
+  const catalogFn = useServerFn(listMapEnemyCatalog);
+  const catalog = useQuery({ queryKey: ["map-enemy-catalog"], queryFn: () => catalogFn() });
+  const [enemyId, setEnemyId] = useState("");
+  const icon = (id: string) => catalog.data?.find((c) => c.id === id)?.icon || "☠";
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
   function paint(x: number, y: number, kind: "down" | "move") {
     if (!draft) return;
+    if (tool === "enemy") {
+      if (kind !== "down") return;
+      const list = draft.enemies ?? [];
+      const here = list.findIndex((e) => e.x === x && e.y === y);
+      if (here >= 0) { setDraft({ ...draft, enemies: list.filter((_, i) => i !== here) }); return; }
+      if (!enemyId) { setMsg("Choisis d'abord un ennemi dans la liste."); return; }
+      if (!cellWalkable(draft, x, y)) { setMsg("Un ennemi ne peut pas être posé sur un mur ou une barrière."); return; }
+      if (list.length >= 60) { setMsg("60 ennemis maximum par carte."); return; }
+      setDraft({ ...draft, enemies: [...list, { catalogId: enemyId, x, y }] }); setMsg(null); return;
+    }
     if (tool === "spawn") { if (kind === "down") setDraft({ ...draft, spawn: { x, y } }); return; }
     if (tool === "fill") {
       if (kind !== "down") return;
@@ -67,7 +81,7 @@ function MapsPage() {
     if (err) { setMsg(err); return; }
     setBusy(true); setMsg(null);
     try {
-      const r = await save({ data: { id: draft.id, name: draft.name, tiles: draft.tiles, spawn: draft.spawn } });
+      const r = await save({ data: { id: draft.id, name: draft.name, tiles: draft.tiles, spawn: draft.spawn, enemies: (draft.enemies ?? []).filter((e) => cellWalkable(draft, e.x, e.y)) } });
       setDraft({ ...draft, id: r.id }); setMsg("Carte enregistrée.");
       await qc.invalidateQueries({ queryKey: ["my-maps"] });
     } catch (e) { setMsg(e instanceof Error ? e.message : "Enregistrement impossible."); }
@@ -81,7 +95,7 @@ function MapsPage() {
     await qc.invalidateQueries({ queryKey: ["my-maps"] });
   }
 
-  const tools: [Tool, string, typeof Brush][] = [["brush", "Pinceau", Brush], ["block", "Barrière", OctagonX], ["fill", "Remplir", PaintBucket], ["erase", "Gomme", Eraser], ["spawn", "Départ", Flag]];
+  const tools: [Tool, string, typeof Brush][] = [["brush", "Pinceau", Brush], ["block", "Barrière", OctagonX], ["fill", "Remplir", PaintBucket], ["erase", "Gomme", Eraser], ["spawn", "Départ", Flag], ["enemy", "Ennemi", Skull]];
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 md:px-10">
@@ -113,7 +127,7 @@ function MapsPage() {
               {Object.values(PREBUILT_MAPS).map((m) => <li key={m.name} className="border-2 border-foreground p-2">
                 <MapCanvas tiles={m.tiles} spawn={m.spawn} label={`Aperçu de ${m.name}`} />
                 <p className="mt-2 font-bold">{m.name}</p>
-                <Button variant="secondary" className="mt-2 min-h-11 w-full rounded-none" onClick={() => setDraft({ name: `${m.name} (copie)`, tiles: [...m.tiles], spawn: { ...m.spawn } })}>Dupliquer</Button>
+                <Button variant="secondary" className="mt-2 min-h-11 w-full rounded-none" onClick={() => setDraft({ name: `${m.name} (copie)`, tiles: [...m.tiles], spawn: { ...m.spawn }, enemies: [] })}>Dupliquer</Button>
               </li>)}
             </ul>
           </div>
@@ -122,16 +136,25 @@ function MapsPage() {
         <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_18rem]">
           <div className="min-w-0">
             <div className="mx-auto max-w-[min(100%,44rem)] border-2 border-foreground">
-              <MapCanvas tiles={draft.tiles} spawn={draft.spawn} onCell={paint} label={`Éditeur de ${draft.name}, 40 × 40 cases`} className="cursor-crosshair" />
+              <MapCanvas tiles={draft.tiles} spawn={draft.spawn} onCell={paint} markers={(draft.enemies ?? []).map((e) => ({ x: e.x, y: e.y, glyph: icon(e.catalogId) }))} label={`Éditeur de ${draft.name}, 40 × 40 cases`} className="cursor-crosshair" />
             </div>
           </div>
           <aside className="space-y-4">
             <label className="block text-xs font-black uppercase">Nom
               <Input value={draft.name} maxLength={60} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="mt-1 h-11 rounded-none font-normal normal-case" />
             </label>
-            <div role="radiogroup" aria-label="Outil" className="grid grid-cols-5 border-2 border-foreground">
+            <div role="radiogroup" aria-label="Outil" className="grid grid-cols-6 border-2 border-foreground">
               {tools.map(([k, l, Icon]) => <button key={k} role="radio" aria-checked={tool === k} onClick={() => setTool(k)} className={`flex min-h-11 flex-col items-center justify-center text-[10px] font-black uppercase ${tool === k ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}><Icon className="size-4" />{l}</button>)}
             </div>
+            {tool === "enemy" && <div className="space-y-2 border-2 border-foreground p-2">
+              <label className="block text-xs font-black uppercase">Ennemi à poser
+                <select value={enemyId} onChange={(e) => setEnemyId(e.target.value)} className="mt-1 h-11 w-full border-2 border-foreground bg-background px-2 font-normal normal-case">
+                  <option value="">Choisir…</option>
+                  {catalog.data?.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+                </select>
+              </label>
+              <p className="text-xs">Touche une case praticable pour poser l'ennemi, touche-le à nouveau pour le retirer. {draft.enemies?.length ?? 0} ennemi(s) sur la carte. Ils arrivent cachés dans le salon quand la carte est chargée.</p>
+            </div>}
             <div role="radiogroup" aria-label="Décor" className="grid grid-cols-2 gap-2">
               {SPRITES.map((s) => <button key={s.code} role="radio" aria-checked={sprite === s.code} onClick={() => { setSprite(s.code); if (tool !== "brush" && tool !== "fill") setTool("brush"); }} className={`flex min-h-11 items-center gap-2 border-2 p-1 text-left text-xs ${sprite === s.code ? "border-primary bg-secondary" : "border-foreground/30"}`}>
                 <SpriteSwatch code={s.code} /><span><b>{s.label}</b><br /><span className="opacity-70">{s.walk ? "Praticable" : "Bloquant"}</span></span>
