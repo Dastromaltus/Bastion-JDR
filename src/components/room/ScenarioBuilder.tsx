@@ -139,7 +139,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
 
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_16rem]">
             <div className="border-2 border-foreground">
-              <MapCanvas tiles={step.tiles} spawn={step.spawn} markers={markers} onCell={section === "mobs" || section === "decor" ? onCell : undefined}
+              <MapCanvas tiles={step.tiles} spawn={step.spawn} markers={markers} {...(section === "mobs" || section === "decor" ? { onCell } : {})}
                 label={`Carte de l'étape ${sel + 1}, ${step.name}, 40 × 40 cases`} className={section === "mobs" || section === "decor" ? "cursor-crosshair" : ""} />
             </div>
 

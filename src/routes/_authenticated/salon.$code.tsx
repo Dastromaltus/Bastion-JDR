@@ -20,8 +20,7 @@ import { useSettings, vibrate, type GameSettings } from "@/components/room/useSe
 import { useAmbience, SoundGate, PersonalAmbience } from "@/components/room/Ambience";
 import { AmbiencePanel, EnemyPanel, TreasurePanel, ExplorePanel } from "@/components/room/NarratorTools";
 import { EncounterPanel } from "@/components/room/EncounterPanel";
-import { MapPanel } from "@/components/room/MapPanel";
-import { LevelsPanel } from "@/components/room/LevelsPanel";
+import { ScenarioBuilder } from "@/components/room/ScenarioBuilder";
 import { RoomPassword } from "@/components/room/RoomPassword";
 import { OperationSection } from "@/components/operations/OperationPanel";
 import { getSalonDungeon } from "@/lib/operations.functions";
