@@ -22,6 +22,12 @@ describe("40×40 salon maps", () => {
     expect(validateGrid(Array(25 * 17).fill(3), { x: 1, y: 1 })).not.toBeNull();
     expect(validateGrid(Array(CELLS).fill(7), { x: 1, y: 1 })).not.toBeNull();
   });
+  it("barrier-painted cells (code 0) are impassable", () => {
+    const tiles = Array<number>(CELLS).fill(6);
+    tiles[10 * GRID + 10] = 0; // pinceau « Barrière »
+    expect(cellWalkable({ name: "t", tiles, spawn: { x: 1, y: 1 } }, 10, 10)).toBe(false);
+    expect(cellWalkable({ name: "t", tiles, spawn: { x: 1, y: 1 } }, 11, 10)).toBe(true);
+  });
   it("blocks outside the grid", () => {
     expect(worldWalkable(-1, 5)).toBe(false);
     expect(worldWalkable(40, 5)).toBe(false);
