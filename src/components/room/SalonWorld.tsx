@@ -33,7 +33,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const canMove = d.game.status === "playing" && d.me.role === "adventurer" && d.me.hp > 0 && here === (d.me.current_zone ?? "entree");
   const enabled = canMove && !d.combat && turn.isMine;
   const fetchMap = useServerFn(getSalonMap);
-  const mapQ = useQuery({ queryKey: ["salon-map", d.game.id, d.events?.length ?? 0], queryFn: () => fetchMap({ data: { gameId: d.game.id } }), staleTime: 30_000, placeholderData: (prev) => prev });
+  const mapQ = useQuery({ queryKey: ["salon-map", d.game.id, (d.events ?? []).filter((e: any) => e.kind === "carte").length], queryFn: () => fetchMap({ data: { gameId: d.game.id } }), staleTime: 30_000, placeholderData: (prev) => prev });
   const grid = mapQ.data ?? PREBUILT_MAPS[DEFAULT_MAP_KEY]!;
   const participants = participantActors(d.players, here, d.me.id, grid);
   const activeId = d.combat?.current?.id ?? turn.active?.id;
