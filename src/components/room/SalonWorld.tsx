@@ -7,7 +7,7 @@ import { getSalonMap } from "@/lib/maps.functions";
 import { useQuery } from "@tanstack/react-query";
 import { PREBUILT_MAPS, DEFAULT_MAP_KEY } from "@/lib/map-grid";
 import { type WorldDirection } from "@/lib/world-map";
-import { participantActors, type WorldActor } from "@/lib/world-actors";
+import { isZombie, participantActors, type WorldActor } from "@/lib/world-actors";
 import { zoneLabel } from "@/lib/races";
 import { salonTurn } from "@/lib/turn-order";
 import type Phaser from "phaser";
