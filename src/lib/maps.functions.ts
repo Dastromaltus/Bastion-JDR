@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { TRACK_KEYS } from "./ambience-tracks";
+import { blockedMapEnemies } from "./map-enemies";
 import { cellWalkable, CELLS, DEFAULT_MAP_KEY, GRID, PREBUILT_MAPS, nearestWalkable, validateGrid, type GridMap } from "./map-grid";
 
 const tilesSchema = z.array(z.number().int().min(0).max(10)).length(CELLS);
@@ -46,7 +47,7 @@ export const saveMyMap = createServerFn({ method: "POST" })
     if (err) throw new Error(err);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const g = { name: data.name, tiles: data.tiles, spawn: data.spawn };
-    if (data.enemies.some((e) => !cellWalkable(g, e.x, e.y))) throw new Error("Un ennemi est placé sur un mur ou une barrière.");
+    if (blockedMapEnemies({ ...g, enemies: data.enemies }).length) throw new Error("Un ennemi est placé sur un mur ou une barrière.");
     const row = { enemies: data.enemies, name: data.name, tiles: data.tiles, spawn_x: data.spawn.x, spawn_y: data.spawn.y, updated_at: new Date().toISOString() };
     if (data.id) {
       const { data: upd, error } = await supabaseAdmin.from("custom_maps").update(row).eq("id", data.id).eq("owner_id", context.userId).select("id").maybeSingle();
@@ -62,7 +63,8 @@ export const saveMyMap = createServerFn({ method: "POST" })
 export const listMapEnemyCatalog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase.from("enemy_catalog").select("id, name, icon, category").is("game_id", null).order("name");
+    const { data, error } = await context.supabase.from("enemy_catalog").select("id, name, icon, category").is("game_id", null).order("name");
+    if (error) throw new Error("Impossible de charger le catalogue d'ennemis.");
     return (data ?? []) as { id: string; name: string; icon: string; category: string }[];
   });
 
@@ -99,14 +101,19 @@ async function installMap(gameId: string, userId: string, map: GridMap, source: 
     const { data: adv } = await supabaseAdmin.from("game_players").select("current_zone").eq("game_id", gameId).eq("role", "adventurer");
     const zone = adv?.[0]?.current_zone ?? "entree";
     const ids = [...new Set(enemies.map((e) => e.catalogId))];
-    const { data: cats } = await supabaseAdmin.from("enemy_catalog").select("*").in("id", ids);
+    const { data: cats, error: catalogError } = await supabaseAdmin.from("enemy_catalog").select("*").in("id", ids);
+    if (catalogError) throw new Error("Impossible de charger les ennemis de cette carte.");
     const rows = enemies.flatMap((e) => {
       const c = (cats ?? []).find((k: any) => k.id === e.catalogId && (!k.game_id || k.game_id === gameId));
       if (!c || !cellWalkable(map, e.x, e.y)) return [];
       const hp = 10 + 2 * c.endurance;
       return [{ game_id: gameId, catalog_id: c.id, name: c.name, category: c.category, icon: c.icon, ability: c.ability, speed: c.speed, strength: c.strength, endurance: c.endurance, hp, max_hp: hp, threat_cost: c.threat_cost, zone, trigger: "entree", tile_x: e.x, tile_y: e.y }];
     });
-    if (rows.length) await supabaseAdmin.from("game_enemies").insert(rows);
+    if (rows.length !== enemies.length) throw new Error("Un ennemi de cette carte est introuvable ou sur une case bloquée.");
+    if (rows.length) {
+      const { error: enemyError } = await supabaseAdmin.from("game_enemies").insert(rows);
+      if (enemyError) throw new Error("Impossible de placer les ennemis de cette carte dans le salon.");
+    }
   }
   const { error } = await supabaseAdmin.from("game_world_maps").upsert({ game_id: gameId, name: map.name, source, tiles: map.tiles, spawn_x: map.spawn.x, spawn_y: map.spawn.y, updated_at: new Date().toISOString() });
   if (error) throw new Error("Chargement de la carte impossible.");
