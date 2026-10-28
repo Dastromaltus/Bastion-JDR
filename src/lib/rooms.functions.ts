@@ -309,6 +309,13 @@ export const narratorAction = createServerFn({ method: "POST" })
         await logEvent(data.gameId, context.userId, "systeme", "La partie commence. Tour 1.", { turn: 1 }, true);
         await openDungeon(data.gameId);
         {
+          const { data: firstMap } = await db.from("game_map_sequence").select("position").eq("game_id", data.gameId).order("position").limit(1).maybeSingle();
+          if (firstMap) {
+            const { activateSequenceMap } = await import("./maps.functions");
+            await activateSequenceMap(data.gameId, context.userId, firstMap.position);
+          }
+        }
+        {
           const { enterLevel } = await import("./levels.functions");
           const { data: first } = await db.from("game_levels").select("zone").eq("game_id", data.gameId).order("position").limit(1).maybeSingle();
           if (first) {
