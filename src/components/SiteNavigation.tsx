@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BookOpen, LogOut, Map, Swords, User, Users } from "lucide-react";
+import { BookOpen, Grid3x3, LogOut, Map, Swords, User, Users } from "lucide-react";
 import bastionEmblem from "@/assets/bastion-emblem.png";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 const destinations = [
   { to: "/salons", label: "Mes salons", icon: Users },
   { to: "/campagnes", label: "Mes campagnes", icon: Map },
+  { to: "/cartes", label: "Mes cartes", icon: Grid3x3 },
   { to: "/operations", label: "Opérations", icon: Swords },
   { to: "/personnage", label: "Mon personnage", icon: User },
   { to: "/", label: "Règles du jeu", icon: BookOpen },
@@ -15,7 +16,7 @@ const destinations = [
 
 export function SiteNavigation() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const workspace = ["/salons", "/campagnes", "/operations"].includes(pathname);
+  const workspace = ["/salons", "/campagnes", "/cartes", "/operations"].includes(pathname);
   if (!workspace && pathname !== "/" && pathname !== "/credits") return null;
 
   async function signOut() {

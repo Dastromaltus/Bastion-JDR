@@ -1,13 +1,14 @@
-import map from "@/data/salon-world.json";
+import { DEFAULT_MAP_KEY, PREBUILT_MAPS, cellWalkable, type GridMap } from "./map-grid";
 
 export type WorldDirection = "up" | "down" | "left" | "right";
-export const WORLD_SPAWN = { x: 12, y: 9 };
+const DEFAULT_MAP = PREBUILT_MAPS[DEFAULT_MAP_KEY]!;
+export const WORLD_SPAWN = DEFAULT_MAP.spawn;
 export const WORLD_DELTAS: Record<WorldDirection, readonly [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
-export function worldWalkable(x: number, y: number) {
-  if (x < 0 || y < 0 || x >= map.width || y >= map.height) return false;
-  const tile = map.layers[0]?.data[y * map.width + x];
-  return tile === 1 || tile === 2 || tile === 3 || tile === 7;
+export function worldWalkable(x: number, y: number, map: GridMap = DEFAULT_MAP) {
+  return cellWalkable(map, x, y);
 }
-export function worldPosition(player: { world_x?: number; world_y?: number; world_zone?: string | null }, zone: string) {
-  return player.world_zone === zone ? { x: player.world_x ?? WORLD_SPAWN.x, y: player.world_y ?? WORLD_SPAWN.y } : WORLD_SPAWN;
+/** Saved position when it belongs to this zone and is walkable on the current map; otherwise the map start. */
+export function worldPosition(player: { world_x?: number; world_y?: number; world_zone?: string | null }, zone: string, map: GridMap = DEFAULT_MAP) {
+  if (player.world_zone === zone && player.world_x !== undefined && player.world_y !== undefined && cellWalkable(map, player.world_x, player.world_y)) return { x: player.world_x, y: player.world_y };
+  return map.spawn;
 }

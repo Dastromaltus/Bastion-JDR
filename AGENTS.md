@@ -22,8 +22,6 @@
 - Operations (prebuilt dungeons) live in dungeon_* template tables readable by signed-in users; loading copies them into the salon's game_enemies/game_treasures/game_dungeon_events and one game_dungeons row, all written only by src/lib/operations.functions.ts, because per-salon copies must stay narrator-only until revealed.
 - Shared Operation template SELECT policies explicitly require a non-null auth.uid(); exploration SELECT policies expose only the porte-rouge homepage demo and its related rows, because new sessions must not inherit unrestricted public reads.
 - Dungeon rooms carry grid_x/grid_y, features and the template map_key so each Operation can later become a Tiled tile map without a schema change.
-- Salon tile movement uses a shared Tiled map and member-checked server intents with compare-and-set position writes; a dynamically imported Phaser scene animates only server-confirmed positions, preserving room transitions and hidden-content filtering.
-- Salon zone scenery uses separate pixel-art tileset rows selected through world-decor without altering the authoritative Tiled collision grid, so visual differentiation never changes movement or hidden-content permissions.
 - Build visible salon participants through the browser-safe world-actors helper; show the characterless narrator only as a labeled observer outside the map and follow the active adventurer's zone in the narrator view, without granting movement or exposing hidden content.
 - Solo games are games.solo=true with one adventurer and no narrator; soloAct runs the automatic enemy rules server-side.
 - Multiplayer salon turns use games turn state and a row-locked, member-checked end_salon_turn RPC; player gameplay handlers enforce the same shared order, while full-round Operation effects run only after the final participant ends their turn, preserving automatic solo play.
@@ -33,3 +31,4 @@
 - Store owner-private campaigns and make immutable salon snapshots through checked SQL RPCs; mark isolated solo playtests with game_campaigns.is_test so they reuse server gameplay without changing authored documents.
 - Share workspace navigation through SiteNavigation, hide it during gameplay, and prioritize salon lists over creation dialogs to preserve page organization.
 - Defer scenarios to narrator-checked preparation; keep catalog and environment previews browser-safe to avoid Phaser in SSR.
+- All salon maps are 40×40 grids of codes from src/lib/map-grid.ts (sprites in map-sprites asset); personal maps live in owner-only custom_maps and are copied into game_world_maps by the narrator-checked loadSalonMap, so movement and mob collisions are validated server-side against the salon's own copy.

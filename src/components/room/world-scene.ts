@@ -1,8 +1,8 @@
 import * as Phaser from "phaser";
 import tiles from "@/assets/world-tiles.png";
-import decorTiles from "@/assets/zone-tiles.png.asset.json";
-import { worldDecorFrame } from "@/lib/world-decor";
-import map from "@/data/salon-world.json";
+import mapSprites from "@/assets/map-sprites.png.asset.json";
+import { GRID, type GridMap } from "@/lib/map-grid";
+const map = { width: GRID, height: GRID };
 import type { WorldActor } from "@/lib/world-actors";
 import { motionDisabled, MOTION_EVENT } from "@/lib/motion";
 
@@ -12,12 +12,18 @@ export class WorldScene extends Phaser.Scene {
   constructor() { super("SalonWorld"); }
   preload() {
     this.load.spritesheet("world-tiles", tiles, { frameWidth: 16, frameHeight: 16 });
-    this.load.spritesheet("zone-tiles", decorTiles.url, { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet("map-sprites", mapSprites.url, { frameWidth: 16, frameHeight: 16 });
   }
   create() {
-    map.layers[0]?.data.forEach((tile, i) => this.scenery.push(this.add.image((i % map.width) * 16 + 8, Math.floor(i / map.width) * 16 + 8, "zone-tiles", worldDecorFrame(tile, "entree"))));
-    this.events.on("zone", (zone: string) => {
-      map.layers[0]?.data.forEach((tile, i) => this.scenery[i]?.setFrame(worldDecorFrame(tile, zone)));
+    const bg = getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim() || "#111";
+    this.cameras.main.setBounds(0, 0, GRID * 16, GRID * 16).setBackgroundColor(bg);
+    for (let i = 0; i < GRID * GRID; i++) this.scenery.push(this.add.image((i % GRID) * 16 + 8, Math.floor(i / GRID) * 16 + 8, "map-sprites", 8).setVisible(false));
+    this.events.on("map", (grid: GridMap) => {
+      grid.tiles.forEach((t, i) => { const img = this.scenery[i]; if (img) img.setVisible(t > 0).setFrame(Math.max(0, t - 1)); });
+    });
+    this.events.on("focus", (p: { x: number; y: number }) => {
+      const cam = this.cameras.main, tx = p.x * 16 + 8, ty = p.y * 16 + 8;
+      if (motionDisabled()) cam.centerOn(tx, ty); else cam.pan(tx, ty, 160, "Linear", true);
     });
     this.events.on("actors", (actors: WorldActor[]) => this.sync(actors));
     const stop = () => {

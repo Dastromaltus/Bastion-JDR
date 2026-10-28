@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedCampagnesRouteImport } from './routes/_authenticated/campagnes'
+import { Route as AuthenticatedCartesRouteImport } from './routes/_authenticated/cartes'
 import { Route as AuthenticatedOperationsRouteImport } from './routes/_authenticated/operations'
 import { Route as AuthenticatedPersonnageRouteImport } from './routes/_authenticated/personnage'
 import { Route as AuthenticatedSalonsRouteImport } from './routes/_authenticated/salons'
@@ -50,6 +51,11 @@ const AuthenticatedCampagnesRoute = AuthenticatedCampagnesRouteImport.update({
   path: '/campagnes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCartesRoute = AuthenticatedCartesRouteImport.update({
+  id: '/cartes',
+  path: '/cartes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOperationsRoute = AuthenticatedOperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/credits': typeof CreditsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/campagnes': typeof AuthenticatedCampagnesRoute
+  '/cartes': typeof AuthenticatedCartesRoute
   '/operations': typeof AuthenticatedOperationsRoute
   '/personnage': typeof AuthenticatedPersonnageRoute
   '/salons': typeof AuthenticatedSalonsRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/credits': typeof CreditsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/campagnes': typeof AuthenticatedCampagnesRoute
+  '/cartes': typeof AuthenticatedCartesRoute
   '/operations': typeof AuthenticatedOperationsRoute
   '/personnage': typeof AuthenticatedPersonnageRoute
   '/salons': typeof AuthenticatedSalonsRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/credits': typeof CreditsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/campagnes': typeof AuthenticatedCampagnesRoute
+  '/_authenticated/cartes': typeof AuthenticatedCartesRoute
   '/_authenticated/operations': typeof AuthenticatedOperationsRoute
   '/_authenticated/personnage': typeof AuthenticatedPersonnageRoute
   '/_authenticated/salons': typeof AuthenticatedSalonsRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/credits'
     | '/sitemap.xml'
     | '/campagnes'
+    | '/cartes'
     | '/operations'
     | '/personnage'
     | '/salons'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/credits'
     | '/sitemap.xml'
     | '/campagnes'
+    | '/cartes'
     | '/operations'
     | '/personnage'
     | '/salons'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/credits'
     | '/sitemap.xml'
     | '/_authenticated/campagnes'
+    | '/_authenticated/cartes'
     | '/_authenticated/operations'
     | '/_authenticated/personnage'
     | '/_authenticated/salons'
@@ -207,6 +219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCampagnesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cartes': {
+      id: '/_authenticated/cartes'
+      path: '/cartes'
+      fullPath: '/cartes'
+      preLoaderRoute: typeof AuthenticatedCartesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/operations': {
       id: '/_authenticated/operations'
       path: '/operations'
@@ -247,6 +266,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCampagnesRoute: typeof AuthenticatedCampagnesRoute
+  AuthenticatedCartesRoute: typeof AuthenticatedCartesRoute
   AuthenticatedOperationsRoute: typeof AuthenticatedOperationsRoute
   AuthenticatedPersonnageRoute: typeof AuthenticatedPersonnageRoute
   AuthenticatedSalonsRoute: typeof AuthenticatedSalonsRoute
@@ -256,6 +276,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCampagnesRoute: AuthenticatedCampagnesRoute,
+  AuthenticatedCartesRoute: AuthenticatedCartesRoute,
   AuthenticatedOperationsRoute: AuthenticatedOperationsRoute,
   AuthenticatedPersonnageRoute: AuthenticatedPersonnageRoute,
   AuthenticatedSalonsRoute: AuthenticatedSalonsRoute,
