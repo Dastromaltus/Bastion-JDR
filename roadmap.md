@@ -21,5 +21,6 @@
 - [x] Add selectable enemy, treasure and environment previews; verified map gallery and both catalogues visually.
 - [x] Suspend threat budgets throughout preparation and publication; 10 tests passed and authenticated placements, publication and reload succeeded. Ownership checks retained; new multi-account isolation checks not performed.
 - [x] Add walking motion for confirmed positions, directional action feedback, active-turn highlights, animated server combat dice and mob health feedback. Twenty tests passed; real salon and active solo canvas checked without runtime errors, with zero CSS animations in reduced-motion mode. Full multiplayer combat remains untested.
-- [ ] Add an adventurer HP tracking panel and persistent damage history during games.
-- [ ] Verify health history rules and the panel in an authenticated salon.
+- [x] Add an adventurer HP tracking panel and persistent, paginated damage history during games; confirm the database trigger and member-scoped event policies.
+- [x] Verify health history rules and regressions: 14 tests pass and the preview build is OK.
+- [ ] Verify the panel and a damage action in an authenticated salon — blocked until the user signs in to the preview or identifies an account to authorize; self-session minting found no matching app account.
