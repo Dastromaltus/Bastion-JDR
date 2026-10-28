@@ -16,9 +16,11 @@ export const moveWorldPlayer = createServerFn({ method: "POST" })
     const { data: combat } = await context.supabase.rpc("get_salon_combat", { p_game_id: data.gameId });
     if (combat) throw new Error("Termine le combat avant de poursuivre l’exploration.");
     const zone = me.current_zone ?? "entree";
-    const { x, y } = worldPosition(me, zone);
+    const { salonGrid } = await import("./maps.functions");
+    const grid = await salonGrid(context.supabase, data.gameId);
+    const { x, y } = worldPosition(me, zone, grid);
     const [dx, dy] = WORLD_DELTAS[data.direction];
-    if (!worldWalkable(x + dx, y + dy)) return { moved: false, message: "Le passage est bloqué.", x, y };
+    if (!worldWalkable(x + dx, y + dy, grid)) return { moved: false, message: "Le passage est bloqué.", x, y };
     // Privileged write only after membership, role, status and collision validation.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let update = supabaseAdmin.from("game_players").update({ world_x: x + dx, world_y: y + dy, world_zone: zone })
