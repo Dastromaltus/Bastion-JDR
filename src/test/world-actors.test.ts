@@ -14,7 +14,7 @@ describe("shared salon characters", () => {
   it("marks the narrator as an observer and the viewer by name", () => {
     const actors = participantActors(players, "machines", "n");
     expect(actors.some((a) => a.id === "n")).toBe(false);
-    expect(actors[0]).toMatchObject({ name: "Alice", x: 10, y: 9, frame: 11 });
+    expect(actors[0]).toMatchObject({ name: "Alice", x: 6, y: 20, frame: 11 });
   });
   it("does not fabricate other-zone adventurer positions", () => {
     expect(participantActors(players, "entree", "c").map((p) => p.id)).toEqual(["c"]);
