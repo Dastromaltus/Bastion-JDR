@@ -3,7 +3,6 @@ import { ArrowDown, ArrowRight, Crown, KeyRound, Shield, Swords, Users, Zap } fr
 import { useState } from "react";
 import bastionLogo from "@/assets/bastion-logo-full.png";
 import bastionFortress from "@/assets/bastion-fortress.jpg";
-import { ExplorationGame } from "@/components/ExplorationGame";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
@@ -103,16 +102,6 @@ function Index() {
             <Button asChild className="h-auto min-h-12 rounded-none px-5 py-3 font-bold"><Link to="/salons"><Users />Créer ou rejoindre un salon</Link></Button>
             <p className="text-xs font-bold uppercase text-muted-foreground">Gratuit · 3 à 5 joueurs · Le créateur devient narrateur</p>
           </div>
-        </div>
-      </section>
-
-      <section id="exploration" className="relative border-b border-border px-4 py-20 md:px-10 md:py-28">
-        <div className="mx-auto max-w-7xl">
-          <div data-motion-enter className="mb-10 grid gap-6 lg:grid-cols-[1fr_0.8fr] lg:items-end">
-            <div><p className="section-label">Mode jouable</p><h2 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Exploration<br /><span className="text-primary">2D</span></h2></div>
-            <p className="max-w-xl text-base leading-relaxed text-muted-foreground">Progressez case par case dans le premier secteur. Chaque peuple ouvre un chemin différent, pendant que le narrateur transforme la carte en direct.</p>
-          </div>
-          <ExplorationGame />
         </div>
       </section>
 
