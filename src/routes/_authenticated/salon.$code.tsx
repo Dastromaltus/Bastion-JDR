@@ -19,6 +19,7 @@ import { ReportButton } from "@/components/ReportButton";
 import { useSettings, vibrate, type GameSettings } from "@/components/room/useSettings";
 import { useAmbience, SoundGate, PersonalAmbience } from "@/components/room/Ambience";
 import { AmbiencePanel, EnemyPanel, TreasurePanel, ExplorePanel } from "@/components/room/NarratorTools";
+import { EncounterPanel } from "@/components/room/EncounterPanel";
 import { LevelsPanel } from "@/components/room/LevelsPanel";
 import { RoomPassword } from "@/components/room/RoomPassword";
 import { OperationSection } from "@/components/operations/OperationPanel";
@@ -376,13 +377,13 @@ function NarratorPanel({ d, narr, busy, refetch }: { d: any; narr: any; busy: st
 }
 
 function NarratorTabs({ d }: { d: any }) {
-  const [tab, setTab] = useState<"niveaux" | "ambiance" | "ennemis" | "tresors">(d.game.status === "waiting" ? "niveaux" : "ambiance");
+  const [tab, setTab] = useState<"niveaux" | "ambiance" | "ennemis" | "tresors" | "rencontre">(d.game.status === "waiting" ? "niveaux" : "ambiance");
   const [mobZone, setMobZone] = useState<string | undefined>(undefined);
   const canAct = d.me.role === "narrator" || d.game.status !== "playing" || (d.combat ? d.combat.isMine : salonTurn(d.game, d.players, d.me.user_id).isMine);
-  const tabs = [["niveaux", "Niveaux"], ["ambiance", "Ambiance"], ["ennemis", "Ennemis"], ["tresors", "Trésors"]] as const;
+  const tabs = [["niveaux", "Niveaux"], ["ambiance", "Ambiance"], ["ennemis", "Ennemis"], ["tresors", "Trésors"], ["rencontre", "Rencontre IA"]] as const;
   return (
     <div className="border-t border-foreground/30 pt-4">
-      <div role="tablist" aria-label="Outils du narrateur" className="grid grid-cols-4 border-2 border-foreground">
+      <div role="tablist" aria-label="Outils du narrateur" className="grid grid-cols-3 border-2 border-foreground sm:grid-cols-5">
         {tabs.map(([k, l]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`min-h-11 text-xs font-black uppercase ${tab === k ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>{l}</button>
         ))}
@@ -390,6 +391,7 @@ function NarratorTabs({ d }: { d: any }) {
       <div key={tab} role="tabpanel" className="mt-4">
         {tab === "niveaux" && <LevelsPanel d={d} onPlaceMobs={(z) => { setMobZone(z); setTab("ennemis"); }} />}
         {tab === "ambiance" && <AmbiencePanel gameId={d.game.id} row={d.ambience} />}
+        {tab === "rencontre" && <EncounterPanel d={d} />}
         {tab === "ennemis" && <fieldset disabled={!canAct} className="min-w-0"><EnemyPanel key={mobZone} d={d} initialZone={mobZone} /></fieldset>}
         {tab === "tresors" && <fieldset disabled={!canAct} className="min-w-0"><TreasurePanel d={d} /></fieldset>}
       </div>
