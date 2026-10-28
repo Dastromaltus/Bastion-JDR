@@ -68,7 +68,7 @@ export class WorldScene extends Phaser.Scene {
         const sprite = actor.sprite === "treasure"
           ? this.add.text(0, -1, "✦", { fontFamily: "monospace", fontSize: "12px", color: "#ffd84a" }).setOrigin(0.5)
           : actor.sprite === "zombie"
-          ? this.add.sprite(0, -6, "zombie", actor.dead ? Z_DIE_LAST : 0)
+          ? this.add.sprite(0, -9, "zombie", actor.dead ? Z_DIE_LAST : 0).setScale(1.5)
           : this.add.image(0, -2, "world-tiles", actor.frame);
         if (sprite instanceof Phaser.GameObjects.Sprite && !actor.dead && !reduced) sprite.play("z-idle");
         const label = this.add.text(0, -15, actor.name, { fontFamily: "VT323, monospace", fontSize: "8px", color: getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim(), backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim(), padding: { x: 2, y: 1 } }).setOrigin(0.5, 1).setVisible(false);
