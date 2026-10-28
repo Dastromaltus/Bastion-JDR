@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
 import { GRID, PREBUILT_MAPS, SPRITES } from "@/lib/map-grid";
+import { readyMapStep } from "@/lib/ready-maps";
 import { TRACKS } from "@/lib/ambience-tracks";
 import { getMapSequence, goToSequenceMap, listMapEnemyCatalog, listMyMaps, saveScenario } from "@/lib/maps.functions";
 import { MAX_STEPS, moveStep, paintTile, putMob, type ScenarioStep } from "@/lib/scenario-steps";
@@ -39,10 +40,10 @@ export function ScenarioBuilder({ d }: { d: any }) {
   useEffect(() => setPicked(null), [sel]);
 
   const options = useMemo(() => [
-    ...Object.entries(PREBUILT_MAPS).map(([k, m]) => ({ key: `prebuilt:${k}`, label: m.name, step: { ...m, source: `prebuilt:${k}`, enemies: [], track: null, intro: "" } as ScenarioStep })),
+    ...Object.entries(PREBUILT_MAPS).map(([k, m]) => ({ key: `prebuilt:${k}`, label: m.name, step: readyMapStep(k) })),
     ...(mine.data ?? []).map((m) => ({ key: `custom:${m.id}`, label: `${m.name} (ma carte)`, step: { name: m.name, tiles: m.tiles, spawn: m.spawn, source: `custom:${m.id}`, enemies: m.enemies, track: null, intro: "" } as ScenarioStep })),
   ], [mine.data]);
-  const fresh = (key: string) => structuredClone(options.find((o) => o.key === key)?.step ?? options[0]!.step);
+  const fresh = (key: string): ScenarioStep => { const entry = options.find((o) => o.key === key) ?? options[0]; if (!entry) throw new Error("Aucune carte disponible."); return structuredClone(entry.step); };
 
   const step = steps[sel];
   const dirty = JSON.stringify(steps) !== JSON.stringify(seq.data?.items ?? []);
@@ -56,7 +57,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
     setSteps((s) => [...s, fresh(source)]); setSel(steps.length); setSection("carte");
   }
   function removeStep(i: number) {
-    if (!confirm(`Supprimer l'étape ${i + 1} « ${steps[i]!.name} » ?`)) return;
+    if (!confirm(`Supprimer l'étape ${i + 1} « ${steps[i]?.name} » ?`)) return;
     setSteps((s) => s.filter((_, j) => j !== i)); setSel((v) => Math.max(0, Math.min(v, steps.length - 2)));
   }
   function shift(dir: -1 | 1) { const j = sel + dir; if (j < 0 || j >= steps.length) return; setSteps((s) => moveStep(s, sel, dir)); setSel(j); }
@@ -78,7 +79,8 @@ export function ScenarioBuilder({ d }: { d: any }) {
   }
   function setCoord(i: number, axis: "x" | "y", v: number) {
     if (!step || Number.isNaN(v)) return;
-    const e = step.enemies[i]!;
+    const e = step.enemies[i];
+    if (!e) return;
     const r = putMob(step, axis === "x" ? v : e.x, axis === "y" ? v : e.y, null, i);
     if (typeof r === "string") toast.error(r); else patch(r);
   }
@@ -94,7 +96,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
 
   if (seq.isLoading) return <p className="text-sm">Chargement du parcours…</p>;
 
-  const markers = step ? step.enemies.map((e, i) => ({ x: e.x, y: e.y, glyph: catIcon(e.catalogId), selected: i === picked, zombie: /zombie/i.test(catName(e.catalogId)) })) : [];
+  const markers = step ? [...step.enemies.map((e, i) => ({ x: e.x, y: e.y, glyph: catIcon(e.catalogId), selected: i === picked, zombie: /zombie/i.test(catName(e.catalogId)) })), ...(step.treasures ?? []).map((t) => ({ x: t.x, y: t.y, glyph: "✦" }))] : [];
 
   return (
     <div className="space-y-4">
@@ -149,11 +151,13 @@ export function ScenarioBuilder({ d }: { d: any }) {
                   <input maxLength={60} value={step.name} onChange={(e) => patch({ name: e.target.value })} className={SEL} />
                 </label>
                 <label className="block text-xs font-black uppercase">Changer de carte
-                  <select value="" onChange={(e) => { if (!e.target.value) return; if (!confirm("Remplacer la carte ? Les mobs et le décor de cette étape seront remplacés.")) return; const f = fresh(e.target.value); patch({ name: f.name, tiles: f.tiles, spawn: f.spawn, source: f.source, enemies: f.enemies }); }} className={SEL}>
+                  <select value="" onChange={(e) => { if (!e.target.value) return; if (!confirm("Remplacer la carte ? Les mobs et le décor de cette étape seront remplacés.")) return; const f = fresh(e.target.value); patch({ name: f.name, tiles: f.tiles, spawn: f.spawn, source: f.source, enemies: f.enemies, treasures: f.treasures, track: f.track, intro: f.intro }); }} className={SEL}>
                     <option value="">Choisir…</option>
                     {options.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
                   </select>
                 </label>
+                <p className="text-xs font-bold">{step.enemies.length} mobs · {step.treasures?.length ?? 0} trésors · {step.track ? TRACKS.find((t) => t.key === step.track)?.label : "Sans musique"}</p>
+                <Link to="/operations" className="inline-flex min-h-11 items-center underline">Cartes prêtes à jouer</Link>
                 <p className="text-xs text-muted-foreground">La carte est copiée dans l'étape : tes retouches ici ne modifient pas l'original.</p>
                 <Link to="/cartes" className="inline-flex min-h-11 items-center underline">Créer une nouvelle carte</Link>
               </>}

@@ -1,150 +1,69 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { MapPlus, Swords, Gem, Music } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { listOperations, loadOperation, startSolo } from "@/lib/operations.functions";
-import { DungeonMap } from "@/components/operations/DungeonMap";
-import { mapIdentity } from "@/lib/map-identity";
+import { MapCanvas } from "@/components/maps/MapCanvas";
+import { addReadyMap, listReadyMapSalons } from "@/lib/maps.functions";
+import { READY_CONTENT, readyMapStep } from "@/lib/ready-maps";
 import { trackLabel } from "@/lib/ambience-tracks";
-import { RACE_NAMES } from "@/lib/races";
 
+const salonsOptions = queryOptions({ queryKey: ["ready-map-salons"], queryFn: () => listReadyMapSalons() });
 export const Route = createFileRoute("/_authenticated/operations")({
   staticData: { sitemap: false },
-  head: () => ({
-    meta: [
-      { title: "Catalogue d'Opérations — Bastion" },
-      { name: "description", content: "Donjons préconstruits Bastion à charger dans ton salon, ou à jouer en solo." },
-      { property: "og:title", content: "Catalogue d'Opérations — Bastion" },
-      { property: "og:description", content: "Donjons préconstruits Bastion à charger dans ton salon, ou à jouer en solo." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  component: OperationsPage,
+  head: () => ({ meta: [
+    { title: "Cartes prêtes à jouer — Bastion" },
+    { name: "description", content: "Quatre cartes Bastion de 40 × 40 cases avec ennemis, trésors et musique, à ajouter au parcours de votre salon." },
+    { property: "og:title", content: "Cartes prêtes à jouer — Bastion" },
+    { property: "og:description", content: "Le Sas, les Machines, le Reliquaire et le Cœur : des cartes équipées pour votre prochaine partie." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(salonsOptions),
+  component: ReadyMapsPage,
 });
 
-const SEL = "h-11 w-full border-2 border-foreground bg-background px-2";
-const DIFF: Record<string, string> = { initiation: "Initiation", moyenne: "Moyenne", difficile: "Difficile" };
-const MAPT: Record<string, string> = { lineaire: "Linéaire", boucle: "Boucle", etoile: "Étoile" };
-
-function OperationsPage() {
-  const fetchOps = useServerFn(listOperations);
-  const q = useQuery({ queryKey: ["operations"], queryFn: () => fetchOps() });
-  const [dur, setDur] = useState("all");
-  const [diff, setDiff] = useState("all");
-  const ops = useMemo(() => (q.data?.operations ?? []).filter((o: any) => (dur === "all" || String(o.duration) === dur) && (diff === "all" || o.difficulty === diff)), [q.data, dur, diff]);
-
-  return (
-    <main className="mx-auto min-h-screen max-w-7xl bg-background px-4 pb-16 pt-8 md:px-10">
-      <p className="section-label">Bibliothèque de donjons</p>
-      <h1 className="mt-6 break-words font-display text-xl uppercase leading-relaxed sm:text-3xl">Opérations</h1>
-      <p className="mt-2 max-w-2xl text-muted-foreground">Des donjons préconstruits, prêts à charger dans ton salon. Ennemis, trésors et événements sont préplacés : tu peux tout ajuster avant de lancer.</p>
-
-      <div data-motion-enter className="mt-6 grid max-w-xl grid-cols-2 gap-3">
-        <label className="text-xs font-bold uppercase">Durée
-          <select className={SEL + " mt-1"} value={dur} onChange={(e) => setDur(e.target.value)}>
-            <option value="all">Toutes</option><option value="30">30 min</option><option value="60">60 min</option><option value="90">90 min</option>
-          </select>
-        </label>
-        <label className="text-xs font-bold uppercase">Difficulté
-          <select className={SEL + " mt-1"} value={diff} onChange={(e) => setDiff(e.target.value)}>
-            <option value="all">Toutes</option><option value="initiation">Initiation</option><option value="moyenne">Moyenne</option><option value="difficile">Difficile</option>
-          </select>
-        </label>
-      </div>
-
-      {q.isLoading && <p className="mt-6">Chargement du catalogue…</p>}
-      {q.error && <p role="alert" className="mt-6 font-bold text-primary">Catalogue indisponible. <button className="underline" onClick={() => q.refetch()}>Réessayer</button></p>}
-      {q.data && ops.length === 0 && <p className="mt-6 text-muted-foreground">Aucune Opération ne correspond à ces filtres.</p>}
-
-      <ul className="mt-6 grid gap-6 lg:grid-cols-2">
-        {ops.map((o: any) => <OperationCard key={o.id} op={o} salons={q.data?.mySalons ?? []} />)}
-      </ul>
-    </main>
-  );
-}
-
-function OperationCard({ op, salons }: { op: any; salons: any[] }) {
-  const navigate = useNavigate();
-  const load = useServerFn(loadOperation);
-  const solo = useServerFn(startSolo);
-  const [salon, setSalon] = useState(salons[0]?.id ?? "");
+function ReadyMapsPage() {
+  const { data: salons } = useSuspenseQuery(salonsOptions);
+  const add = useServerFn(addReadyMap);
+  const qc = useQueryClient();
+  const [salonId, setSalonId] = useState(salons[0]?.id ?? "");
   const [busy, setBusy] = useState<string | null>(null);
-  const [soloForm, setSoloForm] = useState<{ name: string; race: string } | null>(null);
-
-  async function doLoad() {
-    const target = salons.find((s) => s.id === salon);
-    if (!target) return;
-    setBusy("load");
+  const [added, setAdded] = useState<string[]>([]);
+  const salon = salons.find((s) => s.id === salonId);
+  async function load(key: string) {
+    if (!salon) return;
+    setBusy(key);
     try {
-      const r = await load({ data: { gameId: target.id, templateId: op.id, reshuffle: false } });
-      toast.success("Opération chargée.");
-      navigate({ to: "/salon/$code", params: { code: target.code } });
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Chargement impossible."); }
+      const r = await add({ data: { gameId: salon.id, key } });
+      toast.success(`${r.name} ajoutée à l'étape ${r.index + 1}.`);
+      setAdded((list) => [...list, `${salon.id}:${key}`]);
+      await qc.invalidateQueries({ queryKey: ["map-sequence", salon.id] });
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Ajout impossible."); }
     finally { setBusy(null); }
   }
-  async function doPdf() {
-    setBusy("pdf");
-    try { const { downloadOperationPdf } = await import("@/lib/operation-pdf"); await downloadOperationPdf(op); }
-    catch { toast.error("PDF impossible à générer."); }
-    finally { setBusy(null); }
-  }
-  async function doSolo(e: React.FormEvent) {
-    e.preventDefault();
-    if (!soloForm) return;
-    setBusy("solo");
-    try { const r = await solo({ data: { displayName: soloForm.name, race: soloForm.race as any } }); navigate({ to: "/salon/$code", params: { code: r.code } }); }
-    catch (err) { toast.error(err instanceof Error ? err.message : "Partie solo impossible."); setBusy(null); }
-  }
-
-  return (
-    <li className="border-2 border-foreground bg-card p-4 shadow-game">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="section-label">Opération {op.position}</p>
-          <h2 className="mt-1 font-display text-xl uppercase">{op.name}</h2>
-        </div>
-        {op.solo && <span className="border-2 border-foreground bg-secondary px-2 py-1 text-[10px] font-black uppercase">Solo gratuit</span>}
-      </div>
-      <p className="mt-2 text-sm">{op.summary}</p><p className="mt-2 text-sm text-muted-foreground">{mapIdentity[op.slug]} · {trackLabel(op.default_track)}</p>
-      <dl className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-        <div className="border border-foreground p-2"><dt className="uppercase text-muted-foreground">Durée</dt><dd className="font-bold">{op.duration} min</dd></div>
-        <div className="border border-foreground p-2"><dt className="uppercase text-muted-foreground">Difficulté</dt><dd className="font-bold">{op.difficulty_label || DIFF[op.difficulty]}</dd></div>
-        <div className="border border-foreground p-2"><dt className="uppercase text-muted-foreground">Salles</dt><dd className="font-bold">{op.rooms.length} · {MAPT[op.map_type]}</dd></div>
-        <div className="border border-foreground p-2"><dt className="uppercase text-muted-foreground">Ennemis</dt><dd className="font-bold">{op.enemies?.length ?? 0}</dd></div>
-      </dl>
-      <p className="mt-3 text-sm"><b>Objectif :</b> {op.objective_text}</p>
-      <div className="mt-3 border-2 border-foreground bg-background p-2"><DungeonMap rooms={op.rooms} current={op.rooms[0]?.key} label={`Aperçu de la carte de ${op.name}`} /></div>
-
-      <div className="mt-4 space-y-2">
-        {salons.length ? (
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <label className="sr-only" htmlFor={`salon-${op.id}`}>Salon</label>
-            <select id={`salon-${op.id}`} className={SEL} value={salon} onChange={(e) => setSalon(e.target.value)}>
-              {salons.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
-            </select>
-            <Button disabled={!!busy || !salon} className="min-h-11 shrink-0 rounded-none font-black uppercase" onClick={doLoad}>{busy === "load" ? "Chargement…" : "Charger dans mon salon"}</Button>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">Pour charger une Opération, crée d'abord un salon en attente dont tu es narrateur. <Link to="/salons" className="font-bold underline">Mes salons</Link></p>
-        )}
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" disabled={!!busy} className="min-h-11 rounded-none" onClick={doPdf}>{busy === "pdf" ? "Génération…" : "Télécharger l'Opération en PDF"}</Button>
-          {op.solo && !soloForm && <Button variant="secondary" className="min-h-11 rounded-none font-bold uppercase" onClick={() => setSoloForm({ name: "", race: "Humain" })}>Jouer en solo</Button>}
-        </div>
-        {soloForm && (
-          <form data-motion-enter onSubmit={doSolo} className="grid gap-2 border-2 border-primary p-3 sm:grid-cols-3">
-            <Input required maxLength={40} className="h-11 rounded-none" placeholder="Ton nom" value={soloForm.name} onChange={(e) => setSoloForm({ ...soloForm, name: e.target.value })} />
-            <select aria-label="Race" className={SEL} value={soloForm.race} onChange={(e) => setSoloForm({ ...soloForm, race: e.target.value })}>
-              {RACE_NAMES.map((r) => <option key={r}>{r}</option>)}
-            </select>
-            <Button disabled={busy === "solo"} className="min-h-11 rounded-none font-black uppercase">{busy === "solo" ? "Lancement…" : "Lancer le solo"}</Button>
-          </form>
-        )}
-      </div>
-    </li>
-  );
+  return <main className="mx-auto min-h-screen max-w-7xl px-4 pb-16 pt-8 md:px-10">
+    <p className="section-label">Bibliothèque de cartes</p>
+    <h1 className="mt-6 break-words font-display text-xl leading-relaxed sm:text-3xl">Cartes prêtes à jouer</h1>
+    <div className="my-6 flex flex-wrap items-end gap-3 border-y-2 border-foreground py-4">
+      {salons.length ? <label className="w-full max-w-md text-sm font-bold">Salon en préparation<select aria-label="Salon en préparation" className="mt-2 h-11 w-full border-2 border-foreground bg-background px-2" value={salonId} onChange={(e) => setSalonId(e.target.value)}>{salons.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label> : <Button asChild><Link to="/salons">Créer un salon</Link></Button>}
+      {salon && <Button asChild variant="outline"><Link to="/salon/$code" params={{ code: salon.code }}>Ouvrir le salon</Link></Button>}
+    </div>
+    <ul className="grid gap-6 md:grid-cols-2">
+      {Object.entries(READY_CONTENT).map(([key, content]) => {
+        const map = readyMapStep(key);
+        const markers = [...map.enemies.map((e) => ({ ...e, glyph: "☠", zombie: e.catalogId === "d25f0e90-6a3f-4e89-84ac-aecc51b9aa6f" })), ...(map.treasures ?? []).map((t) => ({ ...t, glyph: "✦" }))];
+        return <li key={key} data-motion-enter className="min-w-0 space-y-3 border-2 border-foreground bg-card p-4 shadow-game">
+          <div className="flex flex-wrap items-start justify-between gap-2"><h2 className="font-display text-base leading-relaxed">{map.name}</h2><span className="text-xs font-bold text-muted-foreground">40 × 40 · {content.difficulty}</span></div>
+          <MapCanvas tiles={map.tiles} spawn={map.spawn} markers={markers} label={`Carte prête à jouer : ${map.name}`} />
+          <p className="text-sm">{content.summary}</p>
+          <ul className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-bold"><li className="flex items-center gap-1"><Swords className="size-4" />{map.enemies.length} mobs</li><li className="flex items-center gap-1"><Gem className="size-4" />{map.treasures?.length} trésors</li><li className="flex items-center gap-1"><Music className="size-4" />{trackLabel(content.track)}</li></ul>
+          <p className="text-sm"><b>Objectif :</b> {content.objective}</p>
+          <Button className="min-h-11 w-full whitespace-normal" disabled={!salon || busy !== null} onClick={() => void load(key)}><MapPlus />{busy === key ? "Ajout…" : "Ajouter au parcours du salon"}</Button>
+          {salon && added.includes(`${salon.id}:${key}`) && <p role="status" className="text-xs font-bold text-primary">Carte ajoutée à {salon.name}.</p>}
+        </li>;
+      })}
+    </ul>
+  </main>;
 }
