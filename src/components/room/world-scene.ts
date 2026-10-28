@@ -75,7 +75,7 @@ export class WorldScene extends Phaser.Scene {
         node = this.add.container(x, y, [sprite, label]);
         if (actor.frame === 12) sprite.setInteractive().on("pointerdown", () => window.dispatchEvent(new CustomEvent("bastion-select-mob", { detail: actor.id })));
         this.actors.set(actor.id, node);
-        if (!reduced) this.tweens.add({ targets: sprite, alpha: { from: 0, to: 1 }, scale: { from: 0.88, to: 1 }, duration: actor.frame === 12 ? 200 : 160, ease: "Linear" });
+        if (!reduced) this.tweens.add({ targets: sprite, alpha: { from: 0, to: 1 }, scale: actor.sprite === "zombie" ? { from: 1.3, to: 1.5 } : { from: 0.88, to: 1 }, duration: actor.frame === 12 ? 200 : 160, ease: "Linear" });
       } else {
         const sprite = node.list[0];
         if (sprite instanceof Phaser.GameObjects.Image && !actor.sprite) sprite.setFrame(actor.frame);
