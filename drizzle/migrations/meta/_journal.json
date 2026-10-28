@@ -169,6 +169,13 @@
       "when": 1793200266031,
       "tag": "0023_salon_map_sequence",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793201210555,
+      "tag": "0024_treasure_tile_position",
+      "breakpoints": true
     }
   ]
 }

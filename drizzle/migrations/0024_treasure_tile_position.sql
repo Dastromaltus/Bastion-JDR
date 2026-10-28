@@ -1,0 +1,1 @@
+ALTER TABLE public.game_treasures ADD COLUMN tile_x integer, ADD COLUMN tile_y integer;
