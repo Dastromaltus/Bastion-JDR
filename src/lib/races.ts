@@ -13,15 +13,6 @@ export function hpFor(race: RaceName) {
   return 10 + Math.round(RACES[race].endurance / 10);
 }
 
-export const SCENARIOS = [
-  { key: "tresor", label: "Défendre le trésor" },
-  { key: "survie", label: "Survivre jusqu'à l'aube" },
-  { key: "quete", label: "Quête du relais perdu" },
-] as const;
-
-export function scenarioLabel(key: string) {
-  return key === "a-definir" ? "Scénario à définir" : SCENARIOS.find((s) => s.key === key)?.label ?? key;
-}
 
 export const STATUS_LABEL: Record<string, string> = {
   waiting: "En attente",

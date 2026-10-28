@@ -1,4 +1,4 @@
-import { scenarioLabel, ROLE_LABEL } from "./races";
+import { ROLE_LABEL } from "./races";
 
 export type ReportData = {
   game: any;
@@ -75,7 +75,6 @@ export async function downloadReportPdf(data: ReportData) {
     ["Code du salon", g.code],
     ["Date", fmtDate(g.started_at ?? g.created_at)],
     ["Durée", duration(g.started_at, g.ended_at)],
-    ["Scénario", scenarioLabel(g.scenario)],
     ["Résultat", g.status === "finished" ? (victory ? "Victoire" : "Défaite") : "Partie non terminée"],
     ["Exporté par", ROLE_LABEL[data.viewerRole] ?? data.viewerRole],
   ];

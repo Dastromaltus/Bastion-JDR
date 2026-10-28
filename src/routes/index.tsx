@@ -35,9 +35,9 @@ const salonSteps = [
 ];
 
 const phases = [
-  { number: "01", title: "Préparation", text: "Choisissez votre rôle, votre peuple et vos compétences. Composez une équipe capable de survivre au scénario." },
+  { number: "01", title: "Préparation", text: "Choisissez votre rôle, votre peuple et vos compétences. Composez une équipe capable de survivre au Bastion." },
   { number: "02", title: "Affrontement", text: "Déclarez vos actions, lancez les dés et résolvez les effets. Chaque décision laisse une trace sur le plateau." },
-  { number: "03", title: "Scénario", text: "Défendez un trésor, survivez au siège ou accomplissez une quête conçue par le narrateur." },
+  { number: "03", title: "Exploration", text: "Traversez les cartes préparées par le narrateur, une étape après l'autre." },
 ];
 
 function Index() {
