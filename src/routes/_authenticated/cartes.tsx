@@ -56,7 +56,7 @@ function MapsPage() {
       while (stack.length) { const [cx, cy] = stack.pop()!; if (cx! < 0 || cy! < 0 || cx! >= GRID || cy! >= GRID || tiles[cy! * GRID + cx!] !== from) continue; tiles[cy! * GRID + cx!] = to; stack.push([cx! + 1, cy!], [cx! - 1, cy!], [cx!, cy! + 1], [cx!, cy! - 1]); }
       setDraft({ ...draft, tiles }); return;
     }
-    const v = tool === "erase" ? 0 : sprite;
+    const v = tool === "block" ? 0 : tool === "erase" ? 6 : sprite;
     if (draft.tiles[y * GRID + x] === v) return;
     setDraft((d) => d && { ...d, tiles: d.tiles.map((t, i) => (i === y * GRID + x ? v : t)) });
   }
@@ -81,7 +81,7 @@ function MapsPage() {
     await qc.invalidateQueries({ queryKey: ["my-maps"] });
   }
 
-  const tools: [Tool, string, typeof Brush][] = [["brush", "Pinceau", Brush], ["fill", "Remplir", PaintBucket], ["erase", "Gomme", Eraser], ["spawn", "Départ", Flag]];
+  const tools: [Tool, string, typeof Brush][] = [["brush", "Pinceau", Brush], ["block", "Barrière", OctagonX], ["fill", "Remplir", PaintBucket], ["erase", "Gomme", Eraser], ["spawn", "Départ", Flag]];
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 md:px-10">
