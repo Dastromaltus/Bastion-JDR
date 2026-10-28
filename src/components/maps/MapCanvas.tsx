@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import mapSprites from "@/assets/map-sprites.png.asset.json";
+import zombieSheet from "@/assets/zombie-sheet.png.asset.json";
+
+let zombieImg: HTMLImageElement | null = null;
 import { GRID } from "@/lib/map-grid";
 
 let sheet: HTMLImageElement | null = null;
@@ -15,7 +18,7 @@ function useSheet() {
 }
 
 /** Pixel-perfect 40×40 map drawing (16 px per cell), scaled by CSS. */
-export type MapMarker = { x: number; y: number; glyph: string; selected?: boolean };
+export type MapMarker = { x: number; y: number; glyph: string; selected?: boolean; zombie?: boolean };
 export function MapCanvas({ tiles, spawn, className, onCell, label, markers }: {
   tiles: number[]; spawn?: { x: number; y: number }; className?: string; label: string; markers?: MapMarker[];
   onCell?: (x: number, y: number, kind: "down" | "move") => void;
@@ -23,6 +26,12 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers }: {
   const ref = useRef<HTMLCanvasElement>(null);
   const img = useSheet();
   const drawing = useRef(false);
+  const [zReady, setZReady] = useState(false);
+  useEffect(() => {
+    if (!markers?.some((m) => m.zombie)) return;
+    if (!zombieImg) { zombieImg = new Image(); zombieImg.src = zombieSheet.url; }
+    if (zombieImg.complete) setZReady(true); else zombieImg.addEventListener("load", () => setZReady(true), { once: true });
+  }, [markers?.some((m) => m.zombie)]);
   useEffect(() => {
     const c = ref.current?.getContext("2d");
     if (!c) return;
@@ -37,12 +46,13 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers }: {
     const css = getComputedStyle(document.documentElement);
     for (const m of markers ?? []) {
       c.fillStyle = m.selected ? css.getPropertyValue("--world-label").trim() || "#fff" : "rgba(0,0,0,0.55)";
-      c.fillRect(m.x * 16, m.y * 16, 16, 16);
+      if (!m.zombie || m.selected || !zReady) c.fillRect(m.x * 16, m.y * 16, 16, 16);
+      if (m.zombie && zReady && zombieImg) { c.drawImage(zombieImg, 0, 0, 32, 32, m.x * 16 - 8, m.y * 16 - 10, 32, 32); continue; }
       c.fillStyle = m.selected ? css.getPropertyValue("--world-label-bg").trim() || "#111" : "#fff";
       c.font = "12px monospace"; c.textAlign = "center"; c.textBaseline = "middle";
       c.fillText(m.glyph, m.x * 16 + 8, m.y * 16 + 9);
     }
-  }, [tiles, spawn, img, JSON.stringify(markers ?? [])]);
+  }, [tiles, spawn, img, JSON.stringify(markers ?? []), zReady]);
   function cell(e: React.PointerEvent<HTMLCanvasElement>) {
     const r = e.currentTarget.getBoundingClientRect();
     return [Math.floor(((e.clientX - r.left) / r.width) * GRID), Math.floor(((e.clientY - r.top) / r.height) * GRID)] as const;

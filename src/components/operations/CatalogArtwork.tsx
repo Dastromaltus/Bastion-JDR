@@ -1,3 +1,5 @@
+import zombieIdle from "@/assets/zombie-Idle.gif.asset.json";
+import { isZombie } from "@/lib/world-actors";
 import { useEffect, useRef } from "react";
 import decor from "@/assets/zone-tiles.png.asset.json";
 import map from "@/data/salon-world.json";
@@ -10,6 +12,9 @@ export function CatalogArtwork({ kind, item }: { kind: "mob" | "treasure"; item:
   const key = item.type === "cle";
   const weapon = item.type === "arme";
   const potion = item.type === "consommable";
+  if (kind === "mob" && isZombie(item.name)) return <div role="img" aria-label={`Design de ${item.name}`} className="relative mx-auto size-24 shrink-0 overflow-hidden">
+    <img src={zombieIdle.url} alt="" className="absolute left-1/2 top-1/2 h-auto w-[12rem] max-w-none -translate-x-1/2 -translate-y-[45%] [image-rendering:pixelated]" />
+  </div>;
   return <svg role="img" aria-label={`Design de ${item.name}`} viewBox="0 0 32 32" className="mx-auto size-24! shrink-0" shapeRendering="crispEdges">
     {kind === "mob" ? <>
       <path d={robot ? "M8 5h16v12H8zM6 18h20v9H6zM3 18h3v7H3zM26 18h3v7h-3zM9 27h5v4H9zM18 27h5v4h-5z" : boss ? "M3 3h5v7h16V3h5v18h-4v7H7v-7H3zM8 28h6v3H8zM18 28h6v3h-6z" : "M10 3h4v4h4V3h4v5h4v16h-4v5H10v-5H6V8h4zM3 16h3v10H3zM26 16h3v10h-3z"} className="fill-primary stroke-foreground" strokeWidth="1" />

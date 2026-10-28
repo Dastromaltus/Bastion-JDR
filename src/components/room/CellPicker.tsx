@@ -10,7 +10,7 @@ export function CellPicker({ d, value, onChange, glyph }: { d: any; value: { x: 
   const map = useQuery({ queryKey: ["salon-map", d.game.id, "picker", (d.events ?? []).filter((e: any) => e.kind === "carte").length], queryFn: () => fetchMap({ data: { gameId: d.game.id } }) });
   if (!map.data) return <p className="text-sm">Chargement de la carte…</p>;
   const markers: MapMarker[] = [
-    ...d.enemies.filter((e: any) => e.status !== "vaincu" && e.tile_x != null).map((e: any) => ({ x: e.tile_x, y: e.tile_y, glyph: e.icon || "☠" })),
+    ...d.enemies.filter((e: any) => e.status !== "vaincu" && e.tile_x != null).map((e: any) => ({ x: e.tile_x, y: e.tile_y, glyph: e.icon || "☠", zombie: /zombie/i.test(e.name) })),
     ...d.treasures.filter((t: any) => t.tile_x != null && t.status === "cache").map((t: any) => ({ x: t.tile_x, y: t.tile_y, glyph: "✦" })),
     ...(value ? [{ ...value, glyph, selected: true }] : []),
   ];

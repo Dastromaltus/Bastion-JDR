@@ -68,14 +68,14 @@ export class WorldScene extends Phaser.Scene {
         const sprite = actor.sprite === "treasure"
           ? this.add.text(0, -1, "✦", { fontFamily: "monospace", fontSize: "12px", color: "#ffd84a" }).setOrigin(0.5)
           : actor.sprite === "zombie"
-          ? this.add.sprite(0, -6, "zombie", actor.dead ? Z_DIE_LAST : 0)
+          ? this.add.sprite(0, -9, "zombie", actor.dead ? Z_DIE_LAST : 0).setScale(1.5)
           : this.add.image(0, -2, "world-tiles", actor.frame);
         if (sprite instanceof Phaser.GameObjects.Sprite && !actor.dead && !reduced) sprite.play("z-idle");
         const label = this.add.text(0, -15, actor.name, { fontFamily: "VT323, monospace", fontSize: "8px", color: getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim(), backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim(), padding: { x: 2, y: 1 } }).setOrigin(0.5, 1).setVisible(false);
         node = this.add.container(x, y, [sprite, label]);
         if (actor.frame === 12) sprite.setInteractive().on("pointerdown", () => window.dispatchEvent(new CustomEvent("bastion-select-mob", { detail: actor.id })));
         this.actors.set(actor.id, node);
-        if (!reduced) this.tweens.add({ targets: sprite, alpha: { from: 0, to: 1 }, scale: { from: 0.88, to: 1 }, duration: actor.frame === 12 ? 200 : 160, ease: "Linear" });
+        if (!reduced) this.tweens.add({ targets: sprite, alpha: { from: 0, to: 1 }, scale: actor.sprite === "zombie" ? { from: 1.3, to: 1.5 } : { from: 0.88, to: 1 }, duration: actor.frame === 12 ? 200 : 160, ease: "Linear" });
       } else {
         const sprite = node.list[0];
         if (sprite instanceof Phaser.GameObjects.Image && !actor.sprite) sprite.setFrame(actor.frame);

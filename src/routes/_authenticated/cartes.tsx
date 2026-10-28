@@ -136,7 +136,7 @@ function MapsPage() {
         <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_18rem]">
           <div className="min-w-0">
             <div className="mx-auto max-w-[min(100%,44rem)] border-2 border-foreground">
-              <MapCanvas tiles={draft.tiles} spawn={draft.spawn} onCell={paint} markers={(draft.enemies ?? []).map((e) => ({ x: e.x, y: e.y, glyph: icon(e.catalogId) }))} label={`Éditeur de ${draft.name}, 40 × 40 cases`} className="cursor-crosshair" />
+              <MapCanvas tiles={draft.tiles} spawn={draft.spawn} onCell={paint} markers={(draft.enemies ?? []).map((e) => ({ x: e.x, y: e.y, glyph: icon(e.catalogId), zombie: /zombie/i.test(catalog.data?.find((c) => c.id === e.catalogId)?.name ?? "") }))} label={`Éditeur de ${draft.name}, 40 × 40 cases`} className="cursor-crosshair" />
             </div>
           </div>
           <aside className="space-y-4">
