@@ -16,7 +16,7 @@ describe("shared site navigation", () => {
     render(<SiteNavigation />);
     expect(screen.getByRole("link", { name: "Mes salons" }).getAttribute("aria-current")).toBe("page");
     expect(screen.getByRole("link", { name: "Mes campagnes" }).getAttribute("href")).toBe("/campagnes");
-    expect(screen.getByRole("link", { name: "Opérations" }).getAttribute("href")).toBe("/operations");
+    expect(screen.getByRole("link", { name: "Cartes prêtes à jouer" }).getAttribute("href")).toBe("/operations");
     expect(screen.getByRole("link", { name: "Règles du jeu" }).getAttribute("href")).toBe("/");
   });
   it("keeps the active game free of workspace controls", () => {

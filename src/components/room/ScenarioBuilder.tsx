@@ -151,7 +151,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
                   <input maxLength={60} value={step.name} onChange={(e) => patch({ name: e.target.value })} className={SEL} />
                 </label>
                 <label className="block text-xs font-black uppercase">Changer de carte
-                  <select value="" onChange={(e) => { if (!e.target.value) return; if (!confirm("Remplacer la carte ? Les mobs et le décor de cette étape seront remplacés.")) return; const f = fresh(e.target.value); patch({ name: f.name, tiles: f.tiles, spawn: f.spawn, source: f.source, enemies: f.enemies, treasures: f.treasures, track: f.track, intro: f.intro }); }} className={SEL}>
+                  <select value="" onChange={(e) => { if (!e.target.value) return; if (!confirm("Remplacer la carte, ses mobs, trésors, musique et texte ?")) return; const f = fresh(e.target.value); patch({ name: f.name, tiles: f.tiles, spawn: f.spawn, source: f.source, enemies: f.enemies, treasures: f.treasures ?? [], track: f.track, intro: f.intro }); }} className={SEL}>
                     <option value="">Choisir…</option>
                     {options.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
                   </select>

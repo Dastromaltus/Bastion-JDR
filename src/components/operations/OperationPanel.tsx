@@ -51,9 +51,8 @@ export function OperationSection({ d, onChange }: { d: any; onChange: () => void
     if (!isNarr || d.game.status !== "waiting") return null;
     return (
       <section className="border-2 border-foreground bg-card p-4 shadow-game">
-        <p className="section-label">Opération</p>
-        <p className="mt-2 text-sm">Aucun donjon chargé. Choisis une Opération préconstruite : ennemis, trésors et événements seront préplacés.</p>
-        <Button asChild className="mt-3 min-h-11 rounded-none font-black uppercase"><Link to="/operations">Catalogue d'Opérations</Link></Button>
+        <p className="section-label">Cartes prêtes à jouer</p>
+        <Button asChild className="mt-3 min-h-11 rounded-none font-black uppercase"><Link to="/operations">Choisir une carte</Link></Button>
       </section>
     );
   }
@@ -98,7 +97,7 @@ function NarratorOperation({ d, v, refresh }: { d: any; v: any; refresh: () => v
             </Button>
             <Button variant="outline" disabled={!!busy} className="min-h-11 rounded-none"
               onClick={() => run("reload", async () => { await sLoad({ data: { gameId, templateId: dg.template_id, reshuffle: false } }); refresh(); }, "Opération rechargée telle quelle")}>Recharger l'original</Button>
-            <Button asChild variant="outline" className="min-h-11 rounded-none"><Link to="/operations">Changer d'Opération</Link></Button>
+            <Button asChild variant="outline" className="min-h-11 rounded-none"><Link to="/operations">Cartes prêtes à jouer</Link></Button>
           </div>
           <DungeonMap rooms={rooms} current={dg.current_room} label="Carte de l'Opération" />
           <PrepEditor d={d} rooms={rooms} refresh={refresh} />
