@@ -176,6 +176,13 @@
       "when": 1793201210555,
       "tag": "0024_treasure_tile_position",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793201537255,
+      "tag": "0025_map_enemy_placements",
+      "breakpoints": true
     }
   ]
 }

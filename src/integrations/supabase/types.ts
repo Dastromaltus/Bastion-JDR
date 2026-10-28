@@ -157,6 +157,7 @@ export type Database = {
       custom_maps: {
         Row: {
           created_at: string
+          enemies: Json
           id: string
           name: string
           owner_id: string
@@ -167,6 +168,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          enemies?: Json
           id?: string
           name?: string
           owner_id?: string
@@ -177,6 +179,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          enemies?: Json
           id?: string
           name?: string
           owner_id?: string
@@ -1201,6 +1204,7 @@ export type Database = {
       }
       game_map_sequence: {
         Row: {
+          enemies: Json
           game_id: string
           id: string
           name: string
@@ -1211,6 +1215,7 @@ export type Database = {
           tiles: number[]
         }
         Insert: {
+          enemies?: Json
           game_id: string
           id?: string
           name: string
@@ -1221,6 +1226,7 @@ export type Database = {
           tiles: number[]
         }
         Update: {
+          enemies?: Json
           game_id?: string
           id?: string
           name?: string
