@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, KeyRound, Search, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { createRoom, listMyRooms, deleteRoom } from "@/lib/rooms.functions";
-import { STATUS_LABEL, ROLE_LABEL, scenarioLabel } from "@/lib/races";
+import { STATUS_LABEL, ROLE_LABEL} from "@/lib/races";
 import { ReportButton } from "@/components/ReportButton";
 
 export const Route = createFileRoute("/_authenticated/salons")({
@@ -133,7 +133,7 @@ function SalonsPage() {
               <div className="flex items-start justify-between gap-3">
                  <div className="min-w-0">
                    <p className="break-words font-display text-base uppercase leading-relaxed">{r.name}</p>
-                  <p className="text-xs text-muted-foreground">{scenarioLabel(r.scenario)} · code <span className="font-pixel">{r.code}</span>{r.isCreator ? " · créé par toi" : ""}</p>
+                  <p className="text-xs text-muted-foreground">code <span className="font-pixel">{r.code}</span>{r.isCreator ? " · créé par toi" : ""}</p>
                 </div>
                  <span className={`shrink-0 px-2 py-1 text-[10px] font-black uppercase ${r.role === "narrator" ? "bg-primary text-primary-foreground" : "border border-foreground"}`}>{ROLE_LABEL[r.role]}</span>
               </div>
