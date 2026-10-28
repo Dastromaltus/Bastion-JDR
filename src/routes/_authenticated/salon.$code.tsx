@@ -19,6 +19,7 @@ import { ReportButton } from "@/components/ReportButton";
 import { useSettings, vibrate, type GameSettings } from "@/components/room/useSettings";
 import { useAmbience, SoundGate, PersonalAmbience } from "@/components/room/Ambience";
 import { AmbiencePanel, EnemyPanel, TreasurePanel, ExplorePanel } from "@/components/room/NarratorTools";
+import { EncounterPanel } from "@/components/room/EncounterPanel";
 import { LevelsPanel } from "@/components/room/LevelsPanel";
 import { RoomPassword } from "@/components/room/RoomPassword";
 import { OperationSection } from "@/components/operations/OperationPanel";
