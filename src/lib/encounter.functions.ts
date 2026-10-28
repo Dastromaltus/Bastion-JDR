@@ -9,6 +9,7 @@ const encounterSchema = z.object({
   zone: z.string(),
   objectives: z.array(z.object({ label: z.string(), detail: z.string() })),
   enemies: z.array(z.object({ name: z.string(), count: z.number(), role: z.string(), tactic: z.string() })),
+  treasures: z.array(z.object({ name: z.string(), reason: z.string() })),
   twist: z.string(),
   balance: z.string(),
 });
@@ -35,6 +36,9 @@ export const suggestEncounter = createServerFn({ method: "POST" })
       .select("name, category, speed, strength, endurance, ability")
       .or(`game_id.is.null,game_id.eq.${data.gameId}`);
     const catalog = (cat ?? []).map((e: any) => `- ${e.name} (${e.category}; V${e.speed} F${e.strength} E${e.endurance}; ${e.ability ?? "—"})`).join("\n");
+    const { data: tcat } = await context.supabase
+      .from("treasure_catalog").select("name, type, rarity, effect").or(`game_id.is.null,game_id.eq.${data.gameId}`);
+    const treasures = (tcat ?? []).map((t: any) => `- ${t.name} (${t.type}, ${t.rarity}; ${t.effect ?? "—"})`).join("\n");
     const zones = ZONES.map((z: any) => z.label ?? z.name ?? z.key).join(", ");
 
     const { createOpenAI } = await import("@ai-sdk/openai");
@@ -48,7 +52,7 @@ export const suggestEncounter = createServerFn({ method: "POST" })
       model: provider.responses("openai/gpt-6-astra"),
       system:
         "Tu es l'assistant du narrateur de Bastion, un dungeon crawler pour 3 à 5 aventuriers. Règles : jets de X d6, réussite sur 5 ou 6 ; stats des mobs de 1 à 5 (Vitesse, Force, Endurance). Propose UNE rencontre équilibrée pour le groupe décrit, en français. Utilise de préférence les ennemis du catalogue (noms exacts) et une zone de la liste. Objectifs concrets (2 à 3), au moins un hors combat.",
-      prompt: `Zones disponibles : ${zones}\n\nCatalogue d'ennemis :\n${catalog || "(vide)"}\n\nScénario :\n${data.scenario}\n\nGroupe d'aventuriers :\n${data.party}`,
+      prompt: `Zones disponibles : ${zones}\n\nCatalogue d'ennemis :\n${catalog || "(vide)"}\n\nCatalogue de trésors (1 à 3 récompenses, noms exacts) :\n${treasures || "(vide)"}\n\nScénario :\n${data.scenario}\n\nGroupe d'aventuriers :\n${data.party}`,
       output: Output.object({ schema: encounterSchema }),
       maxRetries: 0,
       providerOptions: {
@@ -64,4 +68,55 @@ export const suggestEncounter = createServerFn({ method: "POST" })
       if (status === 402) throw new Error("Crédits IA épuisés : ajoute des crédits dans les paramètres de l'espace de travail.");
       throw new Error("La proposition de rencontre a échoué. Réessaie.");
     }
+  });
+
+const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+/** Narrator-only: places an AI encounter (hidden enemies + zone treasures) using catalog rows only. */
+export const placeEncounter = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      gameId: z.string().uuid(),
+      zone: z.string().max(80),
+      enemies: z.array(z.object({ name: z.string().max(80), count: z.number().int().min(1).max(4) })).max(6),
+      treasures: z.array(z.object({ name: z.string().max(80) })).max(4),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: me } = await context.supabase.from("game_players").select("role").eq("game_id", data.gameId).eq("user_id", context.userId).maybeSingle();
+    if (me?.role !== "narrator") throw new Error("Seul le narrateur de ce salon peut faire ça.");
+    const { requireSalonTurn } = await import("./turns.server");
+    await requireSalonTurn(context, data.gameId, false);
+    const { admin, log } = await import("./narrator.functions");
+    const db = await admin();
+    const zk = norm(data.zone);
+    const zoneDef = ZONES.find((z) => norm(z.key) === zk || norm(z.label) === zk || zk.includes(norm(z.label))) ?? ZONES[0];
+    const [{ data: ec }, { data: tc }] = await Promise.all([
+      db.from("enemy_catalog").select("*").or(`game_id.is.null,game_id.eq.${data.gameId}`),
+      db.from("treasure_catalog").select("*").or(`game_id.is.null,game_id.eq.${data.gameId}`),
+    ]);
+    const find = (rows: any[], name: string) => rows.find((r) => norm(r.name) === norm(name)) ?? rows.find((r) => norm(name).includes(norm(r.name)) || norm(r.name).includes(norm(name)));
+    const clamp = (n: any) => Math.min(5, Math.max(1, Number(n) || 2));
+    const enemyRows: any[] = []; const skipped: string[] = [];
+    for (const e of data.enemies) {
+      const cat = find(ec ?? [], e.name);
+      if (!cat) { skipped.push(e.name); continue; }
+      for (let i = 0; i < e.count && enemyRows.length < 10; i++) {
+        const sp = clamp(cat.speed), st = clamp(cat.strength), en = clamp(cat.endurance), hp = 10 + 2 * en;
+        enemyRows.push({ game_id: data.gameId, catalog_id: cat.id, name: cat.name, category: cat.category, icon: cat.icon, ability: cat.ability,
+          speed: sp, strength: st, endurance: en, hp, max_hp: hp, threat_cost: cat.threat_cost, zone: zoneDef.key, trigger: "entree" });
+      }
+    }
+    const treasureRows: any[] = [];
+    for (const t of data.treasures) {
+      const cat = find(tc ?? [], t.name);
+      if (!cat) { skipped.push(t.name); continue; }
+      treasureRows.push({ game_id: data.gameId, catalog_id: cat.id, name: cat.name, type: cat.type, rarity: cat.rarity, effect: cat.effect, value: cat.value, placement: "zone", zone: zoneDef.key });
+    }
+    if (!enemyRows.length && !treasureRows.length) throw new Error("Aucun ennemi ni trésor de la proposition n'existe dans ton catalogue.");
+    if (enemyRows.length) { const { error } = await db.from("game_enemies").insert(enemyRows); if (error) throw new Error("Placement des ennemis impossible."); }
+    if (treasureRows.length) { const { error } = await db.from("game_treasures").insert(treasureRows); if (error) throw new Error("Placement des trésors impossible."); }
+    await log(data.gameId, context.userId, "placement", `[Secret] Rencontre IA placée dans ${zoneDef.label} : ${enemyRows.length} ennemi(s), ${treasureRows.length} trésor(s).`, { zone: zoneDef.key }, false, true);
+    return { zone: zoneDef.label, enemies: enemyRows.length, treasures: treasureRows.length, skipped };
   });
