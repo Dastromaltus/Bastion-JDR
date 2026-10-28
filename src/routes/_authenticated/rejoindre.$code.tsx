@@ -35,10 +35,25 @@ function JoinPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => { supabase.auth.getUser().then(async ({ data }) => { const c = data.user && await loadCharacter(data.user.id); if (c) { setName((n) => n || c.name); setRace(c.race); } }); }, []);
+  const [hasCharacter, setHasCharacter] = useState<boolean | null>(null);
+  const [autoTried, setAutoTried] = useState(false);
+  useEffect(() => { supabase.auth.getUser().then(async ({ data }) => { const c = data.user && await loadCharacter(data.user.id); if (c) { setName((n) => n || c.name); setRace(c.race); } setHasCharacter(!!c); }); }, []);
+
+  // Invité avec aventurier déjà créé : on rejoint directement la carte.
+  useEffect(() => {
+    const d = room.data;
+    if (autoTried || !hasCharacter || !d || !name || d.hasPassword) return;
+    if (d.status !== "waiting" || d.locked || d.players >= d.maxPlayers) return;
+    setAutoTried(true);
+    void doJoin();
+  }, [autoTried, hasCharacter, room.data, name]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    await doJoin();
+  }
+
+  async function doJoin() {
     setLoading(true);
     setError(null);
     try {
@@ -70,11 +85,16 @@ function JoinPage() {
                 {r.status !== "waiting" ? "La partie a déjà commencé : les nouvelles arrivées sont refusées." : r.locked ? "Le narrateur a verrouillé ce salon." : "Ce salon est complet."}
               </p>
             ) : null}
-            <form data-motion-enter onSubmit={submit} className="mt-6 space-y-3">
+            {loading && !r.hasPassword && hasCharacter && <p className="mt-6 anim-loading font-bold">Entrée sur la carte avec {name}…</p>}
+            <form data-motion-enter onSubmit={submit} className="mt-6 space-y-3" hidden={!!hasCharacter && !r.hasPassword && !error}>
+              {hasCharacter ? (
+                <p className="text-sm">Tu rejoins en tant que <strong>{name}</strong> ({race}).</p>
+              ) : (<>
               <Input required maxLength={40} className="h-11 rounded-none" placeholder="Ton nom d'aventurier" value={name} onChange={(e) => setName(e.target.value)} />
               <select className="h-11 w-full border border-input bg-background px-2" value={race} onChange={(e) => setRace(e.target.value as any)}>
                 {RACE_NAMES.map((n) => <option key={n}>{n}</option>)}
               </select>
+              </>)}
               {r.hasPassword && <Input type="password" required className="h-11 rounded-none" placeholder="Mot de passe du salon" value={password} onChange={(e) => setPassword(e.target.value)} />}
               {error && <p role="alert" className="text-sm font-bold text-primary">{error}</p>}
               <Button disabled={loading} className="min-h-11 w-full rounded-none font-black uppercase">{loading ? "Connexion…" : "Rejoindre le salon"}</Button>
