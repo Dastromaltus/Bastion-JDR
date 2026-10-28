@@ -7,7 +7,7 @@ import { loadCharacter } from "@/lib/character";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getRoomPreview, joinRoom } from "@/lib/rooms.functions";
-import { RACE_NAMES, scenarioLabel } from "@/lib/races";
+import { RACE_NAMES } from "@/lib/races";
 
 export const Route = createFileRoute("/_authenticated/rejoindre/$code")({
   staticData: { sitemap: false },
@@ -79,7 +79,7 @@ function JoinPage() {
         {r && (
           <>
             <h1 className="mt-3 font-display text-2xl uppercase">{r.name}</h1>
-            <p className="text-sm text-muted-foreground">{scenarioLabel(r.scenario)} · {r.players}/{r.maxPlayers} joueurs</p>
+            <p className="text-sm text-muted-foreground">{r.players}/{r.maxPlayers} joueurs</p>
             {closed ? (
               <p role="alert" className="mt-6 font-bold text-primary">
                 {r.status !== "waiting" ? "La partie a déjà commencé : les nouvelles arrivées sont refusées." : r.locked ? "Le narrateur a verrouillé ce salon." : "Ce salon est complet."}
