@@ -3,6 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Megaphone, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { moveWorldPlayer } from "@/lib/world.functions";
+import { getSalonMap } from "@/lib/maps.functions";
+import { useQuery } from "@tanstack/react-query";
+import { PREBUILT_MAPS, DEFAULT_MAP_KEY } from "@/lib/map-grid";
 import { type WorldDirection } from "@/lib/world-map";
 import { participantActors, type WorldActor } from "@/lib/world-actors";
 import { zoneLabel } from "@/lib/races";
@@ -29,7 +32,10 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const here = zone ?? (d.me.role === "narrator" ? followed?.current_zone : d.me.current_zone) ?? "entree";
   const canMove = d.game.status === "playing" && d.me.role === "adventurer" && d.me.hp > 0 && here === (d.me.current_zone ?? "entree");
   const enabled = canMove && !d.combat && turn.isMine;
-  const participants = participantActors(d.players, here, d.me.id);
+  const fetchMap = useServerFn(getSalonMap);
+  const mapQ = useQuery({ queryKey: ["salon-map", d.game.id, d.events?.length ?? 0], queryFn: () => fetchMap({ data: { gameId: d.game.id } }), staleTime: 30_000, placeholderData: (prev) => prev });
+  const grid = mapQ.data ?? PREBUILT_MAPS[DEFAULT_MAP_KEY]!;
+  const participants = participantActors(d.players, here, d.me.id, grid);
   const activeId = d.combat?.current?.id ?? turn.active?.id;
   const actors: WorldActor[] = participants.map((actor) => ({ ...actor, name: `${actor.id === activeId ? "▶ " : ""}${actor.name}` }));
    d.enemies.filter((e: any) => (e.status === "revele" || (d.me.role === "narrator" && e.status === "cache")) && e.zone === here).forEach((e: any, i: number) => actors.push({ id: e.id, name: `${e.id === d.controlledEnemyId ? '▶ ' : ''}${e.status === 'cache' ? '? ' : ''}${e.name}`, x: e.tile_x ?? 16 + i % 4, y: e.tile_y ?? 9, frame: 12 }));
@@ -45,8 +51,12 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     if (ready) game.current?.scene.getScene("SalonWorld").events.emit("actors", actors);
   }, [ready, JSON.stringify(actors)]);
   useEffect(() => {
-    if (ready) game.current?.scene.getScene("SalonWorld").events.emit("zone", here);
-  }, [ready, here]);
+    if (ready) game.current?.scene.getScene("SalonWorld").events.emit("map", grid);
+  }, [ready, grid]);
+  const focusActor = participants.find((p) => p.id === (d.me.role === "adventurer" ? d.me.id : followed?.id)) ?? participants[0];
+  useEffect(() => {
+    if (ready) game.current?.scene.getScene("SalonWorld").events.emit("focus", focusActor ?? grid.spawn);
+  }, [ready, focusActor?.x, focusActor?.y, grid]);
   useEffect(() => {
     if (previousZone.current && previousZone.current !== here && !motionDisabled()) view.current?.animate(
       [{ opacity: 0.35, transform: "translateX(8px)" }, { opacity: 1, transform: "translateX(0)" }],
@@ -62,7 +72,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     finally { lock.current = false; setBusy(false); setMovingDirection(null); }
   }
   return <section className="space-y-3" aria-label="Exploration en vue de dessus">
-    <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-pixel text-xl">{name ?? zoneLabel(here)}</h2><span className="text-xs text-muted-foreground">{participants.length} participant(s)</span></div>
+    <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-pixel text-xl">{name ?? zoneLabel(here)}</h2><span className="text-xs text-muted-foreground">{grid.name} · 40 × 40 · {participants.length} participant(s)</span></div>
     <div ref={view} tabIndex={0} role="group" aria-label="Carte du salon, vue de dessus. Clique puis utilise Z, Q, S, D." onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onMouseDown={() => view.current?.focus()} className={`salon-world relative overflow-hidden border-2 bg-game outline-none ${focused ? "border-primary ring-4 ring-primary" : "border-foreground"}`} onKeyUp={() => setPressed(null)} onKeyDown={(event) => {
       const keys: Record<string, WorldDirection> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", z: "up", s: "down", q: "left", d: "right", Z: "up", S: "down", Q: "left", D: "right" };
       const direction = keys[event.key];
