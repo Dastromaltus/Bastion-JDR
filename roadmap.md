@@ -24,4 +24,5 @@
 - [x] Add an adventurer HP tracking panel and persistent, paginated damage history during games; confirm the database trigger and member-scoped event policies.
 - [x] Verify health history rules and regressions: 14 tests pass and the preview build is OK.
 - [ ] Verify the panel and a damage action in an authenticated salon — blocked until the user signs in to the preview or identifies an account to authorize; self-session minting found no matching app account.
-- [ ] Make personal-map enemy overlays clear and precise on the 40×40 grid; verify saving and loading into a salon.
+- [x] Make personal-map enemy overlays clear and precise on the 40×40 grid, with catalog preview, coordinate placement, saved-map markers and no silent placement loss; 16 tests pass and build OK.
+- [ ] Verify personal-map save, reload and enemy installation in an authenticated salon — blocked because self-session minting found no matching account; preview sign-in is required.
