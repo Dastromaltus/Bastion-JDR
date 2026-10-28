@@ -154,6 +154,39 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_maps: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          spawn_x: number
+          spawn_y: number
+          tiles: number[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          spawn_x?: number
+          spawn_y?: number
+          tiles: number[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          spawn_x?: number
+          spawn_y?: number
+          tiles?: number[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dungeon_events: {
         Row: {
           effect: string
@@ -1378,6 +1411,44 @@ export type Database = {
           },
         ]
       }
+      game_world_maps: {
+        Row: {
+          game_id: string
+          name: string
+          source: string
+          spawn_x: number
+          spawn_y: number
+          tiles: number[]
+          updated_at: string
+        }
+        Insert: {
+          game_id: string
+          name: string
+          source: string
+          spawn_x: number
+          spawn_y: number
+          tiles: number[]
+          updated_at?: string
+        }
+        Update: {
+          game_id?: string
+          name?: string
+          source?: string
+          spawn_x?: number
+          spawn_y?: number
+          tiles?: number[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_world_maps_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: true
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       games: {
         Row: {
           code: string
@@ -1622,6 +1693,7 @@ export type Database = {
         Args: { p_game_id: string; p_target: string }
         Returns: undefined
       }
+      world_tile_walkable: { Args: { t: number }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
