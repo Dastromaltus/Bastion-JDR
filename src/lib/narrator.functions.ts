@@ -157,7 +157,7 @@ export const placeEnemy = createServerFn({ method: "POST" })
     await requireSalonTurn(context, data.gameId, false);
     const db = await admin();
     const { data: cat } = await db.from("enemy_catalog").select("*").eq("id", data.catalogId).maybeSingle();
-    if (!cat || (cat.game_id && cat.game_id !== data.gameId)) throw new Error("Cet ennemi n'est pas dans ton catalogue.");
+    if (!cat || (cat.owner_id && cat.owner_id !== context.userId) || (cat.game_id && cat.game_id !== data.gameId)) throw new Error("Cet ennemi n'est pas dans ton catalogue.");
     const hp = 10 + 2 * data.endurance;
     const cell = await checkedCell(context, data.gameId, data.x, data.y);
     const { error } = await db.from("game_enemies").insert({

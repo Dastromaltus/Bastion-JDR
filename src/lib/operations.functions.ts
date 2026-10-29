@@ -324,7 +324,7 @@ export const prepareOperation = createServerFn({ method: "POST" })
     const cat = async (table: "enemy_catalog" | "treasure_catalog") => {
       if (!data.catalogId) throw new Error("Choisis un élément du catalogue.");
       const { data: c } = await db.from(table).select("*").eq("id", data.catalogId).maybeSingle();
-      if (!c || (c.game_id && c.game_id !== data.gameId)) throw new Error("Cet élément n'est pas dans ton catalogue.");
+      if (!c || (c.owner_id && c.owner_id !== context.userId) || (c.game_id && c.game_id !== data.gameId)) throw new Error("Cet élément n'est pas dans ton catalogue.");
       if (table === "enemy_catalog" && [c.speed, c.strength, c.endurance].some((s: number) => s < 1 || s > 5)) throw new Error("Les stats vont de 1 à 5.");
       return c;
     };
