@@ -3,7 +3,7 @@ import mapSprites from "@/assets/map-sprites.png.asset.json";
 import zombieSheet from "@/assets/zombie-sheet.png.asset.json";
 
 let zombieImg: HTMLImageElement | null = null;
-import { GRID } from "@/lib/map-grid";
+import { GRID, tileTexture } from "@/lib/map-grid";
 
 let sheet: HTMLImageElement | null = null;
 function useSheet() {
@@ -38,7 +38,7 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers }: {
     c.imageSmoothingEnabled = false;
     c.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim() || "#111";
     c.fillRect(0, 0, GRID * 16, GRID * 16);
-    if (img) tiles.forEach((t, i) => { if (t > 0) c.drawImage(img, (t - 1) * 16, 0, 16, 16, (i % GRID) * 16, Math.floor(i / GRID) * 16, 16, 16); });
+    if (img) tiles.forEach((t, i) => { if (t > 0) c.drawImage(img, (tileTexture(t) - 1) * 16, 0, 16, 16, (i % GRID) * 16, Math.floor(i / GRID) * 16, 16, 16); });
     if (spawn) {
       c.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim() || "#fff";
       c.lineWidth = 3; c.strokeRect(spawn.x * 16 + 2, spawn.y * 16 + 2, 12, 12);
