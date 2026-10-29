@@ -3,10 +3,11 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { readyMapStep } from "./ready-maps";
 import { TRACK_KEYS } from "./ambience-tracks";
+import { personalEnemySchema, usableMapEnemy } from "./map-catalog";
 import { blockedMapEnemies } from "./map-enemies";
-import { cellWalkable, CELLS, DEFAULT_MAP_KEY, GRID, PREBUILT_MAPS, nearestWalkable, validateGrid, type GridMap } from "./map-grid";
+import { cellWalkable, MAX_TILE_CODE, CELLS, DEFAULT_MAP_KEY, GRID, PREBUILT_MAPS, nearestWalkable, validateGrid, type GridMap } from "./map-grid";
 
-const tilesSchema = z.array(z.number().int().min(0).max(10)).length(CELLS);
+const tilesSchema = z.array(z.number().int().min(0).max(MAX_TILE_CODE)).length(CELLS);
 const coord = z.number().int().min(0).max(GRID - 1);
 const mapEnemies = z.array(z.object({ catalogId: z.string().uuid(), x: coord, y: coord })).max(60).default([]);
 export type MapEnemy = { catalogId: string; x: number; y: number };
@@ -49,6 +50,10 @@ export const saveMyMap = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const g = { name: data.name, tiles: data.tiles, spawn: data.spawn };
     if (blockedMapEnemies({ ...g, enemies: data.enemies }).length) throw new Error("Un ennemi est placé sur un mur ou une barrière.");
+    if (data.enemies.length) {
+      const { data: cats, error } = await supabaseAdmin.from("enemy_catalog").select("id,owner_id,game_id").in("id", data.enemies.map((e) => e.catalogId));
+      if (error || data.enemies.some((e) => !cats?.some((c) => c.id === e.catalogId && usableMapEnemy(c, context.userId)))) throw new Error("Un ennemi n'appartient pas à ton catalogue personnel.");
+    }
     const row = { enemies: data.enemies, name: data.name, tiles: data.tiles, spawn_x: data.spawn.x, spawn_y: data.spawn.y, updated_at: new Date().toISOString() };
     if (data.id) {
       const { data: upd, error } = await supabaseAdmin.from("custom_maps").update(row).eq("id", data.id).eq("owner_id", context.userId).select("id").maybeSingle();
@@ -64,9 +69,19 @@ export const saveMyMap = createServerFn({ method: "POST" })
 export const listMapEnemyCatalog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.from("enemy_catalog").select("id, name, icon, category").is("game_id", null).order("name");
+    const { data, error } = await context.supabase.from("enemy_catalog").select("id, name, icon, category, owner_id").or(`and(game_id.is.null,owner_id.is.null),owner_id.eq.${context.userId}`).order("name");
     if (error) throw new Error("Impossible de charger le catalogue d'ennemis.");
-    return (data ?? []) as { id: string; name: string; icon: string; category: string }[];
+    return (data ?? []) as { id: string; name: string; icon: string; category: string; owner_id: string | null }[];
+  });
+
+export const createPersonalMapEnemy = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => personalEnemySchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: enemy, error } = await supabaseAdmin.from("enemy_catalog").insert({ ...data, owner_id: context.userId, created_by: context.userId, game_id: null, threat_cost: 1 }).select("id").single();
+    if (error || !enemy) throw new Error("Création de l'ennemi impossible.");
+    return { id: enemy.id };
   });
 
 export const deleteMyMap = createServerFn({ method: "POST" })
@@ -101,8 +116,8 @@ async function installMap(gameId: string, userId: string, map: GridMap, source: 
   if (invalidGrid) throw new Error(invalidGrid);
   for (const [table, placements] of [["enemy_catalog", enemies], ["treasure_catalog", treasures]] as const) {
     if (!placements.length) continue;
-    const { data: catalogue, error } = await supabaseAdmin.from(table).select("id,game_id").in("id", placements.map((p) => p.catalogId));
-    if (error || placements.some((p) => !cellWalkable(map, p.x, p.y) || !catalogue?.some((c: any) => c.id === p.catalogId && (!c.game_id || c.game_id === gameId)))) throw new Error("Un élément de la carte est inconnu ou sur une case bloquée.");
+    const { data: catalogue, error } = await supabaseAdmin.from(table).select(table === "enemy_catalog" ? "id,game_id,owner_id" : "id,game_id").in("id", placements.map((p) => p.catalogId));
+    if (error || placements.some((p) => !cellWalkable(map, p.x, p.y) || !catalogue?.some((c: any) => c.id === p.catalogId && usableMapEnemy(c, userId, gameId)))) throw new Error("Un élément de la carte est inconnu ou sur une case bloquée.");
   }
   const { data: existingMap } = await supabaseAdmin.from("game_world_maps").select("source").eq("game_id", gameId).maybeSingle();
   // Only remove overlays authored by the outgoing map, never manually placed content or inventory.
@@ -136,7 +151,7 @@ async function installMap(gameId: string, userId: string, map: GridMap, source: 
     const { data: cats, error: catalogError } = await supabaseAdmin.from("enemy_catalog").select("*").in("id", ids);
     if (catalogError) throw new Error("Impossible de charger les ennemis de cette carte.");
     const rows = enemies.flatMap((e) => {
-      const c = (cats ?? []).find((k: any) => k.id === e.catalogId && (!k.game_id || k.game_id === gameId));
+      const c = (cats ?? []).find((k: any) => k.id === e.catalogId && usableMapEnemy(k, userId, gameId));
       if (!c || !cellWalkable(map, e.x, e.y)) return [];
       const hp = 10 + 2 * c.endurance;
       return [{ game_id: gameId, map_source: source, catalog_id: c.id, name: c.name, category: c.category, icon: c.icon, ability: c.ability, speed: c.speed, strength: c.strength, endurance: c.endurance, hp, max_hp: hp, threat_cost: c.threat_cost, zone, trigger: "entree", tile_x: e.x, tile_y: e.y }];
@@ -203,8 +218,8 @@ export const saveScenario = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const ids = [...new Set(data.steps.flatMap((s) => s.enemies.map((e) => e.catalogId)))];
     if (ids.length) {
-      const { data: cats } = await supabaseAdmin.from("enemy_catalog").select("id, game_id").in("id", ids);
-      const ok = new Set((cats ?? []).filter((c: any) => !c.game_id || c.game_id === data.gameId).map((c: any) => c.id));
+      const { data: cats } = await supabaseAdmin.from("enemy_catalog").select("id, game_id, owner_id").in("id", ids);
+      const ok = new Set((cats ?? []).filter((c: any) => usableMapEnemy(c, context.userId, data.gameId)).map((c: any) => c.id));
       if (ids.some((id) => !ok.has(id))) throw new Error("Un mob du parcours est introuvable.");
     }
     const treasureIds = [...new Set(data.steps.flatMap((s) => s.treasures.map((t) => t.catalogId)))];
