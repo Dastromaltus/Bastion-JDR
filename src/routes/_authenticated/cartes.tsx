@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
 import { CatalogArtwork } from "@/components/operations/CatalogArtwork";
 import { blockedMapEnemies, placeMapEnemy } from "@/lib/map-enemies";
-import { CELLS, GRID, PREBUILT_MAPS, SPRITES, validateGrid, type GridMap } from "@/lib/map-grid";
-import { deleteMyMap, listMapEnemyCatalog, listMyMaps, saveMyMap, type MapEnemy } from "@/lib/maps.functions";
+import { barrierTile, CELLS, GRID, PREBUILT_MAPS, SPRITES, validateGrid, type GridMap } from "@/lib/map-grid";
+import { createPersonalMapEnemy, deleteMyMap, listMapEnemyCatalog, listMyMaps, saveMyMap, type MapEnemy } from "@/lib/maps.functions";
 
 export const Route = createFileRoute("/_authenticated/cartes")({
   staticData: { sitemap: false },
@@ -47,6 +47,19 @@ function MapsPage() {
   const catalogFn = useServerFn(listMapEnemyCatalog);
   const catalog = useQuery({ queryKey: ["map-enemy-catalog"], queryFn: () => catalogFn() });
   const [enemyId, setEnemyId] = useState("");
+  const createEnemy = useServerFn(createPersonalMapEnemy);
+  const [customForm, setCustomForm] = useState(false);
+  const [custom, setCustom] = useState({ name: "", category: "créature" as "créature" | "robot" | "boss" | "humanoïde", icon: "☠", speed: 2, strength: 3, endurance: 3, ability: "" });
+  const [creating, setCreating] = useState(false);
+  async function saveEnemy() {
+    setCreating(true); setMsg(null);
+    try {
+      const r = await createEnemy({ data: custom });
+      await qc.invalidateQueries({ queryKey: ["map-enemy-catalog"] });
+      setEnemyId(r.id); setCustomForm(false); setTool("enemy"); setMsg("Ennemi personnel créé.");
+    } catch (e) { setMsg(e instanceof Error ? e.message : "Création impossible."); }
+    finally { setCreating(false); }
+  }
   const [position, setPosition] = useState({ x: 1, y: 1 });
   const icon = (id: string) => catalog.data?.find((c) => c.id === id)?.icon || "☠";
   const markers = (enemies: MapEnemy[] = []) => enemies.map((e) => ({ x: e.x, y: e.y, glyph: icon(e.catalogId), zombie: /zombie/i.test(catalog.data?.find((c) => c.id === e.catalogId)?.name ?? "") }));
@@ -71,7 +84,7 @@ function MapsPage() {
       while (stack.length) { const point = stack.pop(); if (!point) continue; const [cx, cy] = point; if (cx === undefined || cy === undefined || cx < 0 || cy < 0 || cx >= GRID || cy >= GRID || tiles[cy * GRID + cx] !== from) continue; tiles[cy * GRID + cx] = to; stack.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]); }
       setDraft({ ...draft, tiles }); return;
     }
-    const v = tool === "block" ? 0 : tool === "erase" ? 6 : sprite;
+    const v = tool === "block" ? barrierTile(sprite) : tool === "erase" ? 6 : sprite;
     if (draft.tiles[y * GRID + x] === v) return;
     setDraft((d) => d && { ...d, tiles: d.tiles.map((t, i) => (i === y * GRID + x ? v : t)) });
   }
@@ -109,7 +122,7 @@ function MapsPage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 md:px-10">
       <p className="section-label">Atelier du narrateur</p>
-      <h1 data-motion-enter className="mt-2 font-display text-2xl uppercase">Mes cartes</h1>
+      <h1 data-motion-enter className="mt-2 font-display text-xl uppercase sm:text-2xl">Mes cartes</h1>
       <p className="mt-2 text-sm text-muted-foreground">40 × 40 cases · Cartes personnelles</p>
 
       {!draft ? (
@@ -162,17 +175,26 @@ function MapsPage() {
             <label className="block text-xs font-black uppercase">Nom
               <Input value={draft.name} maxLength={60} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="mt-1 h-11 rounded-none font-normal normal-case" />
             </label>
-            <div role="radiogroup" aria-label="Outil" className="grid grid-cols-6 border-2 border-foreground">
+            <div role="radiogroup" aria-label="Outil" className="grid grid-cols-3 border-2 border-foreground sm:grid-cols-6 lg:grid-cols-3">
               {tools.map(([k, l, Icon]) => <Button key={k} role="radio" aria-label={l} aria-checked={tool === k} variant={tool === k ? "default" : "ghost"} onClick={() => setTool(k)} className="h-auto min-h-11 flex-col gap-1 rounded-none px-0 text-[10px] font-black uppercase"><Icon className="size-4" />{l}</Button>)}
             </div>
             <Button variant={tool === "enemy" ? "default" : "outline"} onClick={() => setTool("enemy")} className="min-h-11 w-full rounded-none"><Skull />Ennemis · {draft.enemies?.length ?? 0}</Button>
             {tool === "enemy" && <div className="space-y-2 border-2 border-foreground p-2">
               <label className="block text-xs font-black uppercase">Ennemi à poser
-                <select value={enemyId} onChange={(e) => setEnemyId(e.target.value)} className="mt-1 h-11 w-full border-2 border-foreground bg-background px-2 font-normal normal-case">
+                <select aria-label="Ennemi à poser" value={enemyId} onChange={(e) => setEnemyId(e.target.value)} className="mt-1 h-11 w-full border-2 border-foreground bg-background px-2 font-normal normal-case">
                   <option value="">Choisir…</option>
-                  {catalog.data?.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+                  {catalog.data?.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}{c.owner_id ? " · Personnel" : ""}</option>)}
                 </select>
               </label>
+              <Button variant="outline" className="min-h-11 w-full whitespace-normal" onClick={() => setCustomForm(!customForm)}><Plus />Créer un ennemi personnalisé</Button>
+              {customForm && <form className="space-y-3 border-y border-border py-3" onSubmit={(e) => { e.preventDefault(); void saveEnemy(); }}>
+                <label className="block text-xs font-bold">Nom de l'ennemi<Input required maxLength={40} value={custom.name} onChange={(e) => setCustom({ ...custom, name: e.target.value })} className="mt-1 h-11" /></label>
+                <label className="block text-xs font-bold">Apparence<select value={custom.category} onChange={(e) => setCustom({ ...custom, category: e.target.value as typeof custom.category })} className="mt-1 h-11 w-full border-2 border-foreground bg-background px-2">{["créature", "robot", "boss", "humanoïde"].map((c) => <option key={c} value={c}>{c}</option>)}</select></label>
+                <CatalogArtwork kind="mob" item={{ name: custom.name || "Ennemi personnel", category: custom.category }} />
+                <div className="grid grid-cols-3 gap-2">{(["speed", "strength", "endurance"] as const).map((key) => <label key={key} className="text-xs font-bold">{{ speed: "Vitesse", strength: "Force", endurance: "Endurance" }[key]}<Input type="number" required min={1} max={5} value={custom[key]} onChange={(e) => setCustom({ ...custom, [key]: Number(e.target.value) })} className="mt-1 h-11 px-1" /></label>)}</div>
+                <label className="block text-xs font-bold">Capacité<Input maxLength={120} value={custom.ability} onChange={(e) => setCustom({ ...custom, ability: e.target.value })} className="mt-1 h-11" /></label>
+                <Button type="submit" disabled={creating || !custom.name.trim()} className="min-h-11 w-full whitespace-normal">{creating ? "Création…" : "Enregistrer cet ennemi"}</Button>
+              </form>}
               {catalog.isLoading && <p role="status" className="text-xs">Chargement des ennemis…</p>}
               {catalog.isError && <p role="alert" className="text-xs">Catalogue inaccessible.</p>}
               {catalog.data?.find((c) => c.id === enemyId) && <CatalogArtwork kind="mob" item={catalog.data.find((c) => c.id === enemyId) ?? { name: "Ennemi" }} />}
@@ -183,8 +205,8 @@ function MapsPage() {
               <Button variant="secondary" className="min-h-11 w-full rounded-none" disabled={!enemyId || busy} onClick={() => addEnemy(position.x - 1, position.y - 1)}><Plus />Placer l'ennemi</Button>
             </div>}
             <div role="radiogroup" aria-label="Décor" className="grid grid-cols-2 gap-2">
-              {tool !== "enemy" && SPRITES.map((s) => <Button variant="outline" key={s.code} role="radio" aria-checked={sprite === s.code} onClick={() => { setSprite(s.code); if (tool !== "brush" && tool !== "fill") setTool("brush"); }} className={`h-auto min-h-11 justify-start gap-2 rounded-none border-2 p-1 text-left text-xs ${sprite === s.code ? "border-primary bg-secondary" : "border-foreground/30"}`}>
-                <SpriteSwatch code={s.code} /><span><b>{s.label}</b><br /><span className="opacity-70">{s.walk ? "Praticable" : "Bloquant"}</span></span>
+              {tool !== "enemy" && SPRITES.map((s) => <Button variant="outline" key={s.code} role="radio" aria-checked={sprite === s.code} onClick={() => { setSprite(s.code); if (tool !== "brush" && tool !== "fill" && tool !== "block") setTool("brush"); }} className={`h-auto min-h-11 justify-start gap-2 rounded-none border-2 p-1 text-left text-xs ${sprite === s.code ? "border-primary bg-secondary" : "border-foreground/30"}`}>
+                <SpriteSwatch code={s.code} /><span><b>{s.label}</b><br /><span className="opacity-70">{tool === "block" ? "Barrière" : s.walk ? "Praticable" : "Bloquant"}</span></span>
               </Button>)}
             </div>
             {msg && <p role="status" className="anim-enter text-sm font-bold">{msg}</p>}
