@@ -8,7 +8,7 @@ const Z_COLS = 19, DIRS = ["down", "left", "up", "right"] as const;
 const Z_DIE_LAST = 13 * Z_COLS + 10;
 type ZState = { x: number; y: number; hp?: number; dead?: boolean; dir: number };
 function dirOf(dx: number, dy: number, fallback: number) { if (!dx && !dy) return fallback; return Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 1 : 3) : (dy < 0 ? 2 : 0); }
-import { GRID, type GridMap } from "@/lib/map-grid";
+import { GRID, tileTexture, type GridMap } from "@/lib/map-grid";
 const map = { width: GRID, height: GRID };
 import type { WorldActor } from "@/lib/world-actors";
 import { motionDisabled, MOTION_EVENT } from "@/lib/motion";
@@ -36,7 +36,7 @@ export class WorldScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, GRID * 16, GRID * 16).setBackgroundColor(bg);
     for (let i = 0; i < GRID * GRID; i++) this.scenery.push(this.add.image((i % GRID) * 16 + 8, Math.floor(i / GRID) * 16 + 8, "map-sprites", 8).setVisible(false));
     this.events.on("map", (grid: GridMap) => {
-      grid.tiles.forEach((t, i) => { const img = this.scenery[i]; if (img) img.setVisible(t > 0).setFrame(Math.max(0, t - 1)); });
+      grid.tiles.forEach((t, i) => { const img = this.scenery[i]; if (img) img.setVisible(t > 0).setFrame(Math.max(0, tileTexture(t) - 1)); });
     });
     this.events.on("focus", (p: { id?: string; x: number; y: number }) => {
       const target = p.id ? this.actors.get(p.id) : undefined;

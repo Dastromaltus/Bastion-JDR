@@ -204,6 +204,13 @@
       "when": 1793206911142,
       "tag": "0028_ready_maps_treasures",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793276701433,
+      "tag": "0029_personal_map_enemy_catalog",
+      "breakpoints": true
     }
   ]
 }

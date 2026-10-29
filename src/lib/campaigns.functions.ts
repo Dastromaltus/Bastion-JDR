@@ -15,7 +15,7 @@ export const getCampaignWorkspace = createServerFn({ method: "GET" }).middleware
   // Private catalogue access after narrator verification; do not expose other authors' catalogues.
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const [{ data: enemies }, { data: treasures }] = await Promise.all([
-    supabaseAdmin.from("enemy_catalog").select("*").or(`game_id.is.null,created_by.eq.${context.userId}`),
+    supabaseAdmin.from("enemy_catalog").select("*").or(`and(game_id.is.null,owner_id.is.null),owner_id.eq.${context.userId},and(owner_id.is.null,created_by.eq.${context.userId})`),
     supabaseAdmin.from("treasure_catalog").select("*").or(`game_id.is.null,created_by.eq.${context.userId}`),
   ]);
   return { allowed: true, campaigns: campaigns ?? [], operations: (templates ?? []).map((t) => ({ ...t, rooms: (rooms ?? []).filter((r) => r.template_id === t.id), events: (events ?? []).filter((e) => e.template_id === t.id) })), enemies: enemies ?? [], treasures: treasures ?? [], salons: (narratorRows ?? []).map((r) => r.games).filter((g) => g?.status === "waiting") };

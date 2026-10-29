@@ -16,6 +16,10 @@ export const SPRITES = [
   { code: 10, label: "Herbe sombre", walk: true },
 ] as const;
 const WALK = new Set<number>(SPRITES.filter((s) => s.walk).map((s) => s.code));
+// Codes 11–20 keep the original texture (1–10) but always block movement.
+export const MAX_TILE_CODE = 20;
+export const barrierTile = (texture: number) => texture >= 1 && texture <= 10 ? texture + 10 : 0;
+export const tileTexture = (code: number) => code > 10 ? code - 10 : code;
 export const tileWalkable = (t: number | undefined) => t !== undefined && WALK.has(t);
 
 export type GridMap = { name: string; tiles: number[]; spawn: { x: number; y: number } };
@@ -36,7 +40,7 @@ export function nearestWalkable(map: GridMap, x: number, y: number) {
 
 export function validateGrid(tiles: unknown, spawn: { x: number; y: number }): string | null {
   if (!Array.isArray(tiles) || tiles.length !== CELLS) return "La carte doit compter exactement 40 × 40 cases.";
-  if (tiles.some((t) => !Number.isInteger(t) || t < 0 || t > SPRITES.length)) return "Case inconnue dans la carte.";
+  if (tiles.some((t) => !Number.isInteger(t) || t < 0 || t > MAX_TILE_CODE)) return "Case inconnue dans la carte.";
   if (!tileWalkable(tiles[spawn.y * GRID + spawn.x])) return "Le point de départ doit être sur une case praticable.";
   return null;
 }

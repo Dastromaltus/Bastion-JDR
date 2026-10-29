@@ -444,6 +444,7 @@ export type Database = {
           icon: string
           id: string
           name: string
+          owner_id: string | null
           speed: number
           strength: number
           threat_cost: number
@@ -460,6 +461,7 @@ export type Database = {
           icon?: string
           id?: string
           name: string
+          owner_id?: string | null
           speed: number
           strength: number
           threat_cost: number
@@ -476,6 +478,7 @@ export type Database = {
           icon?: string
           id?: string
           name?: string
+          owner_id?: string | null
           speed?: number
           strength?: number
           threat_cost?: number

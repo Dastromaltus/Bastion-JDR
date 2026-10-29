@@ -29,5 +29,6 @@
 - [x] Replace prebuilt-campaign offerings with ready-to-play 40×40 maps containing mobs, treasures and music.
 - [x] Verify map content and regressions: 29 focused tests pass.
 - [ ] Add a ready map to a salon and launch it in a signed-in game — blocked until preview sign-in.
-- [ ] Add custom enemy authoring directly to Mes cartes and install saved overlays into salons.
-- [ ] Paint impassable barriers with the selected block texture and verify collisions and persistence.
+- [x] Add custom enemy authoring directly to Mes cartes, enforce private owner catalog access and retain saved overlays on salon install.
+- [x] Paint impassable barriers with all ten brush textures; 25 focused tests pass, including texture decoding, placement refusal and private catalog rules.
+- [ ] Verify personal enemy creation, textured-barrier save/reload and salon install in a signed-in game — blocked until preview sign-in; self-session has no matching account.

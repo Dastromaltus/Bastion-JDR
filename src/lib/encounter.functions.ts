@@ -93,7 +93,7 @@ export const placeEncounter = createServerFn({ method: "POST" })
     const zk = norm(data.zone);
     const zoneDef = ZONES.find((z) => norm(z.key) === zk || norm(z.label) === zk || zk.includes(norm(z.label))) ?? ZONES[0];
     const [{ data: ec }, { data: tc }] = await Promise.all([
-      db.from("enemy_catalog").select("*").or(`game_id.is.null,game_id.eq.${data.gameId}`),
+      db.from("enemy_catalog").select("*").or(`and(game_id.is.null,owner_id.is.null),owner_id.eq.${context.userId},game_id.eq.${data.gameId}`),
       db.from("treasure_catalog").select("*").or(`game_id.is.null,game_id.eq.${data.gameId}`),
     ]);
     const find = (rows: any[], name: string) => rows.find((r) => norm(r.name) === norm(name)) ?? rows.find((r) => norm(name).includes(norm(r.name)) || norm(r.name).includes(norm(name)));
