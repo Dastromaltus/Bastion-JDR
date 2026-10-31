@@ -1,5 +1,5 @@
 import zombieIdle from "@/assets/zombie-Idle.gif.asset.json";
-import slimeIdle from "@/assets/SlimeGreenIdle.gif.asset.json";
+import slimeIdle from "@/assets/slime-idle.gif.asset.json";
 import { isZombie, isSlime } from "@/lib/world-actors";
 import { useEffect, useRef } from "react";
 import decor from "@/assets/zone-tiles.png.asset.json";
