@@ -1,0 +1,1 @@
+INSERT INTO public.enemy_catalog (name, category, description, speed, strength, endurance, ability, threat_cost, icon) VALUES ('Slime vert','créature','Une gelée verte bondissante qui rampe dans les couloirs du Bastion.',3,2,2,'Saut acide : bondit sur l''aventurier adjacent.',1,'●') ON CONFLICT DO NOTHING;

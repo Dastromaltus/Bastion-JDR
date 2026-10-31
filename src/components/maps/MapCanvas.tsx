@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import mapSprites from "@/assets/map-sprites.png.asset.json";
 import zombieSheet from "@/assets/zombie-sheet.png.asset.json";
+import slimeSheet from "@/assets/slime-sheet.png.asset.json";
 
-let zombieImg: HTMLImageElement | null = null;
+const monsterImgs: Partial<Record<"zombie" | "slime", HTMLImageElement>> = {};
 import { GRID, tileTexture } from "@/lib/map-grid";
 
 let sheet: HTMLImageElement | null = null;
@@ -18,7 +19,7 @@ function useSheet() {
 }
 
 /** Pixel-perfect 40×40 map drawing (16 px per cell), scaled by CSS. */
-export type MapMarker = { x: number; y: number; glyph: string; selected?: boolean; zombie?: boolean };
+export type MapMarker = { x: number; y: number; glyph: string; selected?: boolean; sprite?: "zombie" | "slime" };
 export function MapCanvas({ tiles, spawn, className, onCell, label, markers }: {
   tiles: number[]; spawn?: { x: number; y: number }; className?: string; label: string; markers?: MapMarker[];
   onCell?: (x: number, y: number, kind: "down" | "move") => void;
@@ -26,12 +27,17 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers }: {
   const ref = useRef<HTMLCanvasElement>(null);
   const img = useSheet();
   const drawing = useRef(false);
-  const [zReady, setZReady] = useState(false);
+  const [ready, setReady] = useState(0);
+  const needed = [...new Set((markers ?? []).map((m) => m.sprite).filter(Boolean))] as ("zombie" | "slime")[];
   useEffect(() => {
-    if (!markers?.some((m) => m.zombie)) return;
-    if (!zombieImg) { zombieImg = new Image(); zombieImg.src = zombieSheet.url; }
-    if (zombieImg.complete) setZReady(true); else zombieImg.addEventListener("load", () => setZReady(true), { once: true });
-  }, [markers?.some((m) => m.zombie)]);
+    for (const kind of needed) {
+      if (monsterImgs[kind]) continue;
+      const image = new Image();
+      image.src = kind === "zombie" ? zombieSheet.url : slimeSheet.url;
+      monsterImgs[kind] = image;
+      if (!image.complete) image.addEventListener("load", () => setReady((n) => n + 1), { once: true });
+    }
+  }, [needed.join(",")]);
   useEffect(() => {
     const c = ref.current?.getContext("2d");
     if (!c) return;
@@ -45,14 +51,16 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers }: {
     }
     const css = getComputedStyle(document.documentElement);
     for (const m of markers ?? []) {
+      const mImg = m.sprite ? monsterImgs[m.sprite] : undefined;
+      const mReady = mImg?.complete && mImg.naturalWidth > 0;
       c.fillStyle = m.selected ? css.getPropertyValue("--world-label").trim() || "#fff" : "rgba(0,0,0,0.55)";
-      if (!m.zombie || m.selected || !zReady) c.fillRect(m.x * 16, m.y * 16, 16, 16);
-      if (m.zombie && zReady && zombieImg) { c.drawImage(zombieImg, 0, 0, 32, 32, m.x * 16 - 8, m.y * 16 - 10, 32, 32); continue; }
+      if (!m.sprite || m.selected || !mReady) c.fillRect(m.x * 16, m.y * 16, 16, 16);
+      if (m.sprite && mReady && mImg) { c.drawImage(mImg, 0, 0, 32, 32, m.x * 16 - 8, m.y * 16 - 10, 32, 32); continue; }
       c.fillStyle = m.selected ? css.getPropertyValue("--world-label-bg").trim() || "#111" : "#fff";
       c.font = "12px monospace"; c.textAlign = "center"; c.textBaseline = "middle";
       c.fillText(m.glyph, m.x * 16 + 8, m.y * 16 + 9);
     }
-  }, [tiles, spawn, img, JSON.stringify(markers ?? []), zReady]);
+  }, [tiles, spawn, img, JSON.stringify(markers ?? []), ready]);
   function cell(e: React.PointerEvent<HTMLCanvasElement>) {
     const r = e.currentTarget.getBoundingClientRect();
     return [Math.floor(((e.clientX - r.left) / r.width) * GRID), Math.floor(((e.clientY - r.top) / r.height) * GRID)] as const;

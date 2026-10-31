@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { MapCanvas, type MapMarker } from "@/components/maps/MapCanvas";
 import { getSalonMap } from "@/lib/maps.functions";
 import { cellWalkable } from "@/lib/map-grid";
+import { monsterSprite } from "@/lib/world-actors";
 
 /** Narrator picks the exact 40×40 cell where an enemy or treasure goes, over the salon's map. */
 export function CellPicker({ d, value, onChange, glyph }: { d: any; value: { x: number; y: number } | null; onChange: (c: { x: number; y: number } | null) => void; glyph: string }) {
@@ -10,7 +11,7 @@ export function CellPicker({ d, value, onChange, glyph }: { d: any; value: { x: 
   const map = useQuery({ queryKey: ["salon-map", d.game.id, "picker", (d.events ?? []).filter((e: any) => e.kind === "carte").length], queryFn: () => fetchMap({ data: { gameId: d.game.id } }) });
   if (!map.data) return <p className="text-sm">Chargement de la carte…</p>;
   const markers: MapMarker[] = [
-    ...d.enemies.filter((e: any) => e.status !== "vaincu" && e.tile_x != null).map((e: any) => ({ x: e.tile_x, y: e.tile_y, glyph: e.icon || "☠", zombie: /zombie/i.test(e.name) })),
+    ...d.enemies.filter((e: any) => e.status !== "vaincu" && e.tile_x != null).map((e: any) => ({ x: e.tile_x, y: e.tile_y, glyph: e.icon || "☠", sprite: monsterSprite(e.name) })),
     ...d.treasures.filter((t: any) => t.tile_x != null && t.status === "cache").map((t: any) => ({ x: t.tile_x, y: t.tile_y, glyph: "✦" })),
     ...(value ? [{ ...value, glyph, selected: true }] : []),
   ];

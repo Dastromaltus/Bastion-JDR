@@ -62,7 +62,7 @@ function MapsPage() {
   }
   const [position, setPosition] = useState({ x: 1, y: 1 });
   const icon = (id: string) => catalog.data?.find((c) => c.id === id)?.icon || "☠";
-  const markers = (enemies: MapEnemy[] = []) => enemies.map((e) => ({ x: e.x, y: e.y, glyph: icon(e.catalogId), zombie: /zombie/i.test(catalog.data?.find((c) => c.id === e.catalogId)?.name ?? "") }));
+  const markers = (enemies: MapEnemy[] = []) => enemies.map((e) => ({ x: e.x, y: e.y, glyph: icon(e.catalogId), sprite: monsterSprite(catalog.data?.find((c) => c.id === e.catalogId)?.name ?? "") }));
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 

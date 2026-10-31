@@ -211,6 +211,13 @@
       "when": 1793276701433,
       "tag": "0029_personal_map_enemy_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793447592027,
+      "tag": "0030_add_green_slime_enemy",
+      "breakpoints": true
     }
   ]
 }

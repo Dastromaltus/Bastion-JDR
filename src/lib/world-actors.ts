@@ -5,9 +5,13 @@ export type WorldParticipant = {
   id: string; display_name: string; role: string; race: string;
   current_zone?: string | null; world_x?: number; world_y?: number; world_zone?: string | null; hp?: number; max_hp?: number;
 };
-export type WorldActor = { id: string; name: string; x: number; y: number; frame: number; hp?: number; sprite?: "zombie" | "treasure"; dead?: boolean };
+export type WorldActor = { id: string; name: string; x: number; y: number; frame: number; hp?: number; sprite?: "zombie" | "slime" | "treasure"; dead?: boolean };
 /** Monsters named "Zombie…" use the animated zombie sprite sheet. */
 export const isZombie = (name: string) => /zombie/i.test(name);
+/** Monsters named "Slime…" use the animated green slime sprite sheet. */
+export const isSlime = (name: string) => /slime/i.test(name);
+/** Animated monster sprite for a catalog name, if any. */
+export const monsterSprite = (name: string): "zombie" | "slime" | undefined => (isZombie(name) ? "zombie" : isSlime(name) ? "slime" : undefined);
 const FRAMES: Record<string, number> = { Humain: 7, Insecte: 8, Reptile: 9, Crustacé: 10, Oiseau: 11 };
 
 /** The narrator is an observer, not a movable adventurer. */
