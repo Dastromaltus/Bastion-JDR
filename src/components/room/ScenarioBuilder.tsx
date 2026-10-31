@@ -96,7 +96,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
 
   if (seq.isLoading) return <p className="text-sm">Chargement du parcours…</p>;
 
-  const markers = step ? [...step.enemies.map((e, i) => ({ x: e.x, y: e.y, glyph: catIcon(e.catalogId), selected: i === picked, zombie: /zombie/i.test(catName(e.catalogId)) })), ...(step.treasures ?? []).map((t) => ({ x: t.x, y: t.y, glyph: "✦" }))] : [];
+  const markers = step ? [...step.enemies.map((e, i) => ({ x: e.x, y: e.y, glyph: catIcon(e.catalogId), selected: i === picked, sprite: monsterSprite(catName(e.catalogId)) })), ...(step.treasures ?? []).map((t) => ({ x: t.x, y: t.y, glyph: "✦" }))] : [];
 
   return (
     <div className="space-y-4">
