@@ -19,7 +19,7 @@ function useSheet() {
 }
 
 /** Pixel-perfect 40×40 map drawing (16 px per cell), scaled by CSS. */
-export type MapMarker = { x: number; y: number; glyph: string; selected?: boolean; sprite?: "zombie" | "slime" };
+export type MapMarker = { x: number; y: number; glyph: string; selected?: boolean; sprite?: "zombie" | "slime" | undefined };
 export function MapCanvas({ tiles, spawn, className, onCell, label, markers }: {
   tiles: number[]; spawn?: { x: number; y: number }; className?: string; label: string; markers?: MapMarker[];
   onCell?: (x: number, y: number, kind: "down" | "move") => void;

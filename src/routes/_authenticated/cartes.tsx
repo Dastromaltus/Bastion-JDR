@@ -10,6 +10,7 @@ import { CatalogArtwork } from "@/components/operations/CatalogArtwork";
 import { blockedMapEnemies, placeMapEnemy } from "@/lib/map-enemies";
 import { barrierTile, CELLS, GRID, PREBUILT_MAPS, SPRITES, validateGrid, type GridMap } from "@/lib/map-grid";
 import { createPersonalMapEnemy, deleteMyMap, listMapEnemyCatalog, listMyMaps, saveMyMap, type MapEnemy } from "@/lib/maps.functions";
+import { monsterSprite } from "@/lib/world-actors";
 
 export const Route = createFileRoute("/_authenticated/cartes")({
   staticData: { sitemap: false },

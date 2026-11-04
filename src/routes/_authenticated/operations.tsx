@@ -53,7 +53,7 @@ function ReadyMapsPage() {
     <ul className="grid gap-6 md:grid-cols-2">
       {Object.entries(READY_CONTENT).map(([key, content]) => {
         const map = readyMapStep(key);
-        const markers = [...map.enemies.map((e) => ({ ...e, glyph: "☠", zombie: e.catalogId === "d25f0e90-6a3f-4e89-84ac-aecc51b9aa6f" })), ...(map.treasures ?? []).map((t) => ({ ...t, glyph: "✦" }))];
+        const markers = [...map.enemies.map((e) => ({ ...e, glyph: "☠", sprite: e.catalogId === "d25f0e90-6a3f-4e89-84ac-aecc51b9aa6f" ? "zombie" as const : undefined })), ...(map.treasures ?? []).map((t) => ({ ...t, glyph: "✦" }))];
         return <li key={key} data-motion-enter className="min-w-0 space-y-3 border-2 border-foreground bg-card p-4 shadow-game">
           <div className="flex flex-wrap items-start justify-between gap-2"><h2 className="font-display text-base leading-relaxed">{map.name}</h2><span className="text-xs font-bold text-muted-foreground">40 × 40 · {content.difficulty}</span></div>
           <MapCanvas tiles={map.tiles} spawn={map.spawn} markers={markers} label={`Carte prête à jouer : ${map.name}`} />
