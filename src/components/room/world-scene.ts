@@ -2,10 +2,14 @@ import * as Phaser from "phaser";
 import tiles from "@/assets/world-tiles.png";
 import mapSprites from "@/assets/map-sprites.png.asset.json";
 import zombieSheet from "@/assets/zombie-sheet.png.asset.json";
+import slimeSheet from "@/assets/slime-sheet.png.asset.json";
 
 /** Zombie sheet: 32px frames, 19 cols. Rows: idle, walk×4, attack×4, damage×4, death. Directions: bas, gauche, haut, droite. */
 const Z_COLS = 19, DIRS = ["down", "left", "up", "right"] as const;
 const Z_DIE_LAST = 13 * Z_COLS + 10;
+/** Slime sheet: 32px frames, 9 cols. Rows: idle (4), attack (4), damage (4), death (9). No directions. */
+const S_COLS = 9;
+const S_DIE_LAST = 3 * S_COLS + 8;
 type ZState = { x: number; y: number; hp?: number; dead?: boolean; dir: number };
 function dirOf(dx: number, dy: number, fallback: number) { if (!dx && !dy) return fallback; return Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 1 : 3) : (dy < 0 ? 2 : 0); }
 import { GRID, tileTexture, type GridMap } from "@/lib/map-grid";
@@ -22,6 +26,7 @@ export class WorldScene extends Phaser.Scene {
     this.load.spritesheet("world-tiles", tiles, { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet("map-sprites", mapSprites.url, { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet("zombie", zombieSheet.url, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("slime", slimeSheet.url, { frameWidth: 32, frameHeight: 32 });
   }
   create() {
     const bg = getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim() || "#111";
@@ -33,6 +38,11 @@ export class WorldScene extends Phaser.Scene {
       this.anims.create({ key: `z-dmg-${i}`, frames: row(9 + i, 4), frameRate: 10 });
     });
     this.anims.create({ key: "z-die", frames: row(13, 11), frameRate: 10 });
+    const srow = (r: number, n: number) => this.anims.generateFrameNumbers("slime", { start: r * S_COLS, end: r * S_COLS + n - 1 });
+    this.anims.create({ key: "s-idle", frames: srow(0, 4), frameRate: 5, repeat: -1 });
+    this.anims.create({ key: "s-attack", frames: srow(1, 4), frameRate: 8 });
+    this.anims.create({ key: "s-dmg", frames: srow(2, 4), frameRate: 8 });
+    this.anims.create({ key: "s-die", frames: srow(3, 9), frameRate: 8 });
     this.cameras.main.setBounds(0, 0, GRID * 16, GRID * 16).setBackgroundColor(bg);
     for (let i = 0; i < GRID * GRID; i++) this.scenery.push(this.add.image((i % GRID) * 16 + 8, Math.floor(i / GRID) * 16 + 8, "map-sprites", 8).setVisible(false));
     this.events.on("map", (grid: GridMap) => {
