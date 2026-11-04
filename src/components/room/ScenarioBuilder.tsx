@@ -10,6 +10,7 @@ import { readyMapStep } from "@/lib/ready-maps";
 import { TRACKS } from "@/lib/ambience-tracks";
 import { getMapSequence, goToSequenceMap, listMapEnemyCatalog, listMyMaps, saveScenario } from "@/lib/maps.functions";
 import { MAX_STEPS, moveStep, paintTile, putMob, type ScenarioStep } from "@/lib/scenario-steps";
+import { monsterSprite } from "@/lib/world-actors";
 
 const SEL = "mt-1 h-11 w-full border-2 border-foreground bg-background px-2 font-normal normal-case";
 type Section = "carte" | "mobs" | "decor" | "musique";
