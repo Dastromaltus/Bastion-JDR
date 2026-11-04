@@ -114,37 +114,39 @@ export class WorldScene extends Phaser.Scene {
         label.setX(Phaser.Math.Clamp(x, label.width / 2, map.width * 16 - label.width / 2) - x);
       }
       node.setDepth(100 + y);
-      if (actor.sprite === "zombie") this.animateZombie(node, actor, reduced);
+      if (actor.sprite === "zombie" || actor.sprite === "slime") this.animateMonster(node, actor, reduced);
       else this.prev.set(actor.id, { x: actor.x, y: actor.y, ...(actor.hp !== undefined ? { hp: actor.hp } : {}), dir: 0 });
     }
     for (const id of [...this.prev.keys()]) if (!ids.has(id)) this.prev.delete(id);
     if (!hurt.length) return;
-    // An adventurer lost HP: the adjacent living zombie plays its attack toward them.
+    // An adventurer lost HP: the adjacent living monster plays its attack toward them.
     for (const t of hurt) {
-      const z = actors.find((a) => a.sprite === "zombie" && !a.dead && Math.abs(a.x - t.x) <= 1 && Math.abs(a.y - t.y) <= 1);
+      const z = actors.find((a) => (a.sprite === "zombie" || a.sprite === "slime") && !a.dead && Math.abs(a.x - t.x) <= 1 && Math.abs(a.y - t.y) <= 1);
       const zs = z && this.actors.get(z.id)?.list[0];
       if (!z || !(zs instanceof Phaser.GameObjects.Sprite)) continue;
       const dir = dirOf(t.x - z.x, t.y - z.y, this.prev.get(z.id)?.dir ?? 0);
       const st = this.prev.get(z.id); if (st) st.dir = dir;
+      if (z.sprite === "slime") { if (reduced) zs.setFrame(S_COLS + 1); else zs.play("s-attack").chain("s-idle"); continue; }
       if (reduced) zs.setFrame((5 + dir) * Z_COLS + 2); else zs.play(`z-attack-${dir}`).chain("z-idle");
     }
   }
-  private animateZombie(node: Phaser.GameObjects.Container, actor: WorldActor, reduced: boolean) {
+  private animateMonster(node: Phaser.GameObjects.Container, actor: WorldActor, reduced: boolean) {
     const sprite = node.list[0];
     const label = node.list[1];
     const before = this.prev.get(actor.id);
     const dir = before ? dirOf(actor.x - before.x, actor.y - before.y, before.dir) : 0;
     this.prev.set(actor.id, { x: actor.x, y: actor.y, ...(actor.hp !== undefined ? { hp: actor.hp } : {}), ...(actor.dead ? { dead: true } : {}), dir });
     if (!(sprite instanceof Phaser.GameObjects.Sprite) || !before) return;
+    const slime = actor.sprite === "slime";
     if (actor.dead) {
       if (label instanceof Phaser.GameObjects.Text) label.setVisible(false);
       if (before.dead) return;
-      if (reduced) sprite.stop().setFrame(Z_DIE_LAST); else sprite.play("z-die");
+      if (reduced) sprite.stop().setFrame(slime ? S_DIE_LAST : Z_DIE_LAST); else sprite.play(slime ? "s-die" : "z-die");
       return;
     }
     if (reduced) { sprite.stop().setFrame(0); return; }
-    if (actor.hp !== undefined && before.hp !== undefined && actor.hp < before.hp) sprite.play(`z-dmg-${dir}`).chain("z-idle");
-    else if (actor.x !== before.x || actor.y !== before.y) sprite.play(`z-walk-${dir}`).chain("z-idle");
+    if (actor.hp !== undefined && before.hp !== undefined && actor.hp < before.hp) sprite.play(slime ? "s-dmg" : `z-dmg-${dir}`).chain(slime ? "s-idle" : "z-idle");
+    else if (actor.x !== before.x || actor.y !== before.y) sprite.play(slime ? "s-idle" : `z-walk-${dir}`).chain(slime ? "s-idle" : "z-idle");
   }
 }
 export function createWorldGame(parent: HTMLDivElement, ready: () => void) {
