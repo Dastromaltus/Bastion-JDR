@@ -5,7 +5,7 @@ export type WorldParticipant = {
   id: string; display_name: string; role: string; race: string;
   current_zone?: string | null; world_x?: number; world_y?: number; world_zone?: string | null; hp?: number; max_hp?: number;
 };
-export type WorldActor = { id: string; name: string; x: number; y: number; frame: number; hp?: number; sprite?: "zombie" | "slime" | "treasure"; dead?: boolean };
+export type WorldActor = { id: string; name: string; x: number; y: number; frame: number; hp?: number; sprite?: "zombie" | "slime" | "treasure" | undefined; dead?: boolean };
 /** Monsters named "Zombie…" use the animated zombie sprite sheet. */
 export const isZombie = (name: string) => /zombie/i.test(name);
 /** Monsters named "Slime…" use the animated green slime sprite sheet. */
