@@ -14,7 +14,7 @@ export const isSlime = (name: string) => /slime/i.test(name);
 /** Animated monster sprite for a catalog name, if any. */
 export const isYeti = (name: string) => /y[eé]ti/i.test(name);
 export const isWolf = (name: string) => /loup|wolf/i.test(name);
-export const isOrc = (name: string) => /\borc(?:s|que|ques)?\b|wildorc/i.test(name);
+export const isOrc = (name: string) => /\b(?:orcs?|orques?)\b|wildorc/i.test(name);
 export const monsterSprite = (name: string): MonsterSprite | undefined => (isZombie(name) ? "zombie" : isSlime(name) ? "slime" : isYeti(name) ? "yeti" : isWolf(name) ? "wolf" : isOrc(name) ? "orc" : undefined);
 const FRAMES: Record<string, number> = { Humain: 7, Insecte: 8, Reptile: 9, Crustacé: 10, Oiseau: 11 };
 
