@@ -36,7 +36,7 @@
 - Record actual adventurer HP decreases during active games through an atomic game_players trigger into structured game_events; read the paginated history with the member's RLS client, without enemy identities, so all damage sources are covered without exposing hidden content or parsing narrative logs.
 
 - Personal map enemies use enemy_catalog.owner_id and authenticated server creation with owner-forced writes; validate ownership on map save and salon install to keep private catalogs isolated.
-- Tile codes 11–20 encode impassable variants of brush textures 1–10; decode only when rendering and keep server walkability restricted to the original walkable codes so textured barriers survive map copies.
+- Keep textures 1–10 and barriers 11–20 stable; new textures use 21–30 and barriers 31–40. Map via tileFrame to the expanded atlas and match SQL walkability so saved maps retain artwork and collisions.
 
 - Expand legacy 40×40 tiles on read (keep coords, fill with tile 0); save only 160×160; DB accepts both for live compatibility.
 - Class HP bonuses: src/lib/classes.ts; class damage/abilities: salon_combat_action (server-authoritative).
