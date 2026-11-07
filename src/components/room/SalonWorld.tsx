@@ -64,7 +64,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const enabled = worldMovementAllowed({ status: d.game.status, role: d.me.role, hp: d.me.hp, sameZone: here === (d.me.current_zone ?? "entree"), explorationTurn: turn.isMine, combat: d.combat });
   const fetchMap = useServerFn(getSalonMap);
   const mapQ = useQuery({ queryKey: ["salon-map", d.game.id, (d.events ?? []).filter((e: any) => e.kind === "carte").length], queryFn: () => fetchMap({ data: { gameId: d.game.id } }), staleTime: 30_000, placeholderData: (prev) => prev });
-  const grid = mapQ.data ?? PREBUILT_MAPS[DEFAULT_MAP_KEY];
+  const grid = mapQ.data ?? PREBUILT_MAPS[DEFAULT_MAP_KEY] ?? (() => { throw new Error("Carte indisponible."); })();
   const narrator = d.me.role === "narrator";
   // The narrator moves the selected mob, or the enemy whose combat turn it is.
   const turnMobId = d.controlledEnemyId ?? (d.combat?.active && d.combat.current?.kind === "enemy" ? d.combat.current.id : null);
