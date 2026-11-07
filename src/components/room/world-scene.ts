@@ -271,7 +271,7 @@ export class WorldScene extends Phaser.Scene {
     const dir = before ? dirOf(actor.x - before.x, actor.y - before.y, before.dir) : 0;
     this.prev.set(actor.id, { x: actor.x, y: actor.y, ...(actor.hp !== undefined ? { hp: actor.hp } : {}), ...(actor.dead ? { dead: true } : {}), dir });
     if (!(sprite instanceof Phaser.GameObjects.Sprite) || !before) return;
-    const slime = actor.sprite === "slime", yeti = actor.sprite === "yeti", wolf = actor.sprite === "wolf", orc = actor.sprite === "orc", goblin = actor.sprite === "goblin", cyclops = actor.sprite === "cyclops" || sprite === "human";
+    const slime = actor.sprite === "slime", yeti = actor.sprite === "yeti", wolf = actor.sprite === "wolf", orc = actor.sprite === "orc", goblin = actor.sprite === "goblin", cyclops = actor.sprite === "cyclops", human = actor.sprite === "human";
     const idle = human ? `h-idle-${dir}` : slime ? "s-idle" : yeti ? `y-idle-${dir}` : wolf ? `w-idle-${dir}` : orc ? `o-idle-${dir}` : goblin ? `g-idle-${dir}` : cyclops ? `c-idle-${dir}` : "z-idle";
     if (actor.dead) {
       if (label instanceof Phaser.GameObjects.Text) label.setVisible(false);
