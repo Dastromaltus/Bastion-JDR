@@ -36,6 +36,7 @@
 - [x] Add the second ten uploaded textures; 23 tests pass and authenticated painting, barrier save/reopen and mobile palette verified without errors.
 - [x] Add Yéti to allowed enemies using uploaded GIFs; verified catalog preview, map placement/save/reopen and Phaser walking, damage and death animations; 13 tests pass.
 - [x] Add uploaded wolf enemy; verified original GIF preview, placement/save/reopen and Phaser walk, damage/death; 12 tests pass and build OK.
+- [x] Add uploaded orc enemy with original GIF preview; authenticated placement/save/reopen verified, Phaser walk/damage/death verified, nine tests pass and build OK. Provisional stats match Loup; no extra ability.
 
 - [x] Remove prebuilt map/campaign offerings and keep personal map choices only; verified both retired URLs redirect to Mes cartes, the personal editor opens, 12 focused tests pass and build OK.
 - [x] Enlarge personal and salon maps to 160×160 with coordinate-preserving legacy expansion, compatible database bounds and zoom; 31 tests pass, authenticated personal save/reopen and legacy salon preview verified, build OK.
