@@ -2,7 +2,7 @@
 export const GRID = 160;
 export const CELLS = GRID * GRID;
 
-/** Stable tile codes: original textures 1–10, their barriers 11–20, added textures 21–30 and barriers 31–40. */
+/** Stable codes: each batch reserves ten texture codes followed by ten barrier codes. */
 export const SPRITES = [
   { code: 1, label: "Eau", walk: false },
   { code: 2, label: "Caisses", walk: false },
@@ -24,13 +24,23 @@ export const SPRITES = [
   { code: 28, label: "Dalle ocre", walk: true },
   { code: 29, label: "Dalle rosée", walk: true },
   { code: 30, label: "Grille cuivrée", walk: true },
+  { code: 41, label: "Feuillage olive", walk: true },
+  { code: 42, label: "Feuillage vert", walk: true },
+  { code: 43, label: "Feuillage turquoise", walk: true },
+  { code: 44, label: "Sous-bois", walk: true },
+  { code: 45, label: "Mosaïque verte", walk: true },
+  { code: 46, label: "Lave", walk: true },
+  { code: 47, label: "Baies rouges", walk: true },
+  { code: 48, label: "Champignon rouge", walk: true },
+  { code: 49, label: "Quadrillage rouge", walk: true },
+  { code: 50, label: "Briques bleues", walk: true },
 ] as const;
 const WALK = new Set<number>(SPRITES.filter((s) => s.walk).map((s) => s.code));
-export const MAX_TILE_CODE = 40;
+export const MAX_TILE_CODE = 60;
 export const barrierTile = (texture: number) => SPRITES.some((s) => s.code === texture) ? texture + 10 : 0;
-export const tileTexture = (code: number) => (code >= 11 && code <= 20) || (code >= 31 && code <= 40) ? code - 10 : code;
+export const tileTexture = (code: number) => code > 0 && (code - 1) % 20 >= 10 ? code - 10 : code;
 /** Atlas frames stay contiguous while persisted codes retain legacy barrier meanings. */
-export const tileFrame = (code: number) => { const texture = tileTexture(code); return texture >= 21 ? texture - 11 : texture - 1; };
+export const tileFrame = (code: number) => { const texture = tileTexture(code); return texture - 1 - Math.floor((texture - 1) / 20) * 10; };
 export const tileWalkable = (t: number | undefined) => t !== undefined && WALK.has(t);
 
 export type GridMap = { name: string; tiles: number[]; spawn: { x: number; y: number } };

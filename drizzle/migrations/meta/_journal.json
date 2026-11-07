@@ -302,6 +302,13 @@
       "when": 1794083604523,
       "tag": "0042_additional_map_textures",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794083762467,
+      "tag": "0043_more_map_textures",
+      "breakpoints": true
     }
   ]
 }

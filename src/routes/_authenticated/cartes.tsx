@@ -216,7 +216,7 @@ function MapsPage() {
             </div>}
             <div role="radiogroup" aria-label="Décor" className="grid grid-cols-2 gap-2">
               {tool !== "enemy" && SPRITES.map((s) => <Button variant="outline" key={s.code} role="radio" aria-checked={sprite === s.code} onClick={() => { setSprite(s.code); if (tool !== "brush" && tool !== "fill" && tool !== "block") setTool("brush"); }} className={`h-auto min-h-11 justify-start gap-2 rounded-none border-2 p-1 text-left text-xs ${sprite === s.code ? "border-primary bg-secondary" : "border-foreground/30"}`}>
-                <SpriteSwatch code={s.code} /><span><b>{s.label}</b><br /><span className="opacity-70">{tool === "block" ? "Barrière" : s.walk ? "Praticable" : "Bloquant"}</span></span>
+                <SpriteSwatch code={s.code} /><span className="min-w-0 whitespace-normal break-words"><b>{s.label}</b><br /><span className="opacity-70">{tool === "block" ? "Barrière" : s.walk ? "Praticable" : "Bloquant"}</span></span>
               </Button>)}
             </div>
             {tool !== "enemy" && <Button variant="outline" disabled={busy} onClick={fillWholeMap} className="min-h-11 w-full whitespace-normal rounded-none"><PaintBucket />Remplir toute la carte</Button>}
