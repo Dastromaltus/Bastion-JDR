@@ -37,3 +37,5 @@
 - [x] Enlarge personal and salon maps to 160×160 with coordinate-preserving legacy expansion, compatible database bounds and zoom; 31 tests pass, authenticated personal save/reopen and legacy salon preview verified, build OK.
 - [x] Add brushes up to 80×80 and confirmed whole-map texture fill in both editors; 11 tests pass, authenticated personal fill and mobile controls verified, build OK.
 - [x] Fix departure placement on blocked cells in both editors, preserving walkable textures; 15 tests pass and authenticated border placement/save/reopen succeeds, build OK.
+- [ ] Allow arrivals in active salons, retaining explicit locks, passwords, capacity and valid map placement.
+- [ ] Test late-arrival rules and verify the invitation-to-map flow.
