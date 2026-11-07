@@ -44,6 +44,8 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const grid = mapQ.data ?? PREBUILT_MAPS[DEFAULT_MAP_KEY]!;
   const narrator = d.me.role === "narrator";
   const mobRow = narrator && d.controlledEnemyId ? d.enemies.find((e: any) => e.id === d.controlledEnemyId) : undefined;
+  const mobPos = useRef<{ id: string; x: number; y: number } | null>(null);
+  useEffect(() => { mobPos.current = mobRow ? { id: mobRow.id, x: mobRow.tile_x, y: mobRow.tile_y } : null; }, [mobRow?.id, mobRow?.tile_x, mobRow?.tile_y]);
   const mobEnabled = mobMovementAllowed({ status: d.game.status, role: d.me.role, controlledId: mobRow?.id, combat: d.combat });
   const controlsReady = (enabled || mobEnabled) && ready && mapQ.isSuccess;
   const controlLabel = narrator ? !mobRow ? "Vue narrateur · contrôle un mob pour le déplacer" : !mobEnabled ? `${mobRow.name} attend · ${d.combat?.label ?? "hors combat"}` : focused ? `▶ ${mobRow.name} · Z Q S D` : `${mobRow.name} · clique sur la carte puis Z Q S D` : !ready || !mapQ.isSuccess ? "Chargement de la carte…" : !enabled ? d.combat?.label ?? turn.message : focused ? "▶ Contrôles actifs · Z Q S D" : "Clique sur la carte pour jouer";
@@ -86,7 +88,9 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
       if (narrator) {
         if (!mobRow) throw new Error("Aucun mob contrôlé.");
         const [dx, dy] = WORLD_DELTAS[direction];
-        await act({ data: { gameId: d.game.id, revision: d.combat?.revision ?? 0, action: "move", enemyId: mobRow.id, x: mobRow.tile_x + dx, y: mobRow.tile_y + dy } });
+        const from = mobPos.current?.id === mobRow.id ? mobPos.current : { id: mobRow.id, x: mobRow.tile_x, y: mobRow.tile_y };
+        await act({ data: { gameId: d.game.id, revision: d.combat?.revision ?? 0, action: "move", enemyId: mobRow.id, x: from.x + dx, y: from.y + dy } });
+        mobPos.current = { id: mobRow.id, x: from.x + dx, y: from.y + dy };
         setMessage("");
       } else { const result = await move({ data: { gameId: d.game.id, direction } }); setMessage(result.message); }
       await onChange();
@@ -128,6 +132,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
         <div className="min-w-0"><p className="break-words font-bold">{p.display_name}{p.id === d.me.id ? " · toi" : ""}</p><p className="text-xs text-muted-foreground">{p.role === "narrator" ? "Narrateur · observe la carte" : `${p.race} · ${zoneLabel(p.current_zone ?? "entree")}${(p.current_zone ?? "entree") === here ? " · ici" : ""}`}</p></div>
       </li>)}
     </ul>
+    {narrator && message && <p role="status" className="text-sm text-muted-foreground">{message}</p>}
     {canMove && <div className="flex items-center justify-between gap-3"><p key={`${turn.active?.id}-${message}`} role="status" className="anim-enter min-w-0 text-sm text-muted-foreground">{!enabled ? d.combat?.label ?? turn.message : busy ? "Déplacement…" : message || "C’est à ton tour !"}</p><div className="grid shrink-0 grid-cols-3 grid-rows-3 gap-1 lg:hidden">
       {([["up", "Monter", ChevronUp, "col-start-2"], ["left", "Gauche", ChevronLeft, "col-start-1 row-start-2"], ["right", "Droite", ChevronRight, "col-start-3 row-start-2"], ["down", "Descendre", ChevronDown, "col-start-2 row-start-3"]] as const).map(([dir, label, Icon, cls]) => <Button key={dir} variant={movingDirection === dir ? "default" : "secondary"} size="icon" aria-label={label} title={label} disabled={busy || !ready || !enabled} className={`h-11 w-11 ${cls} ${movingDirection === dir ? "anim-pop" : ""}`} onClick={() => void step(dir)}><Icon /></Button>)}
     </div></div>}
