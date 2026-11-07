@@ -43,7 +43,9 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const mapQ = useQuery({ queryKey: ["salon-map", d.game.id, (d.events ?? []).filter((e: any) => e.kind === "carte").length], queryFn: () => fetchMap({ data: { gameId: d.game.id } }), staleTime: 30_000, placeholderData: (prev) => prev });
   const grid = mapQ.data ?? PREBUILT_MAPS[DEFAULT_MAP_KEY]!;
   const narrator = d.me.role === "narrator";
-  const mobRow = narrator && d.controlledEnemyId ? d.enemies.find((e: any) => e.id === d.controlledEnemyId) : undefined;
+  // During an enemy's combat turn the narrator moves that enemy; otherwise the selected mob.
+  const turnMobId = d.combat?.active && d.combat.current?.kind === "enemy" ? d.combat.current.id : d.controlledEnemyId;
+  const mobRow = narrator && turnMobId ? d.enemies.find((e: any) => e.id === turnMobId && e.status !== "vaincu") : undefined;
   const mobPos = useRef<{ id: string; x: number; y: number } | null>(null);
   useEffect(() => { mobPos.current = mobRow ? { id: mobRow.id, x: mobRow.tile_x, y: mobRow.tile_y } : null; }, [mobRow?.id, mobRow?.tile_x, mobRow?.tile_y]);
   const mobEnabled = mobMovementAllowed({ status: d.game.status, role: d.me.role, controlledId: mobRow?.id, combat: d.combat });
@@ -68,7 +70,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   useEffect(() => {
     if (ready) game.current?.scene.getScene("SalonWorld").events.emit("map", grid);
   }, [ready, grid]);
-  const controlledMob = d.controlledEnemyId ? actors.find((a) => a.id === d.controlledEnemyId) : undefined;
+  const controlledMob = mobRow ? actors.find((a) => a.id === mobRow.id) : d.controlledEnemyId ? actors.find((a) => a.id === d.controlledEnemyId) : undefined;
   const focusActor = controlledMob ?? participants.find((p) => p.id === (d.me.role === "adventurer" ? d.me.id : followed?.id)) ?? participants[0];
   useEffect(() => {
     if (ready) game.current?.scene.getScene("SalonWorld").events.emit("focus", focusActor ?? grid.spawn);
