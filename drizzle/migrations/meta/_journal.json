@@ -253,6 +253,13 @@
       "when": 1794078456231,
       "tag": "0035_combat_enemy_sight_filter",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794079769810,
+      "tag": "0036_adventurer_screen_vision",
+      "breakpoints": true
     }
   ]
 }
