@@ -13,7 +13,7 @@ export const Route = createFileRoute("/")({
       { title: "Bastion — Entrez dans la forteresse" },
       { name: "description", content: "Découvrez Bastion, le jeu de rôle de plateau asymétrique de Mathéo Destin pour 3 à 5 joueurs." },
       { property: "og:title", content: "Bastion — Entrez dans la forteresse" },
-      { property: "og:description", content: "Des aventuriers humains, trois classes et des cartes personnelles face au narrateur." },
+      { property: "og:description", content: "Des aventuriers humains et nains, trois classes et des cartes personnelles face au narrateur." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -126,11 +126,12 @@ function Index() {
 
       <section id="peuples" className="px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
-          <p className="section-label">Race d’aventurier par défaut</p>
-          <h2 className="mt-4 font-display text-3xl font-black uppercase md:text-5xl">L’Humain</h2>
+          <p className="section-label">Races d’aventurier</p>
+          <h2 className="mt-4 font-display text-3xl font-black uppercase md:text-5xl">Humain et Nain</h2>
           <div data-motion-enter className="mt-8 flex flex-wrap items-center gap-8">
             <CharacterPreview look={DEFAULT_LOOK} size={192} />
-            <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">Tous les aventuriers sont humains. Choisis ta classe — Guerrier, Mage ou Voleur — et rejoins le groupe face aux monstres du Bastion.</p>
+            <CharacterPreview look={{ ...DEFAULT_LOOK, race: "Nain" }} size={192} />
+            <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">L’Humain reste la race par défaut. Tu peux aussi incarner un Nain. Choisis ta classe — Guerrier, Mage ou Voleur — et rejoins le groupe face aux monstres du Bastion.</p>
           </div>
         </div>
       </section>
@@ -139,7 +140,7 @@ function Index() {
         <div className="mx-auto max-w-7xl">
           <div data-motion-enter className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div><p className="section-label">Choisir sa voie</p><h2 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Trois classes</h2></div>
-            <p className="max-w-sm text-sm text-muted-foreground">Chaque aventurier humain choisit une classe : points de vie, dégâts et capacité propre, visibles par toute la table.</p>
+            <p className="max-w-sm text-sm text-muted-foreground">Chaque aventurier choisit une classe : points de vie, dégâts et capacité propre, visibles par toute la table.</p>
           </div>
           <div data-motion-stagger className="grid border border-border bg-background md:grid-cols-3">
             {classes.map((item) => (
