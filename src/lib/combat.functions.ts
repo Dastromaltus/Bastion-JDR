@@ -5,7 +5,7 @@ import { worldWalkable } from "./world-map";
 
 export const combatAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ gameId: z.string().uuid(), revision: z.number().int().default(0), action: z.enum(["control", "attack", "ability", "move", "pass"]), enemyId: z.string().uuid().optional(), targetId: z.string().uuid().optional(), x: z.number().int().optional(), y: z.number().int().optional(), effect: z.enum(["attaque", "soin", "protection"]).default("attaque") }).parse(d))
+  .inputValidator((d) => z.object({ gameId: z.string().uuid(), revision: z.number().int().default(0), action: z.enum(["control", "attack", "slash", "ability", "move", "pass"]), enemyId: z.string().uuid().optional(), targetId: z.string().uuid().optional(), x: z.number().int().optional(), y: z.number().int().optional(), effect: z.enum(["attaque", "soin", "protection"]).default("attaque") }).parse(d))
   .handler(async ({ data, context }) => {
     const { salonGrid } = await import("./maps.functions");
     if (data.action === "move" && (data.x === undefined || data.y === undefined || !worldWalkable(data.x, data.y, await salonGrid(context.supabase, data.gameId)))) throw new Error("Cette case est bloquée.");

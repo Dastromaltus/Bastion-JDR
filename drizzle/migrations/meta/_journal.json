@@ -316,6 +316,13 @@
       "when": 1794085186970,
       "tag": "0044_map_passage_points",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1794088972035,
+      "tag": "0045_slash_fixed_damage",
+      "breakpoints": true
     }
   ]
 }

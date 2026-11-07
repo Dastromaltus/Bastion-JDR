@@ -18,6 +18,7 @@ import { WORLD_DELTAS } from "@/lib/world-map";
 import { worldKeyDirection } from "@/lib/world-keys";
 import { combatAction } from "@/lib/combat.functions";
 import { worldAttackAllowed } from "@/lib/world-attack";
+import { slashKeyPressed, slashTarget } from "@/lib/slash";
 
 export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string; name?: string; onChange: () => unknown | Promise<unknown> }) {
   const mount = useRef<HTMLDivElement>(null);
@@ -38,10 +39,14 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const moveMob = useServerFn(moveSalonMob);
   const attack = useServerFn(combatAction);
   const attacking = useRef(false);
+  const selectedEnemy = useRef<string | null>(null);
+  const slashRef = useRef<() => void>(() => {});
+  const seenSlash = useRef<Set<string> | null>(null);
   useEffect(() => {
     const clickEnemy = async (event: Event) => {
       if (!(event instanceof CustomEvent) || typeof event.detail !== "string") return;
       const enemy = d.enemies.find((e: any) => e.id === event.detail);
+      selectedEnemy.current = enemy?.id ?? null;
       if (!worldAttackAllowed({ status: d.game.status, role: d.me.role, hp: d.me.hp, enemyVisible: !!enemy, enemyAlive: !!enemy && enemy.status !== "vaincu" && enemy.hp > 0, busy: attacking.current })) return;
       attacking.current = true;
       setMessage(`Attaque sur ${enemy.name}…`);
@@ -84,6 +89,31 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const actors: WorldActor[] = optimistic ? baseActors.map((a) => a.id === optimistic.id ? { ...a, x: optimistic.x, y: optimistic.y } : a) : baseActors;
   const movingId: string | undefined = narrator ? mobRow?.id : d.me.id;
   const baseMover = baseActors.find((a) => a.id === movingId);
+  async function slash() {
+    const enemy = slashTarget(d.enemies, selectedEnemy.current, here, optimisticRef.current ?? baseMover ?? grid.spawn);
+    if (!enemy) { setMessage("Aucun ennemi visible pour Slash."); return; }
+    if (!worldAttackAllowed({ status: d.game.status, role: d.me.role, hp: d.me.hp, enemyVisible: true, enemyAlive: enemy.hp > 0, busy: attacking.current })) return;
+    attacking.current = true;
+    setMessage("Slash…");
+    try {
+      await queue.current;
+      const result = await attack({ data: { gameId: d.game.id, action: "slash", enemyId: enemy.id, revision: d.combat?.revision ?? 0 } });
+      setMessage(`Slash · ${d.enemies.find((e: any) => e.id === enemy.id)?.name} : ${result.damage ?? 0} dégâts`);
+      await onChange();
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Slash impossible."); }
+    finally { attacking.current = false; }
+  }
+  slashRef.current = () => { void slash(); };
+  useEffect(() => {
+    if (!ready) return;
+    const events = (d.events ?? []).filter((e: any) => e.payload?.effect === "slash");
+    if (!seenSlash.current) { seenSlash.current = new Set(events.map((e: any) => e.id)); return; }
+    for (const event of events) {
+      if (seenSlash.current.has(event.id)) continue;
+      seenSlash.current.add(event.id);
+      if (d.enemies.some((e: any) => e.id === event.payload.enemyId && e.zone === here)) game.current?.scene.getScene("SalonWorld").events.emit("slash", event.payload.enemyId);
+    }
+  }, [ready, d.events, d.enemies, here]);
   // Drop the local prediction once the server state has caught up and nothing is pending.
   useEffect(() => {
     if (optimistic && inFlight.current === 0 && baseMover && baseMover.x === optimistic.x && baseMover.y === optimistic.y) { optimisticRef.current = null; setOptimistic(null); }
@@ -159,6 +189,9 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     const down = (event: KeyboardEvent) => {
       const target = event.target;
       const editing = target instanceof HTMLElement && !!target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]');
+      if (slashKeyPressed(event.key, event.code, event.repeat, editing)) {
+        event.preventDefault(); slashRef.current(); return;
+      }
       const direction = worldKeyDirection(event.key, event.repeat, editing);
       if (!direction) return;
       event.preventDefault(); setPressed(direction);
@@ -180,6 +213,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
       {!ready && <p role={failure ? "alert" : "status"} className="absolute inset-0 flex items-center justify-center bg-game">{failure ? "La carte n'a pas pu être affichée." : "Chargement de la carte…"}</p>}
     </div>
     {!narrator && canMove && onPassage(optimistic ?? baseMover ?? { x: -1, y: -1 }, grid.passage) && <Button disabled={travelling} onClick={crossPassage} className="min-h-11 whitespace-normal"><DoorOpen />{travelling ? "Passage en cours…" : "Passer à l’étape suivante avec le groupe"}</Button>}
+    {!narrator && canMove && <Button variant="secondary" disabled={!ready} onClick={() => slashRef.current()} className="min-h-11">Slash · 7 · 2 dégâts</Button>}
     <ul aria-label="Participants du salon" className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
       {d.players.map((p: any) => <li key={p.id} className="flex min-w-0 items-start gap-2 text-sm">
         {p.role === "narrator" ? <Megaphone className="mt-0.5 size-4 shrink-0 text-primary" /> : <User className="mt-0.5 size-4 shrink-0 text-primary" />}

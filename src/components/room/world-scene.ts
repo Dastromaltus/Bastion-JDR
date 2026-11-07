@@ -8,6 +8,7 @@ import wolfSheet from "@/assets/wolf-sheet.png.asset.json";
 import orcSheet from "@/assets/orc-sheet.png.asset.json";
 import goblinSheet from "@/assets/goblin-sheet.png.asset.json";
 import cyclopsSheet from "@/assets/cyclops-sheet.png.asset.json";
+import slashSheet from "@/assets/slash-atlas.png.asset.json";
 
 /** Zombie sheet: 32px frames, 19 cols. Rows: idle, walk×4, attack×4, damage×4, death. Directions: bas, gauche, haut, droite. */
 const Z_COLS = 19, DIRS = ["down", "left", "up", "right"] as const;
@@ -42,8 +43,17 @@ export class WorldScene extends Phaser.Scene {
     this.load.spritesheet("orc", orcSheet.url, { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("goblin", goblinSheet.url, { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("cyclops", cyclopsSheet.url, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("slash", slashSheet.url, { frameWidth: 96, frameHeight: 96 });
   }
   create() {
+    this.anims.create({ key: "slash-hit", frames: this.anims.generateFrameNumbers("slash", { start: 0, end: 19 }), frameRate: 50, repeat: 0 });
+    this.events.on("slash", (id: string) => {
+      const target = this.actors.get(id);
+      if (!target || motionDisabled()) return;
+      const effect = this.add.sprite(target.x, target.y - 9, "slash").setScale(0.5).setDepth(10000).setName("slash-effect");
+      effect.play("slash-hit");
+      effect.once("animationcomplete", () => effect.destroy());
+    });
     const bg = getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim() || "#111";
     const row = (r: number, n: number) => this.anims.generateFrameNumbers("zombie", { start: r * Z_COLS, end: r * Z_COLS + n - 1 });
     this.anims.create({ key: "z-idle", frames: row(0, 19), frameRate: 5, repeat: -1 });
@@ -135,6 +145,7 @@ export class WorldScene extends Phaser.Scene {
     this.events.on("actors", (actors: WorldActor[]) => this.sync(actors));
     const stop = () => {
       if (motionDisabled()) {
+        this.children.list.filter((child) => child.name === "slash-effect").forEach((child) => child.destroy());
         this.tweens.getTweens().forEach((tween) => { tween.complete(); });
       }
     };
