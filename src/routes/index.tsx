@@ -160,7 +160,25 @@ function Index() {
         </div>
       </section>
 
-      <section id="partie" className="border-y border-border bg-secondary px-5 py-20 md:px-10 md:py-28">
+      <section id="classes" className="border-y border-border bg-secondary px-5 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div data-motion-enter className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div><p className="section-label">Choisir sa voie</p><h2 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Trois classes</h2></div>
+            <p className="max-w-sm text-sm text-muted-foreground">Chaque aventurier combine un peuple et une classe : points de vie, dégâts et capacité propre, visibles par toute la table.</p>
+          </div>
+          <div data-motion-stagger className="grid border border-border bg-background md:grid-cols-3">
+            {classes.map((item) => (
+              <article key={item.name} className="border-b border-border p-7 last:border-b-0 md:border-b-0 md:border-r md:p-9 md:last:border-r-0">
+                <span className="text-xs font-black uppercase text-primary">Capacité / {item.trait}</span>
+                <h3 className="mt-3 font-display text-base font-black uppercase tracking-normal">{item.name}</h3>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="partie" className="border-b border-border px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
           <p className="section-label">Structure de partie</p><h2 className="mt-4 font-display text-3xl font-black uppercase tracking-normal md:text-5xl">Trois temps.<br />Une mission.</h2>
           <div data-motion-stagger className="mt-14 grid border-t border-border md:grid-cols-3">
