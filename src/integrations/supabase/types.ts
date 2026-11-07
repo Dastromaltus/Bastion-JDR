@@ -1334,6 +1334,7 @@ export type Database = {
       }
       game_players: {
         Row: {
+          class: string
           current_zone: string
           display_name: string
           endurance: number
@@ -1352,6 +1353,7 @@ export type Database = {
           world_zone: string | null
         }
         Insert: {
+          class?: string
           current_zone?: string
           display_name: string
           endurance?: number
@@ -1370,6 +1372,7 @@ export type Database = {
           world_zone?: string | null
         }
         Update: {
+          class?: string
           current_zone?: string
           display_name?: string
           endurance?: number
