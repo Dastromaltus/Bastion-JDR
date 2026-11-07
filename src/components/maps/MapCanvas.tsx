@@ -4,7 +4,7 @@ import zombieSheet from "@/assets/zombie-sheet.png.asset.json";
 import slimeSheet from "@/assets/slime-sheet.png.asset.json";
 
 const monsterImgs: Partial<Record<"zombie" | "slime", HTMLImageElement>> = {};
-import { GRID, tileTexture } from "@/lib/map-grid";
+import { brushCells, GRID, tileTexture } from "@/lib/map-grid";
 
 let sheet: HTMLImageElement | null = null;
 function useSheet() {
@@ -20,14 +20,15 @@ function useSheet() {
 
 /** Pixel-perfect 40×40 map drawing (16 px per cell), scaled by CSS. */
 export type MapMarker = { x: number; y: number; glyph: string; selected?: boolean; sprite?: "zombie" | "slime" | undefined };
-export function MapCanvas({ tiles, spawn, className, onCell, label, markers }: {
+export function MapCanvas({ tiles, spawn, className, onCell, label, markers, brushSize }: {
   tiles: number[]; spawn?: { x: number; y: number }; className?: string; label: string; markers?: MapMarker[];
-  onCell?: (x: number, y: number, kind: "down" | "move") => void;
+  onCell?: (x: number, y: number, kind: "down" | "move") => void; brushSize?: number;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const img = useSheet();
   const drawing = useRef(false);
   const [ready, setReady] = useState(0);
+  const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
   const needed = [...new Set((markers ?? []).map((m) => m.sprite).filter(Boolean))] as ("zombie" | "slime")[];
   useEffect(() => {
     for (const kind of needed) {
@@ -60,16 +61,25 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers }: {
       c.font = "12px monospace"; c.textAlign = "center"; c.textBaseline = "middle";
       c.fillText(m.glyph, m.x * 16 + 8, m.y * 16 + 9);
     }
-  }, [tiles, spawn, img, JSON.stringify(markers ?? []), ready]);
+    // Brush footprint: the exact cells the next click will paint.
+    if (brushSize && hover) {
+      const cells = brushCells(hover.x, hover.y, brushSize);
+      const x0 = Math.min(...cells.map((q) => q.x)) * 16, y0 = Math.min(...cells.map((q) => q.y)) * 16;
+      const x1 = (Math.max(...cells.map((q) => q.x)) + 1) * 16, y1 = (Math.max(...cells.map((q) => q.y)) + 1) * 16;
+      c.strokeStyle = css.getPropertyValue("--world-label").trim() || "#fff";
+      c.lineWidth = 2; c.strokeRect(x0 + 1, y0 + 1, x1 - x0 - 2, y1 - y0 - 2);
+    }
+  }, [tiles, spawn, img, JSON.stringify(markers ?? []), ready, brushSize, hover?.x, hover?.y]);
   function cell(e: React.PointerEvent<HTMLCanvasElement>) {
     const r = e.currentTarget.getBoundingClientRect();
     return [Math.floor(((e.clientX - r.left) / r.width) * GRID), Math.floor(((e.clientY - r.top) / r.height) * GRID)] as const;
   }
   return <canvas ref={ref} width={GRID * 16} height={GRID * 16} role="img" aria-label={label}
     className={`block aspect-square w-full touch-none [image-rendering:pixelated] ${className ?? ""}`}
-    onPointerDown={onCell ? (e) => { drawing.current = true; e.currentTarget.setPointerCapture(e.pointerId); const [x, y] = cell(e); onCell(x, y, "down"); } : undefined}
-    onPointerMove={onCell ? (e) => { if (!drawing.current) return; const [x, y] = cell(e); if (x >= 0 && y >= 0 && x < GRID && y < GRID) onCell(x, y, "move"); } : undefined}
-    onPointerUp={() => { drawing.current = false; }} onPointerCancel={() => { drawing.current = false; }} />;
+    onPointerDown={onCell ? (e) => { drawing.current = true; e.currentTarget.setPointerCapture(e.pointerId); const [x, y] = cell(e); if (x >= 0 && y >= 0 && x < GRID && y < GRID) setHover({ x, y }); onCell(x, y, "down"); } : undefined}
+    onPointerMove={onCell ? (e) => { const [x, y] = cell(e); if (x < 0 || y < 0 || x >= GRID || y >= GRID) { setHover(null); return; } setHover((h) => (h && h.x === x && h.y === y ? h : { x, y })); if (drawing.current) onCell(x, y, "move"); } : undefined}
+    onPointerUp={() => { drawing.current = false; }} onPointerCancel={() => { drawing.current = false; }}
+    onPointerLeave={() => { drawing.current = false; setHover(null); }} />;
 }
 
 export function SpriteSwatch({ code, className }: { code: number; className?: string }) {
