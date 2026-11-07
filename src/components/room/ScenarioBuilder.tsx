@@ -5,8 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
-import { BRUSH_SIZES, GRID, PREBUILT_MAPS, SPRITES } from "@/lib/map-grid";
-import { readyMapStep } from "@/lib/ready-maps";
+import { BRUSH_SIZES, GRID, SPRITES } from "@/lib/map-grid";
 import { TRACKS } from "@/lib/ambience-tracks";
 import { getMapSequence, goToSequenceMap, listMapEnemyCatalog, listMyMaps, saveScenario } from "@/lib/maps.functions";
 import { MAX_STEPS, moveStep, paintTile, putMob, type ScenarioStep } from "@/lib/scenario-steps";
@@ -36,13 +35,12 @@ export function ScenarioBuilder({ d }: { d: any }) {
   const [picked, setPicked] = useState<number | null>(null);
   const [brush, setBrush] = useState<number | "spawn">(6);
   const [brushSize, setBrushSize] = useState(1);
-  const [source, setSource] = useState("prebuilt:le-sas");
+  const [source, setSource] = useState("");
   useEffect(() => { if (seq.data) setSteps(seq.data.items); }, [seq.data]);
   useEffect(() => { if (!mobId && cat.data?.[0]) setMobId(cat.data[0].id); }, [cat.data, mobId]);
   useEffect(() => setPicked(null), [sel]);
 
   const options = useMemo(() => [
-    ...Object.entries(PREBUILT_MAPS).map(([k, m]) => ({ key: `prebuilt:${k}`, label: m.name, step: readyMapStep(k) })),
     ...(mine.data ?? []).map((m) => ({ key: `custom:${m.id}`, label: `${m.name} (ma carte)`, step: { name: m.name, tiles: m.tiles, spawn: m.spawn, source: `custom:${m.id}`, enemies: m.enemies, track: null, intro: "" } as ScenarioStep })),
   ], [mine.data]);
   const fresh = (key: string): ScenarioStep => { const entry = options.find((o) => o.key === key) ?? options[0]; if (!entry) throw new Error("Aucune carte disponible."); return structuredClone(entry.step); };
@@ -55,7 +53,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
   const patch = (p: Partial<ScenarioStep> | ScenarioStep) => setSteps((s) => s.map((x, i) => (i === sel ? { ...x, ...p } : x)));
 
   function addStep() {
-    if (steps.length >= MAX_STEPS) return;
+    if (steps.length >= MAX_STEPS || options.length === 0) return;
     setSteps((s) => [...s, fresh(source)]); setSel(steps.length); setSection("carte");
   }
   function removeStep(i: number) {
@@ -116,16 +114,17 @@ export function ScenarioBuilder({ d }: { d: any }) {
             </li>
           ))}
           <li className="flex items-center gap-1">
-            <select aria-label="Carte de la nouvelle étape" value={source} onChange={(e) => setSource(e.target.value)} className="h-11 border-2 border-foreground bg-background px-1 text-xs">
+            <select aria-label="Carte de la nouvelle étape" value={source || options[0]?.key || ""} disabled={!options.length} onChange={(e) => setSource(e.target.value)} className="h-11 border-2 border-foreground bg-background px-1 text-xs">
+              {!options.length && <option value="">Aucune carte personnelle</option>}
               {options.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
             </select>
-            <Button variant="outline" disabled={steps.length >= MAX_STEPS} onClick={addStep} className="min-h-11 rounded-none text-xs font-black uppercase">+ Étape</Button>
+            <Button variant="outline" disabled={steps.length >= MAX_STEPS || !options.length} onClick={addStep} className="min-h-11 rounded-none text-xs font-black uppercase">+ Étape</Button>
           </li>
         </ol>
         <p className="mt-1 text-xs text-muted-foreground">{steps.length}/{MAX_STEPS} étapes · ▶ = étape en cours de jeu</p>
       </nav>
 
-      {!step ? <p className="text-sm">Ajoute une première étape avec « + Étape ».</p> : (
+      {!step ? (options.length ? <p className="text-sm">Ajoute une première étape avec « + Étape ».</p> : <Button asChild variant="outline"><Link to="/cartes">Créer ma première carte</Link></Button>) : (
         <section className="space-y-3 border-2 border-foreground p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h4 className="font-display text-sm uppercase">Étape {sel + 1} · {step.name}</h4>
@@ -158,7 +157,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
                   </select>
                 </label>
                 <p className="text-xs font-bold">{step.enemies.length} mobs · {step.treasures?.length ?? 0} trésors · {step.track ? TRACKS.find((t) => t.key === step.track)?.label : "Sans musique"}</p>
-                <Link to="/operations" className="inline-flex min-h-11 items-center underline">Cartes prêtes à jouer</Link>
+                
                 <p className="text-xs text-muted-foreground">La carte est copiée dans l'étape : tes retouches ici ne modifient pas l'original.</p>
                 <Link to="/cartes" className="inline-flex min-h-11 items-center underline">Créer une nouvelle carte</Link>
               </>}

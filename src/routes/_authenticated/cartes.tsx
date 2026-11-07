@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
 import { CatalogArtwork } from "@/components/operations/CatalogArtwork";
 import { blockedMapEnemies, placeMapEnemy } from "@/lib/map-enemies";
-import { barrierTile, BRUSH_SIZES, CELLS, GRID, paintBrush, PREBUILT_MAPS, SPRITES, tileWalkable, validateGrid, type GridMap } from "@/lib/map-grid";
+import { barrierTile, BRUSH_SIZES, CELLS, GRID, paintBrush, SPRITES, tileWalkable, validateGrid, type GridMap } from "@/lib/map-grid";
 import { createPersonalMapEnemy, deleteMyMap, listMapEnemyCatalog, listMyMaps, saveMyMap, type MapEnemy } from "@/lib/maps.functions";
 import { monsterSprite } from "@/lib/world-actors";
 
@@ -137,23 +137,13 @@ function MapsPage() {
             <h2 className="font-display text-sm uppercase">Mes cartes</h2>
             {maps.isLoading && <p className="mt-2 anim-loading text-sm">Chargement…</p>}
             {maps.isError && <p role="alert" className="mt-2 text-sm font-bold text-primary">Impossible de charger tes cartes.</p>}
-            {maps.data?.length === 0 && <p className="mt-2 text-sm text-muted-foreground">Aucune carte pour l'instant : crée-en une ou pars d'une carte préconstruite.</p>}
+            {maps.data?.length === 0 && <p className="mt-2 text-sm text-muted-foreground">Aucune carte pour l'instant.</p>}
             <ul className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {maps.data?.map((m) => <li key={m.id} className="border-2 border-foreground p-2">
                 <MapCanvas tiles={m.tiles} spawn={m.spawn} markers={markers(m.enemies)} label={`Aperçu de ${m.name}`} />
                 <p className="mt-2 font-bold">{m.name}</p>
                 <p className="text-xs text-muted-foreground">{m.enemies.length} ennemi(s)</p>
                 <div className="mt-2 flex gap-2"><Button variant="secondary" className="min-h-11 flex-1 rounded-none" onClick={() => setDraft({ ...m })}>Modifier</Button><Button variant="outline" size="icon" aria-label="Supprimer" className="size-11 rounded-none" onClick={() => del(m.id)}><Trash2 /></Button></div>
-              </li>)}
-            </ul>
-          </div>
-          <div>
-            <h2 className="font-display text-sm uppercase">Partir d'une carte préconstruite</h2>
-            <ul className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {Object.values(PREBUILT_MAPS).map((m) => <li key={m.name} className="border-2 border-foreground p-2">
-                <MapCanvas tiles={m.tiles} spawn={m.spawn} label={`Aperçu de ${m.name}`} />
-                <p className="mt-2 font-bold">{m.name}</p>
-                <Button variant="secondary" className="mt-2 min-h-11 w-full rounded-none" onClick={() => setDraft({ name: `${m.name} (copie)`, tiles: [...m.tiles], spawn: { ...m.spawn }, enemies: [] })}>Dupliquer</Button>
               </li>)}
             </ul>
           </div>

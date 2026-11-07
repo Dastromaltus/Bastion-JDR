@@ -57,7 +57,7 @@ function Index() {
           <div className="mt-8 grid gap-8 border-t border-foreground/40 pt-6 md:grid-cols-[1fr_auto] md:items-end">
             <div>
               <p className="max-w-xl text-lg font-medium leading-relaxed md:text-xl">Les aventuriers avancent. Le narrateur prépare l’inconnu. <span className="text-primary">La forteresse ne pardonne rien.</span></p>
-              <div className="mt-6 flex flex-wrap gap-3"><Button asChild className="h-auto min-h-12 rounded-none border-2 border-primary px-5 py-3 font-bold"><Link to="/salons"><Users />Créer ou rejoindre un salon</Link></Button><Button asChild variant="outline" className="h-auto min-h-12 rounded-none px-5 py-3 font-bold"><Link to="/operations"><Swords />Cartes prêtes à jouer</Link></Button></div>
+              <div className="mt-6 flex flex-wrap gap-3"><Button asChild className="h-auto min-h-12 rounded-none border-2 border-primary px-5 py-3 font-bold"><Link to="/salons"><Users />Créer ou rejoindre un salon</Link></Button><Button asChild variant="outline" className="h-auto min-h-12 rounded-none px-5 py-3 font-bold"><Link to="/cartes"><Swords />Mes cartes</Link></Button></div>
             </div>
             <a href="#concept" aria-label="Découvrir le jeu" className="flex h-14 w-14 items-center justify-center border-2 border-foreground transition-colors hover:border-primary hover:bg-primary"><ArrowDown size={24} /></a>
           </div>
