@@ -1,5 +1,5 @@
-/** Shared 40×40 tile grid used by every salon map (browser- and server-safe). */
-export const GRID = 40;
+/** Shared 160×160 tile grid used by every salon map (browser- and server-safe). */
+export const GRID = 160;
 export const CELLS = GRID * GRID;
 
 /** Tile codes 1..10 match frames 0..9 of src/assets/map-sprites.png. 0 = vide (infranchissable). */
@@ -39,10 +39,19 @@ export function nearestWalkable(map: GridMap, x: number, y: number) {
 }
 
 export function validateGrid(tiles: unknown, spawn: { x: number; y: number }): string | null {
-  if (!Array.isArray(tiles) || tiles.length !== CELLS) return "La carte doit compter exactement 40 × 40 cases.";
+  if (!Array.isArray(tiles) || tiles.length !== CELLS) return "La carte doit compter exactement 160 × 160 cases.";
   if (tiles.some((t) => !Number.isInteger(t) || t < 0 || t > MAX_TILE_CODE)) return "Case inconnue dans la carte.";
+  if (!Number.isInteger(spawn.x) || !Number.isInteger(spawn.y) || spawn.x < 0 || spawn.y < 0 || spawn.x >= GRID || spawn.y >= GRID) return "Le point de départ est hors de la carte.";
   if (!tileWalkable(tiles[spawn.y * GRID + spawn.x])) return "Le point de départ doit être sur une case praticable.";
   return null;
+}
+
+/** Preserve legacy terrain at identical coordinates, adding empty editable terrain around it. */
+export function expandLegacyTiles(tiles: number[]): number[] {
+  if (tiles.length !== 40 * 40) return tiles;
+  const expanded = Array<number>(CELLS).fill(0);
+  for (let y = 0; y < 40; y++) for (let x = 0; x < 40; x++) expanded[y * GRID + x] = tiles[y * 40 + x] ?? 0;
+  return expanded;
 }
 
 // ---------- Brush sizes (map editors) ----------
