@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
 import { CatalogArtwork } from "@/components/operations/CatalogArtwork";
 import { blockedMapEnemies, placeMapEnemy } from "@/lib/map-enemies";
-import { barrierTile, BRUSH_SIZES, CELLS, fillMapTiles, GRID, paintBrush, SPRITES, tileWalkable, validateGrid, type GridMap } from "@/lib/map-grid";
+import { barrierTile, BRUSH_SIZES, CELLS, fillMapTiles, GRID, paintBrush, placeMapSpawn, SPRITES, tileWalkable, validateGrid, type GridMap } from "@/lib/map-grid";
 import { createPersonalMapEnemy, deleteMyMap, listMapEnemyCatalog, listMyMaps, saveMyMap, type MapEnemy } from "@/lib/maps.functions";
 import { monsterSprite } from "@/lib/world-actors";
 
@@ -77,13 +77,17 @@ function MapsPage() {
       if (here >= 0) { setDraft({ ...draft, enemies: list.filter((_, i) => i !== here) }); return; }
       addEnemy(x, y); return;
     }
-    if (tool === "spawn") { if (kind === "down") setDraft({ ...draft, spawn: { x, y } }); return; }
+    if (tool === "spawn") {
+      if (kind === "down") { setDraft(placeMapSpawn(draft, x, y)); setMsg(null); }
+      return;
+    }
     if (tool === "fill") {
       if (kind !== "down") return;
       const tiles = [...draft.tiles], from = tiles[y * GRID + x], to = sprite;
       if (from === to) return;
       const stack = [[x, y]];
       while (stack.length) { const point = stack.pop(); if (!point) continue; const [cx, cy] = point; if (cx === undefined || cy === undefined || cx < 0 || cy < 0 || cx >= GRID || cy >= GRID || tiles[cy * GRID + cx] !== from) continue; tiles[cy * GRID + cx] = to; stack.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]); }
+      if (!tileWalkable(to)) tiles[draft.spawn.y * GRID + draft.spawn.x] = draft.tiles[draft.spawn.y * GRID + draft.spawn.x] ?? 6;
       setDraft({ ...draft, tiles }); return;
     }
     const v = tool === "block" ? barrierTile(sprite) : tool === "erase" ? 6 : sprite;
