@@ -41,3 +41,5 @@
 - [x] Test late-arrival rules (19 focused tests pass) and verify authenticated invitation-to-map arrival with persisted adventurer role and spawn (73,81); temporary salon removed, build OK.
 - [x] Improve nameplate font, size, rendering resolution and local overlap spacing; allow adventurer movement on their combat turn and show real control availability. Prevent adventurerless combat starts and deactivate existing enemy-only combats blocking late arrivals.
 - [x] Verify all four ZQSD moves through the authenticated UI with persisted coordinates; label screenshot reviewed, 25 focused tests pass, build OK and temporary salon removed. Multi-account combat movement remains unverified.
+- [ ] Handle ZQSD without mandatory map focus, one step per press, and verify rapid sequential steps.
+- [ ] Add server-enforced per-adventurer mob line of sight and verify visible/occluded rows.

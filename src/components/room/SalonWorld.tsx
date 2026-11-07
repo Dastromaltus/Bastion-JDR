@@ -13,14 +13,17 @@ import { salonTurn } from "@/lib/turn-order";
 import type Phaser from "phaser";
 import { motionDisabled } from "@/lib/motion";
 import { worldMovementAllowed } from "@/lib/world-movement";
+import { worldKeyDirection } from "@/lib/world-keys";
 
-export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string; name?: string; onChange: () => void }) {
+export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string; name?: string; onChange: () => unknown | Promise<unknown> }) {
   const mount = useRef<HTMLDivElement>(null);
   const game = useRef<Phaser.Game | null>(null);
   const [ready, setReady] = useState(false);
   const [failure, setFailure] = useState(false);
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
+  const pending = useRef<WorldDirection[]>([]);
+  const stepRef = useRef<(direction: WorldDirection) => Promise<void>>(async () => {});
   const [movingDirection, setMovingDirection] = useState<WorldDirection | null>(null);
   const [focused, setFocused] = useState(false);
   const [pressed, setPressed] = useState<WorldDirection | null>(null);
@@ -41,7 +44,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const participants = participantActors(d.players, here, d.me.id, grid);
   const activeId = d.combat?.current?.id ?? turn.active?.id;
   const actors: WorldActor[] = participants.map((actor) => ({ ...actor, name: `${actor.id === activeId ? "▶ " : ""}${actor.name}`, hp: d.players.find((p: any) => p.id === actor.id)?.hp }));
-   d.enemies.filter((e: any) => (e.status === "revele" || (d.me.role === "narrator" && e.status === "cache") || (e.status === "vaincu" && (isZombie(e.name) || isSlime(e.name)))) && e.zone === here).forEach((e: any, i: number) => actors.push({ id: e.id, name: e.status === "vaincu" ? "" : `${e.id === d.controlledEnemyId ? '▶ ' : ''}${e.status === 'cache' ? '? ' : ''}${e.name}`, x: e.tile_x ?? 16 + i % 4, y: e.tile_y ?? 9, frame: 12, hp: e.hp, ...(monsterSprite(e.name) ? { sprite: monsterSprite(e.name) } : {}), ...(e.status === "vaincu" ? { dead: true } : {}) }));
+   d.enemies.filter((e: any) => e.zone === here && (e.status !== "vaincu" || isZombie(e.name) || isSlime(e.name))).forEach((e: any, i: number) => actors.push({ id: e.id, name: e.status === "vaincu" ? "" : `${e.id === d.controlledEnemyId ? '▶ ' : ''}${e.status === 'cache' && d.me.role === 'narrator' ? '? ' : ''}${e.name}`, x: e.tile_x ?? 16 + i % 4, y: e.tile_y ?? 9, frame: 12, hp: e.hp, ...(monsterSprite(e.name) ? { sprite: monsterSprite(e.name) } : {}), ...(e.status === "vaincu" ? { dead: true } : {}) }));
   if (d.me.role === "narrator") (d.treasures ?? []).filter((t: any) => t.status === "cache" && t.tile_x != null && t.zone === here).forEach((t: any) => actors.push({ id: t.id, name: `✦ ${t.name}`, x: t.tile_x, y: t.tile_y, frame: 0, sprite: "treasure" }));
   useEffect(() => {
     let disposed = false;
@@ -70,19 +73,31 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     previousZone.current = here;
   }, [here]);
   async function step(direction: WorldDirection) {
-    if (!controlsReady || lock.current) return;
+    if (!controlsReady) { setMessage(controlLabel); return; }
+    if (lock.current) { pending.current.push(direction); return; }
     lock.current = true; setBusy(true); setMovingDirection(direction);
-    try { const result = await move({ data: { gameId: d.game.id, direction } }); setMessage(result.message); onChange(); }
-    catch (e) { setMessage(e instanceof Error ? e.message : "Déplacement impossible."); onChange(); }
-    finally { lock.current = false; setBusy(false); setMovingDirection(null); }
+    try { const result = await move({ data: { gameId: d.game.id, direction } }); setMessage(result.message); await onChange(); }
+    catch (e) { pending.current = []; setMessage(e instanceof Error ? e.message : "Déplacement impossible."); await onChange(); }
+    finally { lock.current = false; setBusy(false); setMovingDirection(null); const next = pending.current.shift(); if (next) void stepRef.current(next); }
   }
+  stepRef.current = step;
+  useEffect(() => {
+    const down = (event: KeyboardEvent) => {
+      const target = event.target;
+      const editing = target instanceof HTMLElement && !!target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]');
+      const direction = worldKeyDirection(event.key, event.repeat, editing);
+      if (!direction) return;
+      event.preventDefault(); setPressed(direction);
+      view.current?.focus({ preventScroll: true });
+      void stepRef.current(direction);
+    };
+    const up = () => setPressed(null);
+    window.addEventListener("keydown", down); window.addEventListener("keyup", up);
+    return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); pending.current = []; };
+  }, []);
   return <section className="space-y-3" aria-label="Exploration en vue de dessus">
     <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-pixel text-xl">{name ?? zoneLabel(here)}</h2><span className="text-xs text-muted-foreground">{grid.name} · 160 × 160 · {participants.length} participant(s)</span></div>
-    <div ref={view} tabIndex={0} role="group" aria-label="Carte du salon, vue de dessus. Clique puis utilise Z, Q, S, D." onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onMouseDown={() => view.current?.focus()} className={`salon-world relative overflow-hidden border-2 bg-game outline-none ${focused ? "border-primary ring-4 ring-primary" : "border-foreground"}`} onKeyUp={() => setPressed(null)} onKeyDown={(event) => {
-      const keys: Record<string, WorldDirection> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", z: "up", s: "down", q: "left", d: "right", Z: "up", S: "down", Q: "left", D: "right" };
-      const direction = keys[event.key];
-      if (direction) { event.preventDefault(); setPressed(direction); if (controlsReady) void step(direction); else setMessage(controlLabel); }
-    }}>
+    <div ref={view} tabIndex={0} role="group" aria-label="Carte du salon, vue de dessus. Clique puis utilise Z, Q, S, D." onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onMouseDown={() => view.current?.focus()} className={`salon-world relative overflow-hidden border-2 bg-game outline-none ${focused ? "border-primary ring-4 ring-primary" : "border-foreground"}`}>
       <div ref={mount} className="salon-world-canvas" />
       <p aria-live="polite" className={`pointer-events-none absolute left-2 top-2 max-w-[calc(100%-1rem)] border-2 px-2 py-1 font-pixel text-[10px] uppercase ${focused && controlsReady ? "border-primary bg-primary text-primary-foreground" : "border-foreground bg-background text-foreground"}`}>{controlLabel}</p>
       {focused && <div aria-hidden="true" className="pointer-events-none absolute bottom-2 right-2 grid grid-cols-3 gap-1">
