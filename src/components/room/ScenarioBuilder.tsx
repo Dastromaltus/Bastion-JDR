@@ -5,7 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
-import { BRUSH_SIZES, GRID, SPRITES } from "@/lib/map-grid";
+import { BRUSH_SIZES, fillMapTiles, GRID, SPRITES } from "@/lib/map-grid";
+import { PaintBucket } from "lucide-react";
 import { TRACKS } from "@/lib/ambience-tracks";
 import { getMapSequence, goToSequenceMap, listMapEnemyCatalog, listMyMaps, saveScenario } from "@/lib/maps.functions";
 import { MAX_STEPS, moveStep, paintTile, putMob, type ScenarioStep } from "@/lib/scenario-steps";
@@ -193,11 +194,16 @@ export function ScenarioBuilder({ d }: { d: any }) {
                   <button aria-pressed={brush === "spawn"} onClick={() => setBrush("spawn")} className={`min-h-11 border-2 text-[10px] font-black uppercase ${brush === "spawn" ? "border-primary" : "border-foreground/40"}`}>Départ</button>
                 </div>
                 <p className="text-xs font-black uppercase">Taille du pinceau · {brushSize} × {brushSize}</p>
-                <div role="radiogroup" aria-label="Taille du pinceau" className="flex items-center gap-1">
+                <div role="radiogroup" aria-label="Taille du pinceau" className="grid grid-cols-4 gap-1">
                   {BRUSH_SIZES.map((s) => (
-                    <button key={s} role="radio" aria-checked={brushSize === s} aria-label={`Pinceau ${s} sur ${s} cases`} onClick={() => setBrushSize(s)} className={`flex size-11 shrink-0 items-center justify-center border-2 ${brushSize === s ? "border-primary bg-secondary" : "border-foreground/40"}`}><span aria-hidden="true" className="block border-2 border-current bg-current/30" style={{ width: s * 5, height: s * 5 }} /></button>
+                    <Button key={s} role="radio" aria-checked={brushSize === s} aria-label={`Pinceau ${s} sur ${s} cases`} variant={brushSize === s ? "default" : "outline"} onClick={() => setBrushSize(s)} className="h-11 min-w-0 rounded-none p-0 text-xs font-bold">{s}×{s}</Button>
                   ))}
                 </div>
+                <Button variant="outline" disabled={brush === "spawn" || busy} className="min-h-11 w-full whitespace-normal rounded-none" onClick={() => {
+                  if (brush === "spawn" || !confirm("Remplacer le décor de toute cette carte par la texture choisie ? Les mobs, trésors et le départ sont conservés.")) return;
+                  patch({ tiles: fillMapTiles(step.tiles, brush, [step.spawn, ...step.enemies, ...(step.treasures ?? [])]) });
+                  toast.success("Carte remplie ; les cases occupées restent praticables.");
+                }}><PaintBucket />Remplir toute la carte</Button>
                 <p className="text-xs text-muted-foreground">Glisse sur la carte pour peindre. La grille reste toujours de 160 × 160 cases ; un mob recouvert par un mur est retiré.</p>
               </>}
 

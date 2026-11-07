@@ -1,9 +1,28 @@
 import { expect, it } from "vitest";
-import { BRUSH_SIZES, CELLS, GRID, barrierTile, brushCells, paintBrush } from "@/lib/map-grid";
+import { BRUSH_SIZES, CELLS, GRID, barrierTile, brushCells, fillMapTiles, paintBrush } from "@/lib/map-grid";
 import { paintTile, type ScenarioStep } from "@/lib/scenario-steps";
 
-it("offers brush sizes from 1 × 1 up to 5 × 5", () => {
-  expect([...BRUSH_SIZES]).toEqual([1, 2, 3, 4, 5]);
+it("offers larger brushes up to 80 × 80", () => {
+  expect([...BRUSH_SIZES]).toEqual([1, 2, 3, 4, 5, 8, 10, 16, 20, 32, 40, 80]);
+});
+
+it("paints 6400 cells with the largest brush", () => {
+  expect(paintBrush(Array<number>(CELLS).fill(6), 80, 80, 3, 80).filter((t) => t === 3)).toHaveLength(6400);
+});
+
+it("fills all 160 × 160 cells with a selected walkable texture", () => {
+  const tiles = Array<number>(CELLS).fill(7);
+  const next = fillMapTiles(tiles, 10, [{ x: 80, y: 80 }]);
+  expect(next).toHaveLength(25600);
+  expect(next.every((t) => t === 10)).toBe(true);
+  expect(tiles[0]).toBe(7);
+});
+
+it("preserves spawn and enemy cells when filling with blocking terrain", () => {
+  const next = fillMapTiles(Array<number>(CELLS).fill(6), barrierTile(3), [{ x: 80, y: 80 }, { x: 10, y: 20 }]);
+  expect(next[80 * GRID + 80]).toBe(6);
+  expect(next[20 * GRID + 10]).toBe(6);
+  expect(next.filter((t) => t === 13)).toHaveLength(25598);
 });
 
 it("a 3 × 3 brush covers nine cells centred on the cursor and clips at the border", () => {

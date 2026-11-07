@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
 import { CatalogArtwork } from "@/components/operations/CatalogArtwork";
 import { blockedMapEnemies, placeMapEnemy } from "@/lib/map-enemies";
-import { barrierTile, BRUSH_SIZES, CELLS, GRID, paintBrush, SPRITES, tileWalkable, validateGrid, type GridMap } from "@/lib/map-grid";
+import { barrierTile, BRUSH_SIZES, CELLS, fillMapTiles, GRID, paintBrush, SPRITES, tileWalkable, validateGrid, type GridMap } from "@/lib/map-grid";
 import { createPersonalMapEnemy, deleteMyMap, listMapEnemyCatalog, listMyMaps, saveMyMap, type MapEnemy } from "@/lib/maps.functions";
 import { monsterSprite } from "@/lib/world-actors";
 
@@ -99,6 +99,13 @@ function MapsPage() {
     setDraft(next); setPosition({ x: x + 1, y: y + 1 }); setMsg(null);
   }
 
+  function fillWholeMap() {
+    if (!draft || !confirm("Remplacer le décor de toute la carte par la texture choisie ? Les ennemis et le départ sont conservés.")) return;
+    const value = tool === "block" ? barrierTile(sprite) : sprite;
+    setDraft({ ...draft, tiles: fillMapTiles(draft.tiles, value, [draft.spawn, ...(draft.enemies ?? [])]) });
+    setMsg(tileWalkable(value) ? "Toute la carte a été remplie." : "Carte remplie ; les cases du départ et des ennemis sont conservées.");
+  }
+
   async function submit() {
     if (!draft) return;
     const err = validateGrid(draft.tiles, draft.spawn);
@@ -173,8 +180,8 @@ function MapsPage() {
             </div>
             {(tool === "brush" || tool === "block" || tool === "erase") && <div className="border-2 border-foreground p-2">
               <p className="text-[10px] font-black uppercase">Taille du pinceau · {brushSize} × {brushSize}</p>
-              <div role="radiogroup" aria-label="Taille du pinceau" className="mt-1 flex items-center gap-1">
-                {BRUSH_SIZES.map((s) => <Button key={s} role="radio" aria-checked={brushSize === s} aria-label={`Pinceau ${s} sur ${s} cases`} variant={brushSize === s ? "default" : "ghost"} onClick={() => setBrushSize(s)} className="size-11 min-h-11 shrink-0 rounded-none p-0"><span aria-hidden="true" className="block border-2 border-current bg-current/30" style={{ width: s * 5, height: s * 5 }} /></Button>)}
+              <div role="radiogroup" aria-label="Taille du pinceau" className="mt-1 grid grid-cols-4 gap-1">
+                {BRUSH_SIZES.map((s) => <Button key={s} role="radio" aria-checked={brushSize === s} aria-label={`Pinceau ${s} sur ${s} cases`} variant={brushSize === s ? "default" : "ghost"} onClick={() => setBrushSize(s)} className="h-11 min-w-0 rounded-none p-0 text-xs font-bold">{s}×{s}</Button>)}
               </div>
             </div>}
             <Button variant={tool === "enemy" ? "default" : "outline"} onClick={() => setTool("enemy")} className="min-h-11 w-full rounded-none"><Skull />Ennemis · {draft.enemies?.length ?? 0}</Button>
@@ -208,6 +215,7 @@ function MapsPage() {
                 <SpriteSwatch code={s.code} /><span><b>{s.label}</b><br /><span className="opacity-70">{tool === "block" ? "Barrière" : s.walk ? "Praticable" : "Bloquant"}</span></span>
               </Button>)}
             </div>
+            {tool !== "enemy" && <Button variant="outline" disabled={busy} onClick={fillWholeMap} className="min-h-11 w-full whitespace-normal rounded-none"><PaintBucket />Remplir toute la carte</Button>}
             {msg && <p role="status" className="anim-enter text-sm font-bold">{msg}</p>}
             <Button onClick={submit} disabled={busy} className="h-11 w-full rounded-none font-black uppercase">{busy ? <span className="anim-loading">Enregistrement…</span> : "Enregistrer"}</Button>
             <Button variant="outline" onClick={() => { setDraft(null); setMsg(null); }} className="h-11 w-full rounded-none">Retour à mes cartes</Button>
