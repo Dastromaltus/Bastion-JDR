@@ -260,6 +260,13 @@
       "when": 1794079769810,
       "tag": "0036_adventurer_screen_vision",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794079824606,
+      "tag": "0037_mob_move_keeps_turn",
+      "breakpoints": true
     }
   ]
 }
