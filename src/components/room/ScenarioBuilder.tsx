@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
-import { GRID, PREBUILT_MAPS, SPRITES } from "@/lib/map-grid";
+import { BRUSH_SIZES, GRID, PREBUILT_MAPS, SPRITES } from "@/lib/map-grid";
 import { readyMapStep } from "@/lib/ready-maps";
 import { TRACKS } from "@/lib/ambience-tracks";
 import { getMapSequence, goToSequenceMap, listMapEnemyCatalog, listMyMaps, saveScenario } from "@/lib/maps.functions";
@@ -35,6 +35,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
   const [mobId, setMobId] = useState("");
   const [picked, setPicked] = useState<number | null>(null);
   const [brush, setBrush] = useState<number | "spawn">(6);
+  const [brushSize, setBrushSize] = useState(1);
   const [source, setSource] = useState("prebuilt:le-sas");
   useEffect(() => { if (seq.data) setSteps(seq.data.items); }, [seq.data]);
   useEffect(() => { if (!mobId && cat.data?.[0]) setMobId(cat.data[0].id); }, [cat.data, mobId]);
@@ -67,8 +68,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
     if (!step) return;
     if (section === "decor") {
       if (brush === "spawn") { if (kind === "down") patch({ spawn: { x, y } }); return; }
-      if (x === step.spawn.x && y === step.spawn.y && !SPRITES.find((s) => s.code === brush)?.walk) return;
-      patch(paintTile(step, x, y, brush)); return;
+      patch(paintTile(step, x, y, brush, brushSize, SPRITES.find((s) => s.code === brush)?.walk ? undefined : [step.spawn])); return;
     }
     if (section !== "mobs" || kind !== "down") return;
     const here = step.enemies.findIndex((e) => e.x === x && e.y === y);
@@ -142,7 +142,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
 
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_16rem]">
             <div className="border-2 border-foreground">
-              <MapCanvas tiles={step.tiles} spawn={step.spawn} markers={markers} {...(section === "mobs" || section === "decor" ? { onCell } : {})}
+              <MapCanvas tiles={step.tiles} spawn={step.spawn} markers={markers} brushSize={section === "decor" ? brushSize : undefined} {...(section === "mobs" || section === "decor" ? { onCell } : {})}
                 label={`Carte de l'étape ${sel + 1}, ${step.name}, 40 × 40 cases`} className={section === "mobs" || section === "decor" ? "cursor-crosshair" : ""} />
             </div>
 
@@ -192,6 +192,12 @@ export function ScenarioBuilder({ d }: { d: any }) {
                   ))}
                   <button aria-pressed={brush === 0} onClick={() => setBrush(0)} className={`min-h-11 border-2 text-[10px] font-black uppercase ${brush === 0 ? "border-primary" : "border-foreground/40"}`}>Barrière</button>
                   <button aria-pressed={brush === "spawn"} onClick={() => setBrush("spawn")} className={`min-h-11 border-2 text-[10px] font-black uppercase ${brush === "spawn" ? "border-primary" : "border-foreground/40"}`}>Départ</button>
+                </div>
+                <p className="text-xs font-black uppercase">Taille du pinceau · {brushSize} × {brushSize}</p>
+                <div role="radiogroup" aria-label="Taille du pinceau" className="flex items-center gap-1">
+                  {BRUSH_SIZES.map((s) => (
+                    <button key={s} role="radio" aria-checked={brushSize === s} aria-label={`Pinceau ${s} sur ${s} cases`} onClick={() => setBrushSize(s)} className={`flex size-11 shrink-0 items-center justify-center border-2 ${brushSize === s ? "border-primary bg-secondary" : "border-foreground/40"}`}><span aria-hidden="true" className="block border-2 border-current bg-current/30" style={{ width: s * 5, height: s * 5 }} /></button>
+                  ))}
                 </div>
                 <p className="text-xs text-muted-foreground">Glisse sur la carte pour peindre. La grille reste toujours de 40 × 40 cases ; un mob recouvert par un mur est retiré.</p>
               </>}

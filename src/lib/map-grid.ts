@@ -45,6 +45,32 @@ export function validateGrid(tiles: unknown, spawn: { x: number; y: number }): s
   return null;
 }
 
+// ---------- Brush sizes (map editors) ----------
+/** Square brush sizes offered by the map editors, in cells. */
+export const BRUSH_SIZES = [1, 2, 3, 4, 5] as const;
+
+/** Cells covered by a size × size square brush centred on (x, y), clipped to the grid. */
+export function brushCells(x: number, y: number, size: number): { x: number; y: number }[] {
+  const s = Math.max(1, Math.min(Math.round(size), GRID));
+  const off = Math.floor((s - 1) / 2);
+  const cells: { x: number; y: number }[] = [];
+  for (let dy = 0; dy < s; dy++) for (let dx = 0; dx < s; dx++) {
+    const cx = x - off + dx, cy = y - off + dy;
+    if (cx >= 0 && cy >= 0 && cx < GRID && cy < GRID) cells.push({ x: cx, y: cy });
+  }
+  return cells;
+}
+
+/** Paint a brush square; cells listed in `keep` are never overwritten. Returns the same array when nothing changes. */
+export function paintBrush(tiles: number[], x: number, y: number, value: number, size = 1, keep?: { x: number; y: number }[]): number[] {
+  const locked = new Set((keep ?? []).map((c) => `${c.x}:${c.y}`));
+  const cells = brushCells(x, y, size).filter((c) => !locked.has(`${c.x}:${c.y}`));
+  if (!cells.some((c) => tiles[c.y * GRID + c.x] !== value)) return tiles;
+  const next = [...tiles];
+  for (const c of cells) next[c.y * GRID + c.x] = value;
+  return next;
+}
+
 // ---------- Prebuilt maps (generated from the same sprites) ----------
 type Rect = [number, number, number, number]; // x, y, w, h
 function build(name: string, floor: number, wall: number, rooms: Rect[], extras: (t: number[]) => void, spawn: { x: number; y: number }): GridMap {

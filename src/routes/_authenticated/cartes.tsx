@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
 import { CatalogArtwork } from "@/components/operations/CatalogArtwork";
 import { blockedMapEnemies, placeMapEnemy } from "@/lib/map-enemies";
-import { barrierTile, CELLS, GRID, PREBUILT_MAPS, SPRITES, validateGrid, type GridMap } from "@/lib/map-grid";
+import { barrierTile, BRUSH_SIZES, CELLS, GRID, paintBrush, PREBUILT_MAPS, SPRITES, tileWalkable, validateGrid, type GridMap } from "@/lib/map-grid";
 import { createPersonalMapEnemy, deleteMyMap, listMapEnemyCatalog, listMyMaps, saveMyMap, type MapEnemy } from "@/lib/maps.functions";
 import { monsterSprite } from "@/lib/world-actors";
 
@@ -45,6 +45,7 @@ function MapsPage() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [tool, setTool] = useState<Tool>("brush");
   const [sprite, setSprite] = useState(6);
+  const [brushSize, setBrushSize] = useState(1);
   const catalogFn = useServerFn(listMapEnemyCatalog);
   const catalog = useQuery({ queryKey: ["map-enemy-catalog"], queryFn: () => catalogFn() });
   const [enemyId, setEnemyId] = useState("");
@@ -86,8 +87,9 @@ function MapsPage() {
       setDraft({ ...draft, tiles }); return;
     }
     const v = tool === "block" ? barrierTile(sprite) : tool === "erase" ? 6 : sprite;
-    if (draft.tiles[y * GRID + x] === v) return;
-    setDraft((d) => d && { ...d, tiles: d.tiles.map((t, i) => (i === y * GRID + x ? v : t)) });
+    const tiles = paintBrush(draft.tiles, x, y, v, brushSize, tileWalkable(v) ? undefined : [draft.spawn]);
+    if (tiles === draft.tiles) return;
+    setDraft((d) => d && { ...d, tiles });
   }
 
   function addEnemy(x: number, y: number) {
@@ -160,7 +162,7 @@ function MapsPage() {
         <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_18rem]">
           <div className="min-w-0">
             <div className="mx-auto max-w-[min(100%,44rem)] border-2 border-foreground">
-              <MapCanvas tiles={draft.tiles} spawn={draft.spawn} onCell={paint} markers={markers(draft.enemies)} label={`Éditeur de ${draft.name}, 40 × 40 cases`} className="cursor-crosshair" />
+              <MapCanvas tiles={draft.tiles} spawn={draft.spawn} onCell={paint} markers={markers(draft.enemies)} brushSize={tool === "brush" || tool === "block" || tool === "erase" ? brushSize : undefined} label={`Éditeur de ${draft.name}, 40 × 40 cases`} className="cursor-crosshair" />
             </div>
             <div className="mt-4 flex items-center justify-between border-b-2 border-foreground pb-2">
               <h2 className="font-display text-xs uppercase">Ennemis placés</h2><span className="text-sm">{draft.enemies?.length ?? 0}</span>
@@ -179,6 +181,12 @@ function MapsPage() {
             <div role="radiogroup" aria-label="Outil" className="grid grid-cols-3 border-2 border-foreground sm:grid-cols-6 lg:grid-cols-3">
               {tools.map(([k, l, Icon]) => <Button key={k} role="radio" aria-label={l} aria-checked={tool === k} variant={tool === k ? "default" : "ghost"} onClick={() => setTool(k)} className="h-auto min-h-11 flex-col gap-1 rounded-none px-0 text-[10px] font-black uppercase"><Icon className="size-4" />{l}</Button>)}
             </div>
+            {(tool === "brush" || tool === "block" || tool === "erase") && <div className="border-2 border-foreground p-2">
+              <p className="text-[10px] font-black uppercase">Taille du pinceau · {brushSize} × {brushSize}</p>
+              <div role="radiogroup" aria-label="Taille du pinceau" className="mt-1 flex items-center gap-1">
+                {BRUSH_SIZES.map((s) => <Button key={s} role="radio" aria-checked={brushSize === s} aria-label={`Pinceau ${s} sur ${s} cases`} variant={brushSize === s ? "default" : "ghost"} onClick={() => setBrushSize(s)} className="size-11 min-h-11 shrink-0 rounded-none p-0"><span aria-hidden="true" className="block border-2 border-current bg-current/30" style={{ width: s * 5, height: s * 5 }} /></Button>)}
+              </div>
+            </div>}
             <Button variant={tool === "enemy" ? "default" : "outline"} onClick={() => setTool("enemy")} className="min-h-11 w-full rounded-none"><Skull />Ennemis · {draft.enemies?.length ?? 0}</Button>
             {tool === "enemy" && <div className="space-y-2 border-2 border-foreground p-2">
               <label className="block text-xs font-black uppercase">Ennemi à poser
