@@ -5,7 +5,7 @@ export type WorldParticipant = {
   id: string; display_name: string; role: string; race: string;
   current_zone?: string | null; world_x?: number; world_y?: number; world_zone?: string | null; hp?: number; max_hp?: number;
 };
-export type MonsterSprite = "zombie" | "slime" | "yeti";
+export type MonsterSprite = "zombie" | "slime" | "yeti" | "wolf";
 export type WorldActor = { id: string; name: string; x: number; y: number; frame: number; hp?: number; maxHp?: number; sprite?: MonsterSprite | "treasure" | undefined; dead?: boolean };
 /** Monsters named "Zombie…" use the animated zombie sprite sheet. */
 export const isZombie = (name: string) => /zombie/i.test(name);
@@ -13,7 +13,8 @@ export const isZombie = (name: string) => /zombie/i.test(name);
 export const isSlime = (name: string) => /slime/i.test(name);
 /** Animated monster sprite for a catalog name, if any. */
 export const isYeti = (name: string) => /y[eé]ti/i.test(name);
-export const monsterSprite = (name: string): MonsterSprite | undefined => (isZombie(name) ? "zombie" : isSlime(name) ? "slime" : isYeti(name) ? "yeti" : undefined);
+export const isWolf = (name: string) => /loup|wolf/i.test(name);
+export const monsterSprite = (name: string): MonsterSprite | undefined => (isZombie(name) ? "zombie" : isSlime(name) ? "slime" : isYeti(name) ? "yeti" : isWolf(name) ? "wolf" : undefined);
 const FRAMES: Record<string, number> = { Humain: 7, Insecte: 8, Reptile: 9, Crustacé: 10, Oiseau: 11 };
 
 /** The narrator is an observer, not a movable adventurer. */
