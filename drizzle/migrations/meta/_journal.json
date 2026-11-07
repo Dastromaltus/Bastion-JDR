@@ -323,6 +323,13 @@
       "when": 1794088972035,
       "tag": "0045_slash_fixed_damage",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1794090556186,
+      "tag": "0046_slash_one_cell_range",
+      "breakpoints": true
     }
   ]
 }
