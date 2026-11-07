@@ -295,6 +295,13 @@
       "when": 1794082799432,
       "tag": "0041_combat_random_bytes_namespace",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1794083604523,
+      "tag": "0042_additional_map_textures",
+      "breakpoints": true
     }
   ]
 }
