@@ -347,9 +347,9 @@ function NarratorPanel({ d, narr, busy, refetch }: { d: any; narr: any; busy: st
       {game.status === "waiting" && <div className="flex flex-wrap gap-3"><Button asChild variant="outline" className="min-h-11"><Link to="/campagnes">Concevoir une campagne</Link></Button></div>}
 
       <div className="flex flex-wrap gap-2">
+        {game.status !== "finished" && <Button variant="outline" disabled={!!busy} className="min-h-11 rounded-none" onClick={() => narr(game.locked ? "unlock" : "lock", {}, game.locked ? "Salon déverrouillé" : "Salon verrouillé")}>{game.locked ? "Déverrouiller" : "Verrouiller"} le salon</Button>}
         {game.status === "waiting" && (
           <>
-            <Button variant="outline" disabled={!!busy} className="min-h-11 rounded-none" onClick={() => narr(game.locked ? "unlock" : "lock", {}, game.locked ? "Salon déverrouillé" : "Salon verrouillé")}>{game.locked ? "Déverrouiller" : "Verrouiller"} le salon</Button>
             <Button disabled={!!busy} className="min-h-11 rounded-none font-black uppercase" onClick={() => narr("start", {}, "Partie lancée")}>{busy === "start" ? "Lancement…" : "Lancer la partie"}</Button>
           </>
         )}
