@@ -54,7 +54,13 @@ export class WorldScene extends Phaser.Scene {
     });
     this.events.on("focus", (p: { id?: string; x: number; y: number }) => {
       const target = p.id ? this.actors.get(p.id) : undefined;
-      if (target) { const lerp = motionDisabled() ? 1 : 0.15; this.cameras.main.startFollow(target, true, lerp, lerp); return; }
+      if (target) {
+        const cam = this.cameras.main as any, lerp = motionDisabled() ? 1 : 0.1;
+        // Keep the same follow running (restarting it causes jumps); sub-pixel camera motion avoids stutter.
+        if (cam._follow !== target) cam.startFollow(target, false, lerp, lerp);
+        else cam.setLerp(lerp, lerp);
+        return;
+      }
       this.cameras.main.stopFollow();
       const cam = this.cameras.main, tx = p.x * 16 + 8, ty = p.y * 16 + 8;
       if (motionDisabled()) cam.centerOn(tx, ty); else cam.pan(tx, ty, 160, "Linear", true);
@@ -103,7 +109,7 @@ export class WorldScene extends Phaser.Scene {
         this.tweens.killTweensOf(node);
         if (reduced) node.setPosition(x, y);
         else if (node.x !== x || node.y !== y) {
-          this.tweens.add({ targets: node, x, y, duration: 160, ease: "Linear" });
+          this.tweens.add({ targets: node, x, y, duration: 180, ease: "Sine.easeOut" });
           if (sprite instanceof Phaser.GameObjects.Image) {
             this.tweens.killTweensOf(sprite);
             sprite.setY(-2).setScale(1).setAlpha(1);
