@@ -32,7 +32,7 @@
 - [x] Add custom enemy authoring directly to Mes cartes, enforce private owner catalog access and retain saved overlays on salon install.
 - [x] Paint impassable barriers with all ten brush textures; 25 focused tests pass, including texture decoding, placement refusal and private catalog rules.
 - [ ] Verify personal enemy creation, textured-barrier save/reload and salon install in a signed-in game — blocked until preview sign-in; self-session has no matching account.
-- [ ] Add the ten uploaded textures to both map editors, preserve legacy barriers, and verify saving/reopening.
+- [x] Add the ten uploaded textures to shared map editors and salon rendering, preserve legacy barriers; 22 tests pass and authenticated painting, barrier save/reopen and mobile palette verified without errors.
 
 - [x] Remove prebuilt map/campaign offerings and keep personal map choices only; verified both retired URLs redirect to Mes cartes, the personal editor opens, 12 focused tests pass and build OK.
 - [x] Enlarge personal and salon maps to 160×160 with coordinate-preserving legacy expansion, compatible database bounds and zoom; 31 tests pass, authenticated personal save/reopen and legacy salon preview verified, build OK.
