@@ -1,5 +1,5 @@
 /** Browser- and server-safe helpers for the GM scenario builder (ordered steps = maps). */
-import { cellWalkable, GRID, paintBrush, tileWalkable, type GridMap } from "./map-grid";
+import { cellWalkable, GRID, paintBrush, type GridMap } from "./map-grid";
 
 export const MAX_STEPS = 12;
 export const MAX_MOBS = 60;
@@ -27,9 +27,9 @@ export function putMob(step: ScenarioStep, x: number, y: number, catalogId: stri
   return { ...step, enemies: [...step.enemies, { catalogId, x, y }] };
 }
 
-/** Repainting a tile drops mobs that would end up inside a wall. A wide brush never walls off the spawn. */
-export function paintTile(step: ScenarioStep, x: number, y: number, code: number, size = 1): ScenarioStep {
-  const tiles = paintBrush(step.tiles, x, y, code, size, tileWalkable(code) ? undefined : [step.spawn]);
+/** Repainting tiles drops mobs that would end up inside a wall. `keep` cells (the spawn) are never overwritten. */
+export function paintTile(step: ScenarioStep, x: number, y: number, code: number, size = 1, keep?: { x: number; y: number }[]): ScenarioStep {
+  const tiles = paintBrush(step.tiles, x, y, code, size, keep);
   const next = { ...step, tiles };
   return { ...next, enemies: next.enemies.filter((e) => cellWalkable(next, e.x, e.y)), treasures: (next.treasures ?? []).filter((e) => cellWalkable(next, e.x, e.y)) };
 }

@@ -68,8 +68,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
     if (!step) return;
     if (section === "decor") {
       if (brush === "spawn") { if (kind === "down") patch({ spawn: { x, y } }); return; }
-      if (x === step.spawn.x && y === step.spawn.y && !SPRITES.find((s) => s.code === brush)?.walk) return;
-      patch(paintTile(step, x, y, brush, brushSize)); return;
+      patch(paintTile(step, x, y, brush, brushSize, SPRITES.find((s) => s.code === brush)?.walk ? undefined : [step.spawn])); return;
     }
     if (section !== "mobs" || kind !== "down") return;
     const here = step.enemies.findIndex((e) => e.x === x && e.y === y);

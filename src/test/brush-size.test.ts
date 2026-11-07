@@ -28,7 +28,7 @@ it("repainting the same square changes nothing and returns the very same array",
 
 it("a wide brush keeps the point of départ walkable", () => {
   const step: ScenarioStep = { name: "T", tiles: Array<number>(CELLS).fill(6), spawn: { x: 20, y: 20 }, source: "test", enemies: [], track: null, intro: "" };
-  const next = paintTile(step, 20, 20, barrierTile(7), 3);
+  const next = paintTile(step, 20, 20, barrierTile(7), 3, [step.spawn]);
   expect(next.tiles[20 * GRID + 20]).toBe(6);
   expect(next.tiles[19 * GRID + 19]).toBe(barrierTile(7));
 });

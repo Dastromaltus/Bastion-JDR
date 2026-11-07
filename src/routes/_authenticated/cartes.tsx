@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
 import { CatalogArtwork } from "@/components/operations/CatalogArtwork";
 import { blockedMapEnemies, placeMapEnemy } from "@/lib/map-enemies";
-import { barrierTile, BRUSH_SIZES, CELLS, GRID, paintBrush, PREBUILT_MAPS, SPRITES, validateGrid, type GridMap } from "@/lib/map-grid";
+import { barrierTile, BRUSH_SIZES, CELLS, GRID, paintBrush, PREBUILT_MAPS, SPRITES, tileWalkable, validateGrid, type GridMap } from "@/lib/map-grid";
 import { createPersonalMapEnemy, deleteMyMap, listMapEnemyCatalog, listMyMaps, saveMyMap, type MapEnemy } from "@/lib/maps.functions";
 import { monsterSprite } from "@/lib/world-actors";
 
@@ -87,7 +87,7 @@ function MapsPage() {
       setDraft({ ...draft, tiles }); return;
     }
     const v = tool === "block" ? barrierTile(sprite) : tool === "erase" ? 6 : sprite;
-    const tiles = paintBrush(draft.tiles, x, y, v, brushSize);
+    const tiles = paintBrush(draft.tiles, x, y, v, brushSize, tileWalkable(v) ? undefined : [draft.spawn]);
     if (tiles === draft.tiles) return;
     setDraft((d) => d && { ...d, tiles });
   }
