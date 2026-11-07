@@ -15,6 +15,8 @@ import { motionDisabled } from "@/lib/motion";
 import { mobMovementAllowed, worldMovementAllowed } from "@/lib/world-movement";
 import { WORLD_DELTAS } from "@/lib/world-map";
 import { worldKeyDirection } from "@/lib/world-keys";
+import { combatAction } from "@/lib/combat.functions";
+import { worldAttackAllowed } from "@/lib/world-attack";
 
 export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string; name?: string; onChange: () => unknown | Promise<unknown> }) {
   const mount = useRef<HTMLDivElement>(null);
@@ -30,6 +32,27 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const [message, setMessage] = useState("");
   const move = useServerFn(moveWorldPlayer);
   const moveMob = useServerFn(moveSalonMob);
+  const attack = useServerFn(combatAction);
+  const attacking = useRef(false);
+  useEffect(() => {
+    const clickEnemy = async (event: Event) => {
+      if (!(event instanceof CustomEvent) || typeof event.detail !== "string") return;
+      const enemy = d.enemies.find((e: any) => e.id === event.detail);
+      if (!worldAttackAllowed({ status: d.game.status, role: d.me.role, hp: d.me.hp, enemyVisible: !!enemy, enemyAlive: !!enemy && enemy.status !== "vaincu" && enemy.hp > 0, busy: attacking.current })) return;
+      attacking.current = true;
+      setMessage(`Attaque sur ${enemy.name}…`);
+      try {
+        await queue.current;
+        const result = await attack({ data: { gameId: d.game.id, action: "attack", enemyId: enemy.id, revision: d.combat?.revision ?? 0 } });
+        setMessage(`${enemy.name} : ${result.damage ?? 0} dégâts`);
+        await onChange();
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Attaque impossible.");
+      } finally { attacking.current = false; }
+    };
+    window.addEventListener("bastion-select-mob", clickEnemy);
+    return () => window.removeEventListener("bastion-select-mob", clickEnemy);
+  }, [d, attack, onChange]);
   const [optimistic, setOptimistic] = useState<{ id: string; x: number; y: number } | null>(null);
   const optimisticRef = useRef<{ id: string; x: number; y: number } | null>(null);
   const queue = useRef<Promise<void>>(Promise.resolve());
@@ -41,7 +64,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const enabled = worldMovementAllowed({ status: d.game.status, role: d.me.role, hp: d.me.hp, sameZone: here === (d.me.current_zone ?? "entree"), explorationTurn: turn.isMine, combat: d.combat });
   const fetchMap = useServerFn(getSalonMap);
   const mapQ = useQuery({ queryKey: ["salon-map", d.game.id, (d.events ?? []).filter((e: any) => e.kind === "carte").length], queryFn: () => fetchMap({ data: { gameId: d.game.id } }), staleTime: 30_000, placeholderData: (prev) => prev });
-  const grid = mapQ.data ?? PREBUILT_MAPS[DEFAULT_MAP_KEY]!;
+  const grid = mapQ.data ?? PREBUILT_MAPS[DEFAULT_MAP_KEY];
   const narrator = d.me.role === "narrator";
   // The narrator moves the selected mob, or the enemy whose combat turn it is.
   const turnMobId = d.controlledEnemyId ?? (d.combat?.active && d.combat.current?.kind === "enemy" ? d.combat.current.id : null);

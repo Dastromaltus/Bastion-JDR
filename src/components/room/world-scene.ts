@@ -98,7 +98,7 @@ export class WorldScene extends Phaser.Scene {
         if (sprite instanceof Phaser.GameObjects.Sprite && !actor.dead && !reduced) sprite.play(actor.sprite === "slime" ? "s-idle" : "z-idle");
         const label = this.add.text(0, -18, actor.name, { fontFamily: "monospace", fontSize: "10px", color: getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim(), backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim(), padding: { x: 4, y: 3 }, resolution: 3 }).setOrigin(0.5, 1).setVisible(false);
         node = this.add.container(x, y, [sprite, label, this.add.graphics()]);
-        if (actor.frame === 12) sprite.setInteractive().on("pointerdown", () => window.dispatchEvent(new CustomEvent("bastion-select-mob", { detail: actor.id })));
+        if (actor.frame === 12) sprite.setInteractive({ useHandCursor: true }).on("pointerdown", () => window.dispatchEvent(new CustomEvent("bastion-select-mob", { detail: actor.id })));
         this.actors.set(actor.id, node);
         if (!reduced) this.tweens.add({ targets: sprite, alpha: { from: 0, to: 1 }, scale: actor.sprite === "zombie" || actor.sprite === "slime" ? { from: 1.3, to: 1.5 } : { from: 0.88, to: 1 }, duration: actor.frame === 12 ? 200 : 160, ease: "Linear" });
       } else {
