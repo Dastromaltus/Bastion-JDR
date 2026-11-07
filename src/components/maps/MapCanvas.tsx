@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import mapSprites from "@/assets/map-textures-complete.png.asset.json";
 import zombieSheet from "@/assets/zombie-sheet.png.asset.json";
 import slimeSheet from "@/assets/slime-sheet.png.asset.json";
+import yetiSheet from "@/assets/yeti-sheet.png.asset.json";
+import type { MonsterSprite } from "@/lib/world-actors";
 
-const monsterImgs: Partial<Record<"zombie" | "slime", HTMLImageElement>> = {};
+const monsterImgs: Partial<Record<MonsterSprite, HTMLImageElement>> = {};
 import { brushCells, GRID, SPRITES, tileFrame } from "@/lib/map-grid";
 
 let sheet: HTMLImageElement | null = null;
@@ -21,7 +23,7 @@ function useSheet() {
 }
 
 /** Pixel-perfect 160×160 map drawing (16 px per cell), scaled by CSS. */
-export type MapMarker = { x: number; y: number; glyph: string; selected?: boolean; sprite?: "zombie" | "slime" | undefined };
+export type MapMarker = { x: number; y: number; glyph: string; selected?: boolean; sprite?: MonsterSprite | undefined };
 export function MapCanvas({ tiles, spawn, className, onCell, label, markers, brushSize }: {
   tiles: number[]; spawn?: { x: number; y: number }; className?: string; label: string; markers?: MapMarker[];
   onCell?: (x: number, y: number, kind: "down" | "move") => void; brushSize?: number | undefined;
@@ -32,12 +34,12 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers, bru
   const [zoom, setZoom] = useState(1);
   const [ready, setReady] = useState(0);
   const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
-  const needed = [...new Set((markers ?? []).map((m) => m.sprite).filter(Boolean))] as ("zombie" | "slime")[];
+  const needed = [...new Set((markers ?? []).map((m) => m.sprite).filter(Boolean))] as MonsterSprite[];
   useEffect(() => {
     for (const kind of needed) {
       if (monsterImgs[kind]) continue;
       const image = new Image();
-      image.src = kind === "zombie" ? zombieSheet.url : slimeSheet.url;
+      image.src = kind === "zombie" ? zombieSheet.url : kind === "yeti" ? yetiSheet.url : slimeSheet.url;
       monsterImgs[kind] = image;
       if (!image.complete) image.addEventListener("load", () => setReady((n) => n + 1), { once: true });
     }
