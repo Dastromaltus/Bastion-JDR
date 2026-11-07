@@ -192,8 +192,8 @@ export const joinRoom = createServerFn({ method: "POST" })
       ...RACES[race],
       hp: hpFor(race),
       max_hp: hpFor(race),
-      tile_x: map.spawn.x,
-      tile_y: map.spawn.y,
+      world_x: map.spawn.x,
+      world_y: map.spawn.y,
       current_zone: companion?.current_zone ?? "entree",
     });
     if (error) return { ok: false as const, error: "Impossible de rejoindre le salon." };
