@@ -1,4 +1,5 @@
 - [x] Add a top-down pixel-art environment to salon games and Operations.
+- [ ] Add uploaded Slash attack on key 7 with fixed server-authoritative 2 damage; verify live input, animation and persisted HP.
 - [x] Persist and validate individual tile movement with salon-scoped synchronization.
 - [x] Verify collisions, rendering, movement controls and existing tests.
 - [x] Enforce salon turns in player order, narrator last, with synchronized turn messages and end-turn controls.
