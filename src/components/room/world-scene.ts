@@ -59,17 +59,18 @@ export class WorldScene extends Phaser.Scene {
       effect.play("slash-hit");
       effect.once("animationcomplete", () => effect.destroy());
     });
-    for (const [texture, prefix] of [["human", "h"], ["dwarf", "d"]]) {
+    for (const [texture, prefix] of [["human", "h"], ["dwarf", "d"]] as const) {
       const hrow = (r: number, n: number) => this.anims.generateFrameNumbers(texture, { start: r * O_COLS, end: r * O_COLS + n - 1 });
       DIRS.forEach((_, i) => {
         this.anims.create({ key: `${prefix}-idle-${i}`, frames: hrow(i, 16), frameRate: 5, repeat: -1 });
         this.anims.create({ key: `${prefix}-walk-${i}`, frames: hrow(4 + i, 4), frameRate: 10 });
         this.anims.create({ key: `${prefix}-attack-${i}`, frames: hrow(8 + i, 4), frameRate: 10 });
         this.anims.create({ key: `${prefix}-dmg-${i}`, frames: hrow(12 + i, 4), frameRate: 10 });
-        this.anims.create({ key: `${prefix}-jump-${i}`, frames: hrow(17 + i, 4), frameRate: 10 });
+        if (texture === "dwarf") this.anims.create({ key: `${prefix}-jump-${i}`, frames: hrow(17 + i, 4), frameRate: 10 });
       });
       this.anims.create({ key: `${prefix}-die`, frames: hrow(16, 12), frameRate: 10 });
-      for (let i = 0; i < 3; i++) this.anims.create({ key: `${prefix}-charged-${i}`, frames: hrow(21 + i, 6), frameRate: 10 });
+      if (texture === "human") this.anims.create({ key: "h-jump", frames: hrow(17, 4), frameRate: 10 });
+      for (let i = 0; i < 3; i++) this.anims.create({ key: `${prefix}-charged-${i}`, frames: hrow((texture === "human" ? 18 : 21) + i, 6), frameRate: 10 });
     }
     this.events.on("human-attack", (p: { id: string; x: number; y: number }) => {
       const node = this.actors.get(p.id), state = this.prev.get(p.id);
