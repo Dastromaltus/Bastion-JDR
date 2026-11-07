@@ -97,7 +97,7 @@ export class WorldScene extends Phaser.Scene {
           : this.add.image(0, -2, "world-tiles", actor.frame);
         if (sprite instanceof Phaser.GameObjects.Sprite && !actor.dead && !reduced) sprite.play(actor.sprite === "slime" ? "s-idle" : "z-idle");
         const label = this.add.text(0, -18, actor.name, { fontFamily: "monospace", fontSize: "10px", color: getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim(), backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim(), padding: { x: 4, y: 3 }, resolution: 3 }).setOrigin(0.5, 1).setVisible(false);
-        node = this.add.container(x, y, [sprite, label]);
+        node = this.add.container(x, y, [sprite, label, this.add.graphics()]);
         if (actor.frame === 12) sprite.setInteractive().on("pointerdown", () => window.dispatchEvent(new CustomEvent("bastion-select-mob", { detail: actor.id })));
         this.actors.set(actor.id, node);
         if (!reduced) this.tweens.add({ targets: sprite, alpha: { from: 0, to: 1 }, scale: actor.sprite === "zombie" || actor.sprite === "slime" ? { from: 1.3, to: 1.5 } : { from: 0.88, to: 1 }, duration: actor.frame === 12 ? 200 : 160, ease: "Linear" });
@@ -122,6 +122,16 @@ export class WorldScene extends Phaser.Scene {
         const row = actors.filter((a) => a.y === actor.y && Math.abs(a.x - actor.x) < 12).findIndex((a) => a.id === actor.id);
         label.setVisible(true).setY(-18 - row * (label.height + 3));
         label.setX(Phaser.Math.Clamp(x, label.width / 2, map.width * 16 - label.width / 2) - x);
+      }
+      const bar = node.list[2];
+      if (bar instanceof Phaser.GameObjects.Graphics) {
+        bar.clear();
+        // Health bar under every character and living mob.
+        if (actor.hp !== undefined && actor.maxHp && !actor.dead) {
+          const ratio = Phaser.Math.Clamp(actor.hp / actor.maxHp, 0, 1), w = 16, by = actor.sprite === "zombie" || actor.sprite === "slime" ? 3 : 7;
+          bar.fillStyle(0x1b1b1b, 1).fillRect(-w / 2 - 1, by - 1, w + 2, 4);
+          bar.fillStyle(ratio > 0.5 ? 0x4ade55 : ratio > 0.25 ? 0xffd84a : 0xff4d4d, 1).fillRect(-w / 2, by, Math.round(w * ratio), 2);
+        }
       }
       node.setDepth(100 + y);
       if (actor.sprite === "zombie" || actor.sprite === "slime") this.animateMonster(node, actor, reduced);
