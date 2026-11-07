@@ -1,6 +1,6 @@
 import * as Phaser from "phaser";
 import tiles from "@/assets/world-tiles.png";
-import mapSprites from "@/assets/map-sprites.png.asset.json";
+import mapSprites from "@/assets/map-textures-expanded.png.asset.json";
 import zombieSheet from "@/assets/zombie-sheet.png.asset.json";
 import slimeSheet from "@/assets/slime-sheet.png.asset.json";
 
@@ -12,7 +12,7 @@ const S_COLS = 9;
 const S_DIE_LAST = 3 * S_COLS + 8;
 type ZState = { x: number; y: number; hp?: number; dead?: boolean; dir: number };
 function dirOf(dx: number, dy: number, fallback: number) { if (!dx && !dy) return fallback; return Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 1 : 3) : (dy < 0 ? 2 : 0); }
-import { GRID, tileTexture, type GridMap } from "@/lib/map-grid";
+import { GRID, tileFrame, type GridMap } from "@/lib/map-grid";
 const map = { width: GRID, height: GRID };
 import type { WorldActor } from "@/lib/world-actors";
 import { motionDisabled, MOTION_EVENT } from "@/lib/motion";
@@ -46,7 +46,7 @@ export class WorldScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, GRID * 16, GRID * 16).setBackgroundColor(bg);
     this.events.on("map", (grid: GridMap) => {
       this.terrain?.tilemap.destroy();
-      const data = Array.from({ length: GRID }, (_, y) => grid.tiles.slice(y * GRID, (y + 1) * GRID).map((t) => t > 0 ? tileTexture(t) - 1 : -1));
+      const data = Array.from({ length: GRID }, (_, y) => grid.tiles.slice(y * GRID, (y + 1) * GRID).map((t) => t > 0 ? tileFrame(t) : -1));
       const tilemap = this.make.tilemap({ data, tileWidth: 16, tileHeight: 16 });
       const tileset = tilemap.addTilesetImage("map-sprites", "map-sprites", 16, 16);
       this.terrain = tileset ? tilemap.createLayer(0, tileset, 0, 0) : null;

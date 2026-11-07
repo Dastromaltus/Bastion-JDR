@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import mapSprites from "@/assets/map-sprites.png.asset.json";
+import mapSprites from "@/assets/map-textures-expanded.png.asset.json";
 import zombieSheet from "@/assets/zombie-sheet.png.asset.json";
 import slimeSheet from "@/assets/slime-sheet.png.asset.json";
 
 const monsterImgs: Partial<Record<"zombie" | "slime", HTMLImageElement>> = {};
-import { brushCells, GRID, tileTexture } from "@/lib/map-grid";
+import { brushCells, GRID, SPRITES, tileFrame } from "@/lib/map-grid";
 
 let sheet: HTMLImageElement | null = null;
 function useSheet() {
@@ -48,7 +48,7 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers, bru
     c.imageSmoothingEnabled = false;
     c.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim() || "#111";
     c.fillRect(0, 0, GRID * 16, GRID * 16);
-    if (img) tiles.forEach((t, i) => { if (t > 0) c.drawImage(img, (tileTexture(t) - 1) * 16, 0, 16, 16, (i % GRID) * 16, Math.floor(i / GRID) * 16, 16, 16); });
+    if (img) tiles.forEach((t, i) => { if (t > 0) c.drawImage(img, tileFrame(t) * 16, 0, 16, 16, (i % GRID) * 16, Math.floor(i / GRID) * 16, 16, 16); });
     if (spawn) {
       c.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim() || "#fff";
       c.lineWidth = 3; c.strokeRect(spawn.x * 16 + 2, spawn.y * 16 + 2, 12, 12);
@@ -97,5 +97,5 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers, bru
 
 export function SpriteSwatch({ code, className }: { code: number; className?: string }) {
   return <span aria-hidden="true" className={`inline-block size-8 shrink-0 border-2 border-foreground [image-rendering:pixelated] ${className ?? ""}`}
-    style={code > 0 ? { backgroundImage: `url(${mapSprites.url})`, backgroundSize: "320px 32px", backgroundPosition: `-${(code - 1) * 32}px 0` } : undefined} />;
+    style={code > 0 ? { backgroundImage: `url(${mapSprites.url})`, backgroundSize: `${SPRITES.length * 32}px 32px`, backgroundPosition: `-${tileFrame(code) * 32}px 0` } : undefined} />;
 }
