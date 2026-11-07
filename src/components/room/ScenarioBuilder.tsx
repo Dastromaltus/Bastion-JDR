@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
-import { BRUSH_SIZES, fillMapTiles, GRID, SPRITES } from "@/lib/map-grid";
+import { BRUSH_SIZES, fillMapTiles, GRID, placeMapSpawn, SPRITES } from "@/lib/map-grid";
 import { PaintBucket } from "lucide-react";
 import { TRACKS } from "@/lib/ambience-tracks";
 import { getMapSequence, goToSequenceMap, listMapEnemyCatalog, listMyMaps, saveScenario } from "@/lib/maps.functions";
@@ -66,7 +66,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
   function onCell(x: number, y: number, kind: "down" | "move") {
     if (!step) return;
     if (section === "decor") {
-      if (brush === "spawn") { if (kind === "down") patch({ spawn: { x, y } }); return; }
+      if (brush === "spawn") { if (kind === "down") patch(placeMapSpawn(step, x, y)); return; }
       patch(paintTile(step, x, y, brush, brushSize, SPRITES.find((s) => s.code === brush)?.walk ? undefined : [step.spawn])); return;
     }
     if (section !== "mobs" || kind !== "down") return;

@@ -24,6 +24,18 @@ export const tileWalkable = (t: number | undefined) => t !== undefined && WALK.h
 
 export type GridMap = { name: string; tiles: number[]; spawn: { x: number; y: number } };
 
+/** Placing a departure opens just its cell, retaining an existing walkable texture. */
+export function placeMapSpawn<T extends GridMap>(map: T, x: number, y: number): T {
+  if (!Number.isInteger(x) || !Number.isInteger(y) || x < 0 || y < 0 || x >= GRID || y >= GRID) return map;
+  const index = y * GRID + x;
+  const tile = map.tiles[index];
+  if (tileWalkable(tile)) return { ...map, spawn: { x, y } };
+  const texture = tileTexture(tile ?? 0);
+  const tiles = [...map.tiles];
+  tiles[index] = tileWalkable(texture) ? texture : 6;
+  return { ...map, tiles, spawn: { x, y } };
+}
+
 export function cellWalkable(map: GridMap, x: number, y: number) {
   if (x < 0 || y < 0 || x >= GRID || y >= GRID) return false;
   return tileWalkable(map.tiles[y * GRID + x]);
