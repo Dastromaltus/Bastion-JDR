@@ -119,7 +119,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     for (const event of events) {
       if (seenSlash.current.has(event.id)) continue;
       seenSlash.current.add(event.id);
-      const localIndex = localSlashes.current.findIndex((entry) => entry.enemyId === event.payload.enemyId && event.actor_id === d.me.id && Date.parse(event.created_at) >= entry.after - 2000);
+      const localIndex = localSlashes.current.findIndex((entry) => entry.enemyId === event.payload.enemyId && event.actor_id === d.me.user_id && Date.parse(event.created_at) >= entry.after - 2000);
       if (localIndex >= 0) { localSlashes.current.splice(localIndex, 1); continue; }
       if (d.enemies.some((e: any) => e.id === event.payload.enemyId && e.zone === here)) game.current?.scene.getScene("SalonWorld").events.emit("slash", event.payload.enemyId);
     }
