@@ -232,6 +232,13 @@
       "when": 1794077924605,
       "tag": "0032_avoid_adventurerless_combat",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794078346886,
+      "tag": "0033_adventurer_enemy_line_of_sight",
+      "breakpoints": true
     }
   ]
 }

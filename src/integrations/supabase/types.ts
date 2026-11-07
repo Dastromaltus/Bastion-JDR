@@ -1744,6 +1744,10 @@ export type Database = {
     }
     Functions: {
       advance_private_campaign: { Args: { p_game_id: string }; Returns: Json }
+      adventurer_sees_cell: {
+        Args: { p_game_id: string; p_x: number; p_y: number; p_zone: string }
+        Returns: boolean
+      }
       create_campaign_playtest: {
         Args: { p_campaign_id: string }
         Returns: Json
