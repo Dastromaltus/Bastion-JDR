@@ -5,7 +5,7 @@ import { getSalonMap } from "@/lib/maps.functions";
 import { cellWalkable } from "@/lib/map-grid";
 import { monsterSprite } from "@/lib/world-actors";
 
-/** Narrator picks the exact 40×40 cell where an enemy or treasure goes, over the salon's map. */
+/** Narrator picks the exact 160×160 cell where an enemy or treasure goes, over the salon's map. */
 export function CellPicker({ d, value, onChange, glyph }: { d: any; value: { x: number; y: number } | null; onChange: (c: { x: number; y: number } | null) => void; glyph: string }) {
   const fetchMap = useServerFn(getSalonMap);
   const map = useQuery({ queryKey: ["salon-map", d.game.id, "picker", (d.events ?? []).filter((e: any) => e.kind === "carte").length], queryFn: () => fetchMap({ data: { gameId: d.game.id } }) });
