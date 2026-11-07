@@ -1,6 +1,6 @@
 import * as Phaser from "phaser";
 import tiles from "@/assets/world-tiles.png";
-import mapSprites from "@/assets/map-textures-expanded.png.asset.json";
+import mapSprites from "@/assets/map-textures-complete.png.asset.json";
 import zombieSheet from "@/assets/zombie-sheet.png.asset.json";
 import slimeSheet from "@/assets/slime-sheet.png.asset.json";
 
