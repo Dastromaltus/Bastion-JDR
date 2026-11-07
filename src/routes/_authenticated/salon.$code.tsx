@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Backpack, MessageSquare, Settings, User, Dices, Copy, Megaphone } from "lucide-react";
+import { Backpack, MessageSquare, Settings, User, Dices, Copy, Share2, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -142,8 +142,24 @@ function RoomPage() {
   const isNarr = me.role === "narrator";
   const turn = d.combat ? { ...salonTurn(game, players, me.user_id), isMine: !!d.combat.isMine } : salonTurn(game, players, me.user_id);
   // Preview/editor origins require Lovable workspace access; invitations always target the public site.
-  const inviteOrigin = typeof window === "undefined" ? "" : /(^|\.)lovable(project)?\.(app|dev)$/.test(window.location.hostname) && /preview|lovableproject|-dev\./.test(window.location.hostname) ? "https://bastion-roleplay.lovable.app" : window.location.origin;
-  const inviteUrl = inviteOrigin ? `${inviteOrigin}/rejoindre/${game.code}` : "";
+  const inviteUrl = `https://bastion-roleplay.lovable.app/rejoindre/${encodeURIComponent(game.code)}`;
+  const copyInvite = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      toast.success("Lien d’invitation copié");
+    } catch {
+      toast.error("Copie impossible : sélectionne le lien pour le copier.");
+    }
+  };
+  const shareInvite = async () => {
+    if (!navigator.share) return copyInvite();
+    try {
+      await navigator.share({ title: `${game.name} — Bastion`, text: `Rejoins le salon ${game.name}`, url: inviteUrl });
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      await copyInvite();
+    }
+  };
   const textClass = settings.textSize === "grand" ? "text-[17px]" : settings.textSize === "tres-grand" ? "text-[19px]" : "text-base";
   const narr = (action: any, extra: Record<string, unknown> = {}, ok?: string) =>
     run(action + String(extra["targetUserId"] ?? ""), () => sNarr({ data: { gameId: game.id, action, ...extra } as any }), ok);
@@ -174,13 +190,21 @@ function RoomPage() {
         )}
 
         {game.created_by === me.user_id && <RoomPassword gameId={game.id} />}
+        {isNarr && !game.solo && (
+          <section className="border-y-2 border-foreground py-4" aria-label="Invitation au salon">
+            <p className="section-label">Inviter des aventuriers</p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <Input aria-label="Lien d’invitation du salon" value={inviteUrl} readOnly onFocus={(event) => event.currentTarget.select()} className="min-h-11 min-w-0 flex-1 rounded-none" />
+              <Button variant="outline" className="min-h-11 rounded-none" onClick={copyInvite}><Copy /> Copier le lien</Button>
+              <Button variant="outline" className="min-h-11 rounded-none" onClick={shareInvite}><Share2 /> Partager</Button>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">Code du salon : <span className="font-bold">{game.code}</span>{game.locked ? " · Salon verrouillé" : ""}</p>
+          </section>
+        )}
         {game.status === "waiting" && (
           <section className="border-2 border-foreground p-4">
             <p className="section-label">Salle d'attente — <AnimatedCount value={players.filter((p: any) => p.role === "adventurer").length} />/{game.max_players} joueurs</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button variant="outline" className="min-h-11 rounded-none" onClick={() => { navigator.clipboard.writeText(inviteUrl).then(() => toast.success("Lien d'invitation copié"), () => toast.error("Copie impossible")); }}>
-                <Copy /> Copier le lien d'invitation
-              </Button>
               <span className="flex min-h-11 items-center border border-foreground px-3 font-pixel text-xl tracking-[0.3em]">{game.code}</span>
             </div>
           </section>
