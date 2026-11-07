@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { RACES, RACE_NAMES, hpFor, type RaceName } from "./races";
 import { startDungeonIfAny, openDungeon } from "./operations.functions";
+import { roomAdmissionError } from "./room-admission";
 
 const CODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -169,10 +170,9 @@ export const joinRoom = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .maybeSingle();
     if (existing) return { ok: true as const, code: game.code };
-    if (game.status !== "waiting") return { ok: false as const, error: "Cette partie a déjà commencé : impossible de la rejoindre." };
-    if (game.locked) return { ok: false as const, error: "Le narrateur a verrouillé ce salon." };
     const { count } = await db.from("game_players").select("id", { count: "exact", head: true }).eq("game_id", game.id).eq("role", "adventurer");
-    if ((count ?? 0) >= game.max_players) return { ok: false as const, error: `Salon complet (${game.max_players} joueurs maximum).` };
+    const admissionError = roomAdmissionError({ status: game.status, locked: game.locked, players: count ?? 0, maxPlayers: game.max_players });
+    if (admissionError) return { ok: false as const, error: admissionError };
     if (game.has_password) {
       const { data: secret } = await db.from("game_secrets").select("password_hash").eq("game_id", game.id).single();
       if (!data.password || !secret || !(await verifyPassword(data.password, secret.password_hash))) {
@@ -180,6 +180,9 @@ export const joinRoom = createServerFn({ method: "POST" })
       }
     }
     const race = data.race;
+    const { salonGrid } = await import("./maps.functions");
+    const map = await salonGrid(db, game.id);
+    const { data: companion } = await db.from("game_players").select("current_zone").eq("game_id", game.id).eq("role", "adventurer").order("joined_at").limit(1).maybeSingle();
     const { error } = await db.from("game_players").insert({
       game_id: game.id,
       user_id: context.userId,
@@ -189,6 +192,9 @@ export const joinRoom = createServerFn({ method: "POST" })
       ...RACES[race],
       hp: hpFor(race),
       max_hp: hpFor(race),
+      world_x: map.spawn.x,
+      world_y: map.spawn.y,
+      current_zone: companion?.current_zone ?? "entree",
     });
     if (error) return { ok: false as const, error: "Impossible de rejoindre le salon." };
     await logEvent(game.id, context.userId, "systeme", `${data.displayName} (${race}) rejoint le salon.`);
@@ -305,7 +311,7 @@ export const narratorAction = createServerFn({ method: "POST" })
         break;
       case "start":
         await startDungeonIfAny(data.gameId);
-        await db.from("games").update({ status: "playing", started_at: new Date().toISOString(), locked: true }).eq("id", data.gameId).eq("status", "waiting");
+        await db.from("games").update({ status: "playing", started_at: new Date().toISOString() }).eq("id", data.gameId).eq("status", "waiting");
         await logEvent(data.gameId, context.userId, "systeme", "La partie commence. Tour 1.", { turn: 1 }, true);
         await openDungeon(data.gameId);
         {
