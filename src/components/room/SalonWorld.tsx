@@ -90,7 +90,8 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
       if (narrator) {
         if (!mobRow) throw new Error("Aucun mob contrôlé.");
         const [dx, dy] = WORLD_DELTAS[direction];
-        const from = mobPos.current?.id === mobRow.id ? mobPos.current : { id: mobRow.id, x: mobRow.tile_x, y: mobRow.tile_y };
+        const saved = mobPos.current;
+        const from = saved && saved.id === mobRow.id ? saved : { id: mobRow.id as string, x: mobRow.tile_x as number, y: mobRow.tile_y as number };
         await act({ data: { gameId: d.game.id, revision: d.combat?.revision ?? 0, action: "move", enemyId: mobRow.id, x: from.x + dx, y: from.y + dy } });
         mobPos.current = { id: mobRow.id, x: from.x + dx, y: from.y + dy };
         setMessage("");
