@@ -23,7 +23,7 @@
 - Dungeon rooms carry grid_x/grid_y, features and the template map_key so each Operation can later become a Tiled tile map without a schema change.
 - Build visible salon participants through the browser-safe world-actors helper; show the characterless narrator only as a labeled observer outside the map and follow the active adventurer's zone in the narrator view, without granting movement or exposing hidden content.
 - Solo games are games.solo=true with one adventurer and no narrator; soloAct runs the automatic enemy rules server-side.
-- Multiplayer salon turns use games turn state and a row-locked, member-checked end_salon_turn RPC; player actions (attacks, abilities) enforce the same shared order while map movement is free through the salon_move_player/salon_move_mob RPCs with client-side prediction, while full-round Operation effects run only after the final participant ends their turn, preserving automatic solo play.
+- Salon turns use games turn state and a row-locked end_salon_turn RPC; attacks/abilities follow that order, map movement is free via salon_move_player/salon_move_mob RPCs with client prediction; full-round Operation effects run after the last turn, keeping solo automatic.
 - Keep motion as additive CSS utilities plus browser-only MotionEffects and MotionBits; use explicit DOM entrance markers and a shared IntersectionObserver for page content, and propagate the saved motion preference to the document so every page, portal and Phaser obeys the same accessibility setting without changing game rules.
 
 - Archive narrator sheets in an owner-readable separate table and zero narrator roster stats; use row-locked combat RPCs for server dice and filtered initiative, keeping exploration adventurer-only.
