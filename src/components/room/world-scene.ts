@@ -6,6 +6,7 @@ import slimeSheet from "@/assets/slime-sheet.png.asset.json";
 import yetiSheet from "@/assets/yeti-sheet.png.asset.json";
 import wolfSheet from "@/assets/wolf-sheet.png.asset.json";
 import orcSheet from "@/assets/orc-sheet.png.asset.json";
+import goblinSheet from "@/assets/goblin-sheet.png.asset.json";
 
 /** Zombie sheet: 32px frames, 19 cols. Rows: idle, walk×4, attack×4, damage×4, death. Directions: bas, gauche, haut, droite. */
 const Z_COLS = 19, DIRS = ["down", "left", "up", "right"] as const;
@@ -16,7 +17,7 @@ const S_DIE_LAST = 3 * S_COLS + 8;
 const Y_COLS = 16, Y_DIE_LAST = 16 * Y_COLS + 13;
 const W_COLS = 12, W_DIE_LAST = 16 * W_COLS + 8;
 const O_COLS = 16, O_DIE_LAST = 16 * O_COLS + 11;
-const animated = (sprite: WorldActor["sprite"]) => sprite === "zombie" || sprite === "slime" || sprite === "yeti" || sprite === "wolf" || sprite === "orc";
+const animated = (sprite: WorldActor["sprite"]) => sprite === "zombie" || sprite === "slime" || sprite === "yeti" || sprite === "wolf" || sprite === "orc" || sprite === "goblin";
 type ZState = { x: number; y: number; hp?: number; dead?: boolean; dir: number };
 function dirOf(dx: number, dy: number, fallback: number) { if (!dx && !dy) return fallback; return Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 1 : 3) : (dy < 0 ? 2 : 0); }
 import { GRID, tileFrame, type GridMap } from "@/lib/map-grid";
@@ -37,6 +38,7 @@ export class WorldScene extends Phaser.Scene {
     this.load.spritesheet("yeti", yetiSheet.url, { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("wolf", wolfSheet.url, { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("orc", orcSheet.url, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("goblin", goblinSheet.url, { frameWidth: 32, frameHeight: 32 });
   }
   create() {
     const bg = getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim() || "#111";
@@ -82,6 +84,17 @@ export class WorldScene extends Phaser.Scene {
     // ChargedAttack supplies three action stages, not four facing directions.
     for (let i = 0; i < 3; i++) this.anims.create({ key: `o-charged-${i}`, frames: orow(21 + i, 6), frameRate: 10 });
     this.anims.create({ key: "o-die", frames: orow(16, 12), frameRate: 10 });
+    // Goblin GIFs share the same frame counts and directional layout as the orc.
+    const grow = (r: number, n: number) => this.anims.generateFrameNumbers("goblin", { start: r * O_COLS, end: r * O_COLS + n - 1 });
+    DIRS.forEach((_, i) => {
+      this.anims.create({ key: `g-idle-${i}`, frames: grow(i, 16), frameRate: 5, repeat: -1 });
+      this.anims.create({ key: `g-walk-${i}`, frames: grow(4 + i, 4), frameRate: 5 });
+      this.anims.create({ key: `g-attack-${i}`, frames: grow(8 + i, 4), frameRate: 10 });
+      this.anims.create({ key: `g-dmg-${i}`, frames: grow(12 + i, 4), frameRate: 10 });
+      this.anims.create({ key: `g-jump-${i}`, frames: grow(17 + i, 4), frameRate: 10 });
+    });
+    for (let i = 0; i < 3; i++) this.anims.create({ key: `g-charged-${i}`, frames: grow(21 + i, 6), frameRate: 10 });
+    this.anims.create({ key: "g-die", frames: grow(16, 12), frameRate: 10 });
     this.cameras.main.setBounds(0, 0, GRID * 16, GRID * 16).setBackgroundColor(bg);
     this.events.on("map", (grid: GridMap) => {
       this.terrain?.tilemap.destroy();
@@ -139,8 +152,10 @@ export class WorldScene extends Phaser.Scene {
           ? this.add.sprite(0, -9, "wolf", actor.dead ? W_DIE_LAST : 0).setScale(1.5)
           : actor.sprite === "orc"
           ? this.add.sprite(0, -9, "orc", actor.dead ? O_DIE_LAST : 0).setScale(1.5)
+          : actor.sprite === "goblin"
+          ? this.add.sprite(0, -9, "goblin", actor.dead ? O_DIE_LAST : 0).setScale(1.5)
           : this.add.image(0, -2, "world-tiles", actor.frame);
-        if (sprite instanceof Phaser.GameObjects.Sprite && !actor.dead && !reduced) sprite.play(actor.sprite === "slime" ? "s-idle" : actor.sprite === "yeti" ? "y-idle-0" : actor.sprite === "wolf" ? "w-idle-0" : actor.sprite === "orc" ? "o-idle-0" : "z-idle");
+        if (sprite instanceof Phaser.GameObjects.Sprite && !actor.dead && !reduced) sprite.play(actor.sprite === "slime" ? "s-idle" : actor.sprite === "yeti" ? "y-idle-0" : actor.sprite === "wolf" ? "w-idle-0" : actor.sprite === "orc" ? "o-idle-0" : actor.sprite === "goblin" ? "g-idle-0" : "z-idle");
         const label = this.add.text(0, -18, actor.name, { fontFamily: "monospace", fontSize: "10px", color: getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim(), backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim(), padding: { x: 4, y: 3 }, resolution: 3 }).setOrigin(0.5, 1).setVisible(false);
         node = this.add.container(x, y, [sprite, label, this.add.graphics()]);
         if (actor.frame === 12) sprite.setInteractive({ useHandCursor: true }).on("pointerdown", () => window.dispatchEvent(new CustomEvent("bastion-select-mob", { detail: actor.id })));
@@ -195,6 +210,7 @@ export class WorldScene extends Phaser.Scene {
       if (z.sprite === "yeti") { if (reduced) zs.setFrame((8 + dir) * Y_COLS + 1); else zs.play(`y-attack-${dir}`).chain(`y-idle-${dir}`); continue; }
       if (z.sprite === "wolf") { if (reduced) zs.setFrame((8 + dir) * W_COLS + 1); else zs.play(`w-attack-${dir}`).chain(`w-idle-${dir}`); continue; }
       if (z.sprite === "orc") { if (reduced) zs.setFrame((8 + dir) * O_COLS + 1); else zs.play(`o-attack-${dir}`).chain(`o-idle-${dir}`); continue; }
+      if (z.sprite === "goblin") { if (reduced) zs.setFrame((8 + dir) * O_COLS + 1); else zs.play(`g-attack-${dir}`).chain(`g-idle-${dir}`); continue; }
       if (reduced) zs.setFrame((5 + dir) * Z_COLS + 2); else zs.play(`z-attack-${dir}`).chain("z-idle");
     }
   }
@@ -205,17 +221,17 @@ export class WorldScene extends Phaser.Scene {
     const dir = before ? dirOf(actor.x - before.x, actor.y - before.y, before.dir) : 0;
     this.prev.set(actor.id, { x: actor.x, y: actor.y, ...(actor.hp !== undefined ? { hp: actor.hp } : {}), ...(actor.dead ? { dead: true } : {}), dir });
     if (!(sprite instanceof Phaser.GameObjects.Sprite) || !before) return;
-    const slime = actor.sprite === "slime", yeti = actor.sprite === "yeti", wolf = actor.sprite === "wolf", orc = actor.sprite === "orc";
-    const idle = slime ? "s-idle" : yeti ? `y-idle-${dir}` : wolf ? `w-idle-${dir}` : orc ? `o-idle-${dir}` : "z-idle";
+    const slime = actor.sprite === "slime", yeti = actor.sprite === "yeti", wolf = actor.sprite === "wolf", orc = actor.sprite === "orc", goblin = actor.sprite === "goblin";
+    const idle = slime ? "s-idle" : yeti ? `y-idle-${dir}` : wolf ? `w-idle-${dir}` : orc ? `o-idle-${dir}` : goblin ? `g-idle-${dir}` : "z-idle";
     if (actor.dead) {
       if (label instanceof Phaser.GameObjects.Text) label.setVisible(false);
       if (before.dead) return;
-      if (reduced) sprite.stop().setFrame(slime ? S_DIE_LAST : yeti ? Y_DIE_LAST : wolf ? W_DIE_LAST : orc ? O_DIE_LAST : Z_DIE_LAST); else sprite.play(slime ? "s-die" : yeti ? "y-die" : wolf ? "w-die" : orc ? "o-die" : "z-die");
+      if (reduced) sprite.stop().setFrame(slime ? S_DIE_LAST : yeti ? Y_DIE_LAST : wolf ? W_DIE_LAST : orc || goblin ? O_DIE_LAST : Z_DIE_LAST); else sprite.play(slime ? "s-die" : yeti ? "y-die" : wolf ? "w-die" : orc ? "o-die" : goblin ? "g-die" : "z-die");
       return;
     }
     if (reduced) { sprite.stop().setFrame(0); return; }
-    if (actor.hp !== undefined && before.hp !== undefined && actor.hp < before.hp) sprite.play(slime ? "s-dmg" : yeti ? `y-dmg-${dir}` : wolf ? `w-dmg-${dir}` : orc ? `o-dmg-${dir}` : `z-dmg-${dir}`).chain(idle);
-    else if (actor.x !== before.x || actor.y !== before.y) sprite.play(slime ? "s-idle" : yeti ? `y-walk-${dir}` : wolf ? `w-walk-${dir}` : orc ? `o-walk-${dir}` : `z-walk-${dir}`).chain(idle);
+    if (actor.hp !== undefined && before.hp !== undefined && actor.hp < before.hp) sprite.play(slime ? "s-dmg" : yeti ? `y-dmg-${dir}` : wolf ? `w-dmg-${dir}` : orc ? `o-dmg-${dir}` : goblin ? `g-dmg-${dir}` : `z-dmg-${dir}`).chain(idle);
+    else if (actor.x !== before.x || actor.y !== before.y) sprite.play(slime ? "s-idle" : yeti ? `y-walk-${dir}` : wolf ? `w-walk-${dir}` : orc ? `o-walk-${dir}` : goblin ? `g-walk-${dir}` : `z-walk-${dir}`).chain(idle);
   }
 }
 export function createWorldGame(parent: HTMLDivElement, ready: () => void) {
