@@ -5,8 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CharacterPreview } from "@/components/CharacterPreview";
-import { ACCESSORIES, DEFAULT_LOOK, OUTFIT_COLORS, SKIN_COLORS, loadCharacter, saveCharacter, type CharacterLook } from "@/lib/character";
-import { RACES, RACE_NAMES, hpFor } from "@/lib/races";
+import { DEFAULT_LOOK, loadCharacter, saveCharacter, type CharacterLook } from "@/lib/character";
+import { RACES, hpFor } from "@/lib/races";
 
 export const Route = createFileRoute("/_authenticated/personnage")({
   staticData: { sitemap: false },
@@ -23,12 +23,6 @@ export const Route = createFileRoute("/_authenticated/personnage")({
   component: CharacterPage,
 });
 
-function Swatches({ label, colors, value, onChange }: { label: string; colors: readonly string[]; value: string; onChange: (c: string) => void }) {
-  return <fieldset><legend className="section-label">{label}</legend><div className="mt-2 flex flex-wrap gap-2">
-    {colors.map((c) => <button key={c} type="button" aria-label={`${label} ${c}`} aria-pressed={value === c} onClick={() => onChange(c)} className={`h-11 w-11 border-2 ${value === c ? "border-foreground ring-2 ring-primary" : "border-border"}`} style={{ background: c }} />)}
-  </div></fieldset>;
-}
-
 function CharacterPage() {
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string>();
@@ -43,7 +37,7 @@ function CharacterPage() {
       if (c) { setLook(c); setIsNew(false); }
     });
   }, []);
-  const set = (p: Partial<CharacterLook>) => setLook((l) => ({ ...l, ...p }));
+  const set = (p: Partial<CharacterLook>) => setLook((l) => ({ ...l, ...p, race: "Humain" }));
   const stats = RACES[look.race];
 
   async function submit(e: React.FormEvent) {
@@ -62,14 +56,7 @@ function CharacterPage() {
       <form onSubmit={submit} className="mt-6 grid gap-8 md:grid-cols-[1fr_280px]">
         <div className="space-y-6">
           <label className="block"><span className="section-label">Nom d'aventurier</span><Input required maxLength={40} className="mt-2 h-11 rounded-none" value={look.name} onChange={(e) => set({ name: e.target.value })} /></label>
-          <fieldset><legend className="section-label">Race</legend><div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
-            {RACE_NAMES.map((r) => <button key={r} type="button" aria-pressed={look.race === r} onClick={() => set({ race: r })} className={`min-h-11 border-2 p-2 text-sm font-bold ${look.race === r ? "border-primary bg-secondary" : "border-border"}`}>{r}</button>)}
-          </div></fieldset>
-          <Swatches label="Peau / carapace" colors={SKIN_COLORS} value={look.skin} onChange={(skin) => set({ skin })} />
-          <Swatches label="Tenue" colors={OUTFIT_COLORS} value={look.outfit} onChange={(outfit) => set({ outfit })} />
-          <fieldset><legend className="section-label">Accessoire</legend><div className="mt-2 flex flex-wrap gap-2">
-            {ACCESSORIES.map((a) => <button key={a.key} type="button" aria-pressed={look.accessory === a.key} onClick={() => set({ accessory: a.key })} className={`min-h-11 border-2 px-3 text-sm font-bold ${look.accessory === a.key ? "border-primary bg-secondary" : "border-border"}`}>{a.label}</button>)}
-          </div></fieldset>
+          <div><p className="section-label">Race d’aventurier par défaut</p><p className="mt-2 font-bold">Humain</p></div>
         </div>
         <aside className="h-fit border-2 border-foreground p-4 md:sticky md:top-4">
           <div className="flex justify-center bg-secondary p-4"><CharacterPreview look={look} size={200} /></div>

@@ -1,9 +1,5 @@
 export const RACES = {
   Humain: { speed: 70, strength: 70, endurance: 70 },
-  Insecte: { speed: 95, strength: 55, endurance: 40 },
-  Reptile: { speed: 35, strength: 65, endurance: 90 },
-  "Crustacé": { speed: 20, strength: 75, endurance: 100 },
-  Oiseau: { speed: 100, strength: 60, endurance: 35 },
 } as const;
 
 export type RaceName = keyof typeof RACES;

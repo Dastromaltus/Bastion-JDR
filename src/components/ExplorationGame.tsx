@@ -12,9 +12,9 @@ type Entity = { id: string; kind: string; label: string; tile_x: number; tile_y:
 type Player = { id: string; client_key: string; name: string; race: string; tile_x: number; tile_y: number; hp: number };
 type State = Awaited<ReturnType<typeof getExplorationState>>;
 type Direction = "up" | "down" | "left" | "right";
-type Race = "Humain" | "Insecte" | "Reptile" | "Crustacé" | "Oiseau";
+type Race = "Humain";
 
-const raceSpeed: Record<Race, number> = { Humain: 70, Insecte: 95, Reptile: 35, Crustacé: 20, Oiseau: 100 };
+const raceSpeed: Record<Race, number> = { Humain: 70 };
 
 function getClientKey() {
   const stored = window.localStorage.getItem("bastion-client-key");
