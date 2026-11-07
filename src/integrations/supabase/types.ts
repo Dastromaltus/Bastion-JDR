@@ -161,6 +161,7 @@ export type Database = {
           id: string
           name: string
           owner_id: string
+          passage: Json | null
           spawn_x: number
           spawn_y: number
           tiles: number[]
@@ -172,6 +173,7 @@ export type Database = {
           id?: string
           name?: string
           owner_id?: string
+          passage?: Json | null
           spawn_x?: number
           spawn_y?: number
           tiles: number[]
@@ -183,6 +185,7 @@ export type Database = {
           id?: string
           name?: string
           owner_id?: string
+          passage?: Json | null
           spawn_x?: number
           spawn_y?: number
           tiles?: number[]
@@ -1215,6 +1218,7 @@ export type Database = {
           id: string
           intro_text: string
           name: string
+          passage: Json | null
           position: number
           source: string
           spawn_x: number
@@ -1229,6 +1233,7 @@ export type Database = {
           id?: string
           intro_text?: string
           name: string
+          passage?: Json | null
           position: number
           source: string
           spawn_x: number
@@ -1243,6 +1248,7 @@ export type Database = {
           id?: string
           intro_text?: string
           name?: string
+          passage?: Json | null
           position?: number
           source?: string
           spawn_x?: number
@@ -1515,6 +1521,7 @@ export type Database = {
         Row: {
           game_id: string
           name: string
+          passage: Json | null
           source: string
           spawn_x: number
           spawn_y: number
@@ -1524,6 +1531,7 @@ export type Database = {
         Insert: {
           game_id: string
           name: string
+          passage?: Json | null
           source: string
           spawn_x: number
           spawn_y: number
@@ -1533,6 +1541,7 @@ export type Database = {
         Update: {
           game_id?: string
           name?: string
+          passage?: Json | null
           source?: string
           spawn_x?: number
           spawn_y?: number
@@ -1810,6 +1819,7 @@ export type Database = {
         Args: { p_game_id: string; p_target: string }
         Returns: undefined
       }
+      use_map_passage: { Args: { p_game_id: string }; Returns: Json }
       world_tile_walkable: { Args: { t: number }; Returns: boolean }
     }
     Enums: {
