@@ -39,6 +39,7 @@
 - [x] Add uploaded orc enemy with original GIF preview; authenticated placement/save/reopen verified, Phaser walk/damage/death verified, nine tests pass and build OK. Provisional stats match Loup; no extra ability.
 - [x] Add uploaded goblin enemy; original GIF preview and authenticated map placement/save/reopen verified, Phaser walk/damage/death verified, ten tests pass and build OK. Provisional stats match Orc; no extra ability.
 - [x] Add uploaded cyclops enemy; authenticated catalog/placement/save/reopen and Phaser walk/damage/death verified, eleven tests pass and build OK. Provisional stats match Yéti; no extra ability.
+- [ ] Add placeable passage points to personal maps and salon steps, with member-checked transition to the next step; verify save/reload and live travel.
 
 - [x] Remove prebuilt map/campaign offerings and keep personal map choices only; verified both retired URLs redirect to Mes cartes, the personal editor opens, 12 focused tests pass and build OK.
 - [x] Enlarge personal and salon maps to 160×160 with coordinate-preserving legacy expansion, compatible database bounds and zoom; 31 tests pass, authenticated personal save/reopen and legacy salon preview verified, build OK.
