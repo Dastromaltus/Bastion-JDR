@@ -35,7 +35,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
   const [busy, setBusy] = useState(false);
   const [mobId, setMobId] = useState("");
   const [picked, setPicked] = useState<number | null>(null);
-  const [brush, setBrush] = useState<number | "spawn">(6);
+  const [brush, setBrush] = useState<number | "spawn" | "passage">(6);
   const [brushSize, setBrushSize] = useState(1);
   const [source, setSource] = useState("");
   const [passageCoord, setPassageCoord] = useState({ x: 1, y: 1 });
@@ -70,6 +70,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
     if (section === "passage") { if (kind === "down") placePassage(x, y); return; }
     if (section === "decor") {
       if (brush === "spawn") { if (kind === "down") patch(placeMapSpawn(step, x, y)); return; }
+      if (brush === "passage") { if (kind === "down") placePassage(x, y); return; }
       patch(paintTile(step, x, y, brush, brushSize, SPRITES.find((s) => s.code === brush)?.walk ? undefined : [step.spawn])); return;
     }
     if (section !== "mobs" || kind !== "down") return;
@@ -150,7 +151,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
 
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_16rem]">
             <div className="border-2 border-foreground">
-              <MapCanvas tiles={step.tiles} spawn={step.spawn} passage={step.passage} markers={markers} brushSize={section === "decor" ? brushSize : undefined} {...(section === "mobs" || section === "decor" || section === "passage" ? { onCell } : {})}
+              <MapCanvas tiles={step.tiles} spawn={step.spawn} passage={step.passage} markers={markers} brushSize={section === "decor" && typeof brush === "number" ? brushSize : undefined} {...(section === "mobs" || section === "decor" || section === "passage" ? { onCell } : {})}
                 label={`Carte de l'étape ${sel + 1}, ${step.name}, 160 × 160 cases`} className={section === "mobs" || section === "decor" ? "cursor-crosshair" : ""} />
             </div>
 
@@ -210,15 +211,20 @@ export function ScenarioBuilder({ d }: { d: any }) {
                   ))}
                   <button aria-pressed={brush === 0} onClick={() => setBrush(0)} className={`min-h-11 border-2 text-[10px] font-black uppercase ${brush === 0 ? "border-primary" : "border-foreground/40"}`}>Barrière</button>
                   <button aria-pressed={brush === "spawn"} onClick={() => setBrush("spawn")} className={`min-h-11 border-2 text-[10px] font-black uppercase ${brush === "spawn" ? "border-primary" : "border-foreground/40"}`}>Départ</button>
+                  <Button variant="outline" aria-pressed={brush === "passage"} onClick={() => setBrush("passage")} className={`min-h-11 flex-col gap-1 rounded-none border-2 px-1 text-[10px] font-black uppercase ${brush === "passage" ? "border-primary" : "border-foreground/40"}`}><DoorOpen className="size-4" />Passage</Button>
                 </div>
+                {brush === "passage" && step.passage && <div className="flex flex-wrap items-center gap-2">
+                  <p role="status" className="text-xs">Passage · Col. {step.passage.x + 1}, lig. {step.passage.y + 1}</p>
+                  <Button variant="ghost" size="icon" aria-label="Retirer le passage" onClick={() => patch({ passage: null })}><Trash2 /></Button>
+                </div>}
                 <p className="text-xs font-black uppercase">Taille du pinceau · {brushSize} × {brushSize}</p>
                 <div role="radiogroup" aria-label="Taille du pinceau" className="grid grid-cols-4 gap-1">
                   {BRUSH_SIZES.map((s) => (
                     <Button key={s} role="radio" aria-checked={brushSize === s} aria-label={`Pinceau ${s} sur ${s} cases`} variant={brushSize === s ? "default" : "outline"} onClick={() => setBrushSize(s)} className="h-11 min-w-0 rounded-none p-0 text-xs font-bold">{s}×{s}</Button>
                   ))}
                 </div>
-                <Button variant="outline" disabled={brush === "spawn" || busy} className="min-h-11 w-full whitespace-normal rounded-none" onClick={() => {
-                  if (brush === "spawn" || !confirm("Remplacer le décor de toute cette carte par la texture choisie ? Les mobs, trésors et le départ sont conservés.")) return;
+                <Button variant="outline" disabled={typeof brush !== "number" || busy} className="min-h-11 w-full whitespace-normal rounded-none" onClick={() => {
+                  if (typeof brush !== "number" || !confirm("Remplacer le décor de toute cette carte par la texture choisie ? Les mobs, trésors et le départ sont conservés.")) return;
                   patch({ tiles: fillMapTiles(step.tiles, brush, [step.spawn, ...step.enemies, ...(step.treasures ?? []), ...(step.passage ? [step.passage] : [])]) });
                   toast.success("Carte remplie ; les cases occupées restent praticables.");
                 }}><PaintBucket />Remplir toute la carte</Button>
