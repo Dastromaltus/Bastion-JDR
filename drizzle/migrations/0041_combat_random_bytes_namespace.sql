@@ -1,0 +1,1 @@
+CREATE OR REPLACE FUNCTION public.salon_d6() RETURNS integer LANGUAGE plpgsql SET search_path TO 'public' AS $function$ DECLARE r integer; BEGIN LOOP r:=get_byte(extensions.gen_random_bytes(1),0); EXIT WHEN r<252; END LOOP; RETURN 1+r%6; END $function$;
