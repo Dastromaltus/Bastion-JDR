@@ -46,7 +46,7 @@ export function EncounterPanel({ d }: { d: any }) {
           <Textarea required value={scenario} onChange={(e) => setScenario(e.target.value)} rows={3} maxLength={1500} placeholder="Ex. : le groupe doit couper l'alarme de la fonderie avant l'arrivée des renforts…" className="mt-1 rounded-none font-normal normal-case" />
         </label>
         <label className="block text-xs font-black uppercase">Groupe d'aventuriers
-          <Textarea required value={party} onChange={(e) => setParty(e.target.value)} rows={3} maxLength={1500} placeholder="Ex. : 4 aventuriers — un Reptile costaud, un Oiseau rapide, deux Insectes, peu de soins." className="mt-1 rounded-none font-normal normal-case" />
+          <Textarea required value={party} onChange={(e) => setParty(e.target.value)} rows={3} maxLength={1500} placeholder="Ex. : 4 aventuriers — un Guerrier, un Mage, deux Voleurs, peu de soins." className="mt-1 rounded-none font-normal normal-case" />
         </label>
         {error && <p role="alert" className="text-sm font-bold text-primary">{error}</p>}
         <Button type="submit" disabled={busy} className="h-11 w-full rounded-none font-black uppercase">

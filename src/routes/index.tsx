@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowDown, ArrowRight, Crown, KeyRound, Shield, Swords, Users, Zap } from "lucide-react";
-import { useState } from "react";
+import { ArrowDown, Crown, KeyRound, Shield, Swords, Users, Zap } from "lucide-react";
+import { CharacterPreview } from "@/components/CharacterPreview";
+import { DEFAULT_LOOK } from "@/lib/character";
 import bastionLogo from "@/assets/bastion-logo-full.png";
 import bastionFortress from "@/assets/bastion-fortress.jpg";
 import { Button } from "@/components/ui/button";
@@ -12,21 +13,13 @@ export const Route = createFileRoute("/")({
       { title: "Bastion — Entrez dans la forteresse" },
       { name: "description", content: "Découvrez Bastion, le jeu de rôle de plateau asymétrique de Mathéo Destin pour 3 à 5 joueurs." },
       { property: "og:title", content: "Bastion — Entrez dans la forteresse" },
-      { property: "og:description", content: "Cinq peuples. Trois phases. Un narrateur sans pitié." },
+      { property: "og:description", content: "Des aventuriers humains, trois classes et des cartes personnelles face au narrateur." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Index,
 });
-
-const races = [
-  { name: "Humain", mark: "H", trait: "Polyvalent", detail: "Équilibré et adaptable, sans malus majeur. Le choix idéal pour improviser face à l’inconnu.", stats: [70, 70, 70] },
-  { name: "Insecte", mark: "I", trait: "Embuscade", detail: "Rapide et fragile. Excelle dans le poison, l’esquive et les attaques surprises.", stats: [95, 55, 40] },
-  { name: "Reptile", mark: "R", trait: "Défense", detail: "Résistant mais lent. Encaisse les coups et tient la ligne quand tout s’effondre.", stats: [35, 65, 90] },
-  { name: "Crustacé", mark: "C", trait: "Rempart", detail: "Une armure vivante à faible mobilité. Protège le groupe et verrouille le terrain.", stats: [20, 75, 100] },
-  { name: "Oiseau", mark: "O", trait: "Mobilité", detail: "Une mobilité exceptionnelle au prix d’une défense plus faible. Frappe puis disparaît.", stats: [100, 60, 35] },
-];
 
 const salonSteps = [
   { icon: <Users size={28} />, title: "01 · Monte ton salon", text: "Choisis un nom, le nombre de joueurs (3 à 5) et prépare tes cartes. Un mot de passe optionnel protège l’entrée, et le salon peut rester en attente jusqu’à la partie." },
@@ -48,17 +41,12 @@ const mapFeatures = [
 ];
 
 const phases = [
-  { number: "01", title: "Préparation", text: "Choisissez votre peuple et votre classe, personnalisez votre aventurier et composez une équipe capable de survivre au Bastion." },
+  { number: "01", title: "Préparation", text: "Choisissez votre classe, nommez votre aventurier humain et composez une équipe capable de survivre au Bastion." },
   { number: "02", title: "Affrontement", text: "Déplacez-vous librement au clavier (Z, Q, S, D) ; attaques et capacités se résolvent en tour par tour, avec des dés lancés côté serveur." },
   { number: "03", title: "Exploration", text: "Traversez les immenses cartes préparées par le narrateur, une étape après l’autre, en atteignant les points de passage." },
 ];
 
 function Index() {
-  const [activeRace, setActiveRace] = useState(0);
-  const race = races[activeRace] ?? races[0];
-
-  if (!race) return null;
-
   return (
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
       <section className="relative min-h-[74vh] border-b-4 border-primary">
@@ -78,7 +66,7 @@ function Index() {
       </section>
 
       <nav aria-label="Sommaire des règles" className="flex flex-wrap gap-2 border-b border-border px-5 py-4 md:px-10">
-        {[{ id: "concept", label: "Le jeu" }, { id: "salons", label: "Les salons" }, { id: "cartes", label: "Les cartes" }, { id: "peuples", label: "Les peuples" }, { id: "classes", label: "Les classes" }, { id: "partie", label: "Les phases" }].map(({ id, label }) => <Button key={id} asChild variant="ghost" className="min-h-11 rounded-none font-bold"><a href={`#${id}`}>{label}</a></Button>)}
+        {[{ id: "concept", label: "Le jeu" }, { id: "salons", label: "Les salons" }, { id: "cartes", label: "Les cartes" }, { id: "peuples", label: "L’Humain" }, { id: "classes", label: "Les classes" }, { id: "partie", label: "Les phases" }].map(({ id, label }) => <Button key={id} asChild variant="ghost" className="min-h-11 rounded-none font-bold"><a href={`#${id}`}>{label}</a></Button>)}
       </nav>
 
       <section id="concept" data-motion-stagger className="grid border-b border-border lg:grid-cols-2">
@@ -100,7 +88,7 @@ function Index() {
         <div className="mx-auto max-w-7xl">
           <div data-motion-enter className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div><p className="section-label">Salons privés</p><h2 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Conçois tes propres<br /><span className="text-primary">parties.</span></h2></div>
-            <p className="max-w-sm text-sm text-muted-foreground">Un salon, un code à six caractères et la table est montée. Toi ou un ami incarne le narrateur, les autres incarnent les peuples — en ligne, sur téléphone ou ordinateur.</p>
+            <p className="max-w-sm text-sm text-muted-foreground">Un salon, un code à six caractères et la table est montée. Toi ou un ami incarne le narrateur, les autres incarnent les aventuriers humains — en ligne, sur téléphone ou ordinateur.</p>
           </div>
           <div data-motion-stagger className="grid border border-border bg-background md:grid-cols-3">
             {salonSteps.map((step) => (
@@ -138,24 +126,11 @@ function Index() {
 
       <section id="peuples" className="px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
-          <div data-motion-enter className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div><p className="section-label">Choisir son origine</p><h2 className="mt-4 font-display text-3xl font-black uppercase tracking-normal md:text-5xl">Cinq peuples</h2></div>
-            <p className="max-w-sm text-sm text-muted-foreground">Chaque peuple modifie votre manière d’explorer, de combattre et de survivre.</p>
-          </div>
-          <div className="grid border border-border lg:grid-cols-[0.8fr_1.2fr]">
-            <div data-motion-stagger className="divide-y divide-border lg:border-r lg:border-border">
-              {races.map((item, index) => (
-                <button key={item.name} onClick={() => setActiveRace(index)} className={`group flex w-full items-center gap-5 px-5 py-5 text-left transition-colors ${activeRace === index ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>
-                  <span className="font-display text-xl font-black">{item.mark}</span><span className="flex-1 font-bold uppercase">{item.name}</span><ArrowRight size={18} className={activeRace === index ? "opacity-100" : "opacity-30 group-hover:opacity-100"} />
-                </button>
-              ))}
-            </div>
-            <div key={race.name} data-motion-enter className="flex min-h-[430px] flex-col justify-between bg-card p-7 md:p-12">
-              <div><span className="text-xs font-black uppercase text-primary">Spécialité / {race.trait}</span><h3 className="mt-5 font-display text-4xl font-black uppercase tracking-normal md:text-5xl">{race.name}</h3><p className="mt-6 max-w-xl text-sm leading-relaxed text-muted-foreground">{race.detail}</p></div>
-              <div className="mt-12 grid gap-4">
-                {['Vitesse', 'Force', 'Endurance'].map((label, i) => <div key={label} className="grid grid-cols-[90px_1fr] items-center gap-4"><span className="text-[10px] font-bold uppercase">{label}</span><div className="h-2 bg-secondary"><div className="h-full bg-primary transition-all duration-500" style={{ width: `${race.stats[i]}%` }} /></div></div>)}
-              </div>
-            </div>
+          <p className="section-label">Race d’aventurier par défaut</p>
+          <h2 className="mt-4 font-display text-3xl font-black uppercase md:text-5xl">L’Humain</h2>
+          <div data-motion-enter className="mt-8 flex flex-wrap items-center gap-8">
+            <CharacterPreview look={DEFAULT_LOOK} size={192} />
+            <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">Tous les aventuriers sont humains. Choisis ta classe — Guerrier, Mage ou Voleur — et rejoins le groupe face aux monstres du Bastion.</p>
           </div>
         </div>
       </section>
@@ -164,7 +139,7 @@ function Index() {
         <div className="mx-auto max-w-7xl">
           <div data-motion-enter className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div><p className="section-label">Choisir sa voie</p><h2 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Trois classes</h2></div>
-            <p className="max-w-sm text-sm text-muted-foreground">Chaque aventurier combine un peuple et une classe : points de vie, dégâts et capacité propre, visibles par toute la table.</p>
+            <p className="max-w-sm text-sm text-muted-foreground">Chaque aventurier humain choisit une classe : points de vie, dégâts et capacité propre, visibles par toute la table.</p>
           </div>
           <div data-motion-stagger className="grid border border-border bg-background md:grid-cols-3">
             {classes.map((item) => (
@@ -191,7 +166,7 @@ function Index() {
         <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.8fr_1.2fr]">
           <div data-motion-enter><p className="section-label">Protocole de test</p><h2 className="mt-5 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Jouer.<br /><span className="text-primary">Observer.</span><br />Ajuster.</h2></div>
           <ol className="divide-y divide-border border-y border-border">
-            {["Lancer une partie courte", "Attribuer un peuple différent à chaque joueur", "Limiter chacun à une compétence forte", "Noter ce qui gagne trop souvent", "Ajuster les coûts, durées et restrictions"].map((step, i) => <li key={step} className="flex items-center gap-5 py-5"><span className="text-xs font-black text-primary">0{i + 1}</span><span className="font-bold">{step}</span></li>)}
+            {["Lancer une partie courte", "Répartir les trois classes dans le groupe", "Limiter chacun à une compétence forte", "Noter ce qui gagne trop souvent", "Ajuster les coûts, durées et restrictions"].map((step, i) => <li key={step} className="flex items-center gap-5 py-5"><span className="text-xs font-black text-primary">0{i + 1}</span><span className="font-bold">{step}</span></li>)}
           </ol>
         </div>
       </section>

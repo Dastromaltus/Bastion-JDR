@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import sectorMap from "@/data/sector-01.json";
 
-const raceSchema = z.enum(["Humain", "Insecte", "Reptile", "Crustacé", "Oiseau"]);
+const raceSchema = z.enum(["Humain"]);
 const directionSchema = z.enum(["up", "down", "left", "right"]);
 const SESSION_SLUG = "porte-rouge";
 
@@ -14,12 +14,8 @@ function tileAt(x: number, y: number) {
   return layer.data[y * sectorMap.width + x] ?? 2;
 }
 
-function canCross(tile: number, race: z.infer<typeof raceSchema>) {
-  if (tile === 2) return false;
-  if (tile === 3) return race === "Oiseau";
-  if (tile === 4) return race === "Reptile";
-  if (tile === 5) return race === "Insecte";
-  return true;
+function canCross(tile: number) {
+  return ![2, 3, 4, 5].includes(tile);
 }
 
 export const getExplorationState = createServerFn({ method: "GET" }).handler(async () => {
@@ -54,15 +50,12 @@ export const moveExplorer = createServerFn({ method: "POST" })
     const tile = tileAt(nextX, nextY);
     const { data: blocking } = await supabaseAdmin.from("exploration_entities").select("id, kind, label, locked").eq("session_id", session.id).eq("tile_x", nextX).eq("tile_y", nextY).eq("active", true);
     const door = blocking?.find((entity) => entity.kind === "door" && entity.locked);
-    if (!canCross(tile, data.race) || door) return { moved: false, x: current.tile_x, y: current.tile_y, message: door ? "La porte est verrouillée." : "Passage impossible pour ce peuple." };
-    if (tile === 6 && data.race === "Crustacé") {
-      await supabaseAdmin.from("exploration_events").insert({ session_id: session.id, event_type: "ability", message: "Le Crustacé pulvérise la paroi fissurée." });
-    }
+    if (!canCross(tile) || door) return { moved: false, x: current.tile_x, y: current.tile_y, message: door ? "La porte est verrouillée." : "Passage impossible pour cet aventurier." };
     const playerData = { session_id: session.id, client_key: data.clientKey, race: data.race, tile_x: nextX, tile_y: nextY, updated_at: new Date().toISOString() };
     if (current.id) await supabaseAdmin.from("exploration_players").update(playerData).eq("id", current.id);
     else await supabaseAdmin.from("exploration_players").insert({ ...playerData, name: "Éclaireur" });
     await supabaseAdmin.from("exploration_events").insert({ session_id: session.id, event_type: "move", message: `${data.race} se déplace en (${nextX}, ${nextY}).`, payload: { x: nextX, y: nextY, race: data.race } });
-    const encounter = blocking?.find((entity) => entity.kind === "enemy" || (entity.kind === "trap" && data.race !== "Oiseau"));
+    const encounter = blocking?.find((entity) => entity.kind === "enemy" || entity.kind === "trap");
     const objective = blocking?.find((entity) => entity.kind === "objective");
     if (encounter) await supabaseAdmin.from("exploration_events").insert({ session_id: session.id, event_type: "combat", message: `${encounter.label} déclenche un affrontement !`, payload: { entityId: encounter.id } });
     if (objective) {
