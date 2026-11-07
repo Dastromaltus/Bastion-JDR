@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CharacterPreview } from "@/components/CharacterPreview";
 import { DEFAULT_LOOK, loadCharacter, saveCharacter, type CharacterLook } from "@/lib/character";
-import { RACES, hpFor } from "@/lib/races";
+import { RACES, RACE_NAMES, normalizeRace, hpFor } from "@/lib/races";
 
 export const Route = createFileRoute("/_authenticated/personnage")({
   staticData: { sitemap: false },
@@ -37,7 +37,7 @@ function CharacterPage() {
       if (c) { setLook(c); setIsNew(false); }
     });
   }, []);
-  const set = (p: Partial<CharacterLook>) => setLook((l) => ({ ...l, ...p, race: "Humain" }));
+  const set = (p: Partial<CharacterLook>) => setLook((l) => ({ ...l, ...p }));
   const stats = RACES[look.race];
 
   async function submit(e: React.FormEvent) {
@@ -56,7 +56,7 @@ function CharacterPage() {
       <form onSubmit={submit} className="mt-6 grid gap-8 md:grid-cols-[1fr_280px]">
         <div className="space-y-6">
           <label className="block"><span className="section-label">Nom d'aventurier</span><Input required maxLength={40} className="mt-2 h-11 rounded-none" value={look.name} onChange={(e) => set({ name: e.target.value })} /></label>
-          <div><p className="section-label">Race d’aventurier par défaut</p><p className="mt-2 font-bold">Humain</p></div>
+          <label className="block"><span className="section-label">Race d’aventurier</span><select aria-label="Race d’aventurier" className="mt-2 h-11 w-full border-2 border-foreground bg-background px-3 font-bold" value={look.race} onChange={(e) => set({ race: normalizeRace(e.target.value) })}>{RACE_NAMES.map((race) => <option key={race} value={race}>{race}</option>)}</select></label>
         </div>
         <aside className="h-fit border-2 border-foreground p-4 md:sticky md:top-4">
           <div className="flex justify-center bg-secondary p-4"><CharacterPreview look={look} size={200} /></div>

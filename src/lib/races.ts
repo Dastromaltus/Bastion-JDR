@@ -1,9 +1,14 @@
 export const RACES = {
   Humain: { speed: 70, strength: 70, endurance: 70 },
+  Nain: { speed: 70, strength: 70, endurance: 70 },
 } as const;
 
 export type RaceName = keyof typeof RACES;
 export const RACE_NAMES = Object.keys(RACES) as RaceName[];
+
+export function normalizeRace(race: unknown): RaceName {
+  return race === "Nain" ? "Nain" : "Humain";
+}
 
 export function hpFor(race: RaceName) {
   return 10 + Math.round(RACES[race].endurance / 10);

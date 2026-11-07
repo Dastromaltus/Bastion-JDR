@@ -9,6 +9,7 @@ import orcSheet from "@/assets/orc-sheet.png.asset.json";
 import goblinSheet from "@/assets/goblin-sheet.png.asset.json";
 import cyclopsSheet from "@/assets/cyclops-sheet.png.asset.json";
 import humanSheet from "@/assets/human-sheet.png.asset.json";
+import dwarfSheet from "@/assets/dwarf-sheet.png.asset.json";
 import slashSheet from "@/assets/slash-atlas.png.asset.json";
 
 /** Zombie sheet: 32px frames, 19 cols. Rows: idle, walk×4, attack×4, damage×4, death. Directions: bas, gauche, haut, droite. */
@@ -20,7 +21,7 @@ const S_DIE_LAST = 3 * S_COLS + 8;
 const Y_COLS = 16, Y_DIE_LAST = 16 * Y_COLS + 13;
 const W_COLS = 12, W_DIE_LAST = 16 * W_COLS + 8;
 const O_COLS = 16, O_DIE_LAST = 16 * O_COLS + 11;
-const animated = (sprite: WorldActor["sprite"]) => sprite === "zombie" || sprite === "slime" || sprite === "yeti" || sprite === "wolf" || sprite === "orc" || sprite === "goblin" || sprite === "cyclops" || sprite === "human";
+const animated = (sprite: WorldActor["sprite"]) => sprite === "zombie" || sprite === "slime" || sprite === "yeti" || sprite === "wolf" || sprite === "orc" || sprite === "goblin" || sprite === "cyclops" || sprite === "human" || sprite === "dwarf";
 type ZState = { x: number; y: number; hp?: number; dead?: boolean; dir: number };
 function dirOf(dx: number, dy: number, fallback: number) { if (!dx && !dy) return fallback; return Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 1 : 3) : (dy < 0 ? 2 : 0); }
 import { GRID, tileFrame, type GridMap } from "@/lib/map-grid";
@@ -46,6 +47,7 @@ export class WorldScene extends Phaser.Scene {
     this.load.spritesheet("goblin", goblinSheet.url, { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("cyclops", cyclopsSheet.url, { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("human", humanSheet.url, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("dwarf", dwarfSheet.url, { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("slash", slashSheet.url, { frameWidth: 96, frameHeight: 96 });
   }
   create() {
@@ -57,22 +59,26 @@ export class WorldScene extends Phaser.Scene {
       effect.play("slash-hit");
       effect.once("animationcomplete", () => effect.destroy());
     });
-    const hrow = (r: number, n: number) => this.anims.generateFrameNumbers("human", { start: r * O_COLS, end: r * O_COLS + n - 1 });
-    DIRS.forEach((_, i) => {
-      this.anims.create({ key: `h-idle-${i}`, frames: hrow(i, 16), frameRate: 5, repeat: -1 });
-      this.anims.create({ key: `h-walk-${i}`, frames: hrow(4 + i, 4), frameRate: 10 });
-      this.anims.create({ key: `h-attack-${i}`, frames: hrow(8 + i, 4), frameRate: 10 });
-      this.anims.create({ key: `h-dmg-${i}`, frames: hrow(12 + i, 4), frameRate: 10 });
-    });
-    this.anims.create({ key: "h-die", frames: hrow(16, 12), frameRate: 10 });
-    this.anims.create({ key: "h-jump", frames: hrow(17, 4), frameRate: 10 });
-    for (let i = 0; i < 3; i++) this.anims.create({ key: `h-charged-${i}`, frames: hrow(18 + i, 6), frameRate: 10 });
+    for (const [texture, prefix] of [["human", "h"], ["dwarf", "d"]] as const) {
+      const hrow = (r: number, n: number) => this.anims.generateFrameNumbers(texture, { start: r * O_COLS, end: r * O_COLS + n - 1 });
+      DIRS.forEach((_, i) => {
+        this.anims.create({ key: `${prefix}-idle-${i}`, frames: hrow(i, 16), frameRate: 5, repeat: -1 });
+        this.anims.create({ key: `${prefix}-walk-${i}`, frames: hrow(4 + i, 4), frameRate: 10 });
+        this.anims.create({ key: `${prefix}-attack-${i}`, frames: hrow(8 + i, 4), frameRate: 10 });
+        this.anims.create({ key: `${prefix}-dmg-${i}`, frames: hrow(12 + i, 4), frameRate: 10 });
+        if (texture === "dwarf") this.anims.create({ key: `${prefix}-jump-${i}`, frames: hrow(17 + i, 4), frameRate: 10 });
+      });
+      this.anims.create({ key: `${prefix}-die`, frames: hrow(16, 12), frameRate: 10 });
+      if (texture === "human") this.anims.create({ key: "h-jump", frames: hrow(17, 4), frameRate: 10 });
+      for (let i = 0; i < 3; i++) this.anims.create({ key: `${prefix}-charged-${i}`, frames: hrow((texture === "human" ? 18 : 21) + i, 6), frameRate: 10 });
+    }
     this.events.on("human-attack", (p: { id: string; x: number; y: number }) => {
       const node = this.actors.get(p.id), state = this.prev.get(p.id);
       const sprite = node?.list[0];
       if (!(sprite instanceof Phaser.GameObjects.Sprite) || !state || motionDisabled()) return;
       const dir = dirOf(p.x - state.x, p.y - state.y, state.dir);
-      sprite.play(`h-attack-${dir}`).chain(`h-idle-${dir}`);
+      const prefix = sprite.texture.key === "dwarf" ? "d" : "h";
+      sprite.play(`${prefix}-attack-${dir}`).chain(`${prefix}-idle-${dir}`);
     });
     const bg = getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim() || "#111";
     const row = (r: number, n: number) => this.anims.generateFrameNumbers("zombie", { start: r * Z_COLS, end: r * Z_COLS + n - 1 });
@@ -167,7 +173,7 @@ export class WorldScene extends Phaser.Scene {
       if (motionDisabled()) {
         for (const [id, node] of this.actors) {
           const sprite = node.list[0], state = this.prev.get(id);
-          if (sprite instanceof Phaser.GameObjects.Sprite && sprite.texture.key === "human") sprite.stop().setFrame(state?.dead ? O_DIE_LAST : (state?.dir ?? 0) * O_COLS);
+          if (sprite instanceof Phaser.GameObjects.Sprite && (sprite.texture.key === "human" || sprite.texture.key === "dwarf")) sprite.stop().setFrame(state?.dead ? O_DIE_LAST : (state?.dir ?? 0) * O_COLS);
         }
         this.children.list.filter((child) => child.name === "slash-effect").forEach((child) => child.destroy());
         this.tweens.getTweens().forEach((tween) => { tween.complete(); });
@@ -186,7 +192,7 @@ export class WorldScene extends Phaser.Scene {
     const ids = new Set(actors.map((a) => a.id));
     for (const [id, node] of this.actors) if (!ids.has(id)) { if ((this.cameras.main as any)._follow === node) this.cameras.main.stopFollow(); node.destroy(); this.actors.delete(id); }
     const reduced = motionDisabled();
-    const hurt = actors.filter((a) => a.sprite === "human" && a.hp !== undefined && (this.prev.get(a.id)?.hp ?? a.hp) > a.hp);
+    const hurt = actors.filter((a) => (a.sprite === "human" || a.sprite === "dwarf") && a.hp !== undefined && (this.prev.get(a.id)?.hp ?? a.hp) > a.hp);
     for (const actor of actors) {
       let node = this.actors.get(actor.id);
       const sharing = actors.filter((a) => a.x === actor.x && a.y === actor.y);
@@ -209,10 +215,10 @@ export class WorldScene extends Phaser.Scene {
           ? this.add.sprite(0, -9, "goblin", actor.dead ? O_DIE_LAST : 0).setScale(1.5)
           : actor.sprite === "cyclops"
           ? this.add.sprite(0, -9, "cyclops", actor.dead ? Y_DIE_LAST : 0).setScale(1.5)
-          : actor.sprite === "human"
-          ? this.add.sprite(0, -9, "human", actor.dead ? O_DIE_LAST : 0).setScale(1.5)
+          : actor.sprite === "human" || actor.sprite === "dwarf"
+          ? this.add.sprite(0, -9, actor.sprite, actor.dead ? O_DIE_LAST : 0).setScale(1.5)
           : this.add.image(0, -2, "world-tiles", actor.frame);
-        if (sprite instanceof Phaser.GameObjects.Sprite && !actor.dead && !reduced) sprite.play(actor.sprite === "human" ? "h-idle-0" : actor.sprite === "slime" ? "s-idle" : actor.sprite === "yeti" ? "y-idle-0" : actor.sprite === "wolf" ? "w-idle-0" : actor.sprite === "orc" ? "o-idle-0" : actor.sprite === "goblin" ? "g-idle-0" : actor.sprite === "cyclops" ? "c-idle-0" : "z-idle");
+        if (sprite instanceof Phaser.GameObjects.Sprite && !actor.dead && !reduced) sprite.play(actor.sprite === "dwarf" ? "d-idle-0" : actor.sprite === "human" ? "h-idle-0" : actor.sprite === "slime" ? "s-idle" : actor.sprite === "yeti" ? "y-idle-0" : actor.sprite === "wolf" ? "w-idle-0" : actor.sprite === "orc" ? "o-idle-0" : actor.sprite === "goblin" ? "g-idle-0" : actor.sprite === "cyclops" ? "c-idle-0" : "z-idle");
         const label = this.add.text(0, -18, actor.name, { fontFamily: "monospace", fontSize: "10px", color: getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim(), backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim(), padding: { x: 4, y: 3 }, resolution: 3 }).setOrigin(0.5, 1).setVisible(false);
         node = this.add.container(x, y, [sprite, label, this.add.graphics()]);
         if (actor.frame === 12) sprite.setInteractive({ useHandCursor: true }).on("pointerdown", () => window.dispatchEvent(new CustomEvent("bastion-select-mob", { detail: actor.id })));
@@ -258,7 +264,7 @@ export class WorldScene extends Phaser.Scene {
     if (!hurt.length) return;
     // An adventurer lost HP: the adjacent living monster plays its attack toward them.
     for (const t of hurt) {
-      const z = actors.find((a) => animated(a.sprite) && a.sprite !== "human" && !a.dead && Math.abs(a.x - t.x) <= 1 && Math.abs(a.y - t.y) <= 1);
+      const z = actors.find((a) => animated(a.sprite) && a.sprite !== "human" && a.sprite !== "dwarf" && !a.dead && Math.abs(a.x - t.x) <= 1 && Math.abs(a.y - t.y) <= 1);
       const zs = z && this.actors.get(z.id)?.list[0];
       if (!z || !(zs instanceof Phaser.GameObjects.Sprite)) continue;
       const dir = dirOf(t.x - z.x, t.y - z.y, this.prev.get(z.id)?.dir ?? 0);
@@ -279,18 +285,19 @@ export class WorldScene extends Phaser.Scene {
     const dir = before ? dirOf(actor.x - before.x, actor.y - before.y, before.dir) : 0;
     this.prev.set(actor.id, { x: actor.x, y: actor.y, ...(actor.hp !== undefined ? { hp: actor.hp } : {}), ...(actor.dead ? { dead: true } : {}), dir });
     if (!(sprite instanceof Phaser.GameObjects.Sprite) || !before) return;
-    const slime = actor.sprite === "slime", yeti = actor.sprite === "yeti", wolf = actor.sprite === "wolf", orc = actor.sprite === "orc", goblin = actor.sprite === "goblin", cyclops = actor.sprite === "cyclops", human = actor.sprite === "human";
-    const idle = human ? `h-idle-${dir}` : slime ? "s-idle" : yeti ? `y-idle-${dir}` : wolf ? `w-idle-${dir}` : orc ? `o-idle-${dir}` : goblin ? `g-idle-${dir}` : cyclops ? `c-idle-${dir}` : "z-idle";
+    const slime = actor.sprite === "slime", yeti = actor.sprite === "yeti", wolf = actor.sprite === "wolf", orc = actor.sprite === "orc", goblin = actor.sprite === "goblin", cyclops = actor.sprite === "cyclops", human = actor.sprite === "human" || actor.sprite === "dwarf";
+    const prefix = actor.sprite === "dwarf" ? "d" : "h";
+    const idle = human ? `${prefix}-idle-${dir}` : slime ? "s-idle" : yeti ? `y-idle-${dir}` : wolf ? `w-idle-${dir}` : orc ? `o-idle-${dir}` : goblin ? `g-idle-${dir}` : cyclops ? `c-idle-${dir}` : "z-idle";
     if (actor.dead) {
       if (label instanceof Phaser.GameObjects.Text) label.setVisible(false);
       if (before.dead) return;
-      if (reduced) sprite.stop().setFrame(slime ? S_DIE_LAST : yeti || cyclops ? Y_DIE_LAST : wolf ? W_DIE_LAST : orc || goblin || human ? O_DIE_LAST : Z_DIE_LAST); else sprite.play(human ? "h-die" : slime ? "s-die" : yeti ? "y-die" : wolf ? "w-die" : orc ? "o-die" : goblin ? "g-die" : cyclops ? "c-die" : "z-die");
+      if (reduced) sprite.stop().setFrame(slime ? S_DIE_LAST : yeti || cyclops ? Y_DIE_LAST : wolf ? W_DIE_LAST : orc || goblin || human ? O_DIE_LAST : Z_DIE_LAST); else sprite.play(human ? `${prefix}-die` : slime ? "s-die" : yeti ? "y-die" : wolf ? "w-die" : orc ? "o-die" : goblin ? "g-die" : cyclops ? "c-die" : "z-die");
       return;
     }
     if (reduced) { sprite.stop().setFrame(human ? dir * O_COLS : 0); return; }
     if (before.dead) { sprite.play(idle); return; }
-    if (actor.hp !== undefined && before.hp !== undefined && actor.hp < before.hp) sprite.play(human ? `h-dmg-${dir}` : slime ? "s-dmg" : yeti ? `y-dmg-${dir}` : wolf ? `w-dmg-${dir}` : orc ? `o-dmg-${dir}` : goblin ? `g-dmg-${dir}` : cyclops ? `c-dmg-${dir}` : `z-dmg-${dir}`).chain(idle);
-    else if (actor.x !== before.x || actor.y !== before.y) sprite.play(human ? `h-walk-${dir}` : slime ? "s-idle" : yeti ? `y-walk-${dir}` : wolf ? `w-walk-${dir}` : orc ? `o-walk-${dir}` : goblin ? `g-walk-${dir}` : cyclops ? `c-walk-${dir}` : `z-walk-${dir}`).chain(idle);
+    if (actor.hp !== undefined && before.hp !== undefined && actor.hp < before.hp) sprite.play(human ? `${prefix}-dmg-${dir}` : slime ? "s-dmg" : yeti ? `y-dmg-${dir}` : wolf ? `w-dmg-${dir}` : orc ? `o-dmg-${dir}` : goblin ? `g-dmg-${dir}` : cyclops ? `c-dmg-${dir}` : `z-dmg-${dir}`).chain(idle);
+    else if (actor.x !== before.x || actor.y !== before.y) sprite.play(human ? `${prefix}-walk-${dir}` : slime ? "s-idle" : yeti ? `y-walk-${dir}` : wolf ? `w-walk-${dir}` : orc ? `o-walk-${dir}` : goblin ? `g-walk-${dir}` : cyclops ? `c-walk-${dir}` : `z-walk-${dir}`).chain(idle);
   }
 }
 export function createWorldGame(parent: HTMLDivElement, ready: () => void) {
