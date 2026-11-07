@@ -118,6 +118,24 @@ function Index() {
         </div>
       </section>
 
+      <section id="cartes" className="border-b border-border px-5 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div data-motion-enter className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div><p className="section-label">Atelier du narrateur</p><h2 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Dessine tes<br /><span className="text-primary">propres cartes.</span></h2></div>
+            <p className="max-w-sm text-sm text-muted-foreground">L’éditeur de cartes te donne les clés du Bastion : terrain, monstres, trésors, musique et passages, tout se prépare avant le lancement.</p>
+          </div>
+          <div data-motion-stagger className="grid border border-border sm:grid-cols-2 lg:grid-cols-4">
+            {mapFeatures.map((feature) => (
+              <article key={feature.title} className="border-b border-border p-7 last:border-b-0 sm:border-r sm:[&:nth-child(2n)]:border-r-0 sm:[&:nth-last-child(-n+2)]:border-b-0 lg:[&:nth-child(2n)]:border-r lg:[&:nth-last-child(-n+2)]:border-b-0 lg:last:border-r-0">
+                <h3 className="font-display text-base font-black uppercase tracking-normal">{feature.title}</h3>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{feature.text}</p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-10"><Button asChild variant="outline" className="h-auto min-h-12 rounded-none px-5 py-3 font-bold"><Link to="/cartes"><Swords />Ouvrir l’éditeur de cartes</Link></Button></div>
+        </div>
+      </section>
+
       <section id="peuples" className="px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
           <div data-motion-enter className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
