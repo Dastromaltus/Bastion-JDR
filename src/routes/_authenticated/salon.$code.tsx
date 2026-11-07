@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Backpack, BookOpen, MessageSquare, Settings, User, Dices, Copy, Megaphone } from "lucide-react";
+import { Backpack, MessageSquare, Settings, User, Dices, Copy, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -167,7 +167,7 @@ function RoomPage() {
           <section className="border-4 border-primary p-5 text-center">
             <p className="section-label">Fin de partie</p>
             <h1 className="mt-2 font-display text-3xl uppercase">{(game.result === "victoire" ? "Victoire" : "Défaite").split("").map((letter, i) => <span key={i} className="anim-enter inline-block" style={{ "--anim-delay": `${i * 40}ms` } as React.CSSProperties}>{letter}</span>)}</h1>
-            <p className="mt-2 text-sm text-muted-foreground">Le journal complet est disponible au format PDF.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Le rapport de partie est disponible au format PDF.</p>
             <ReportButton gameId={game.id} className="mt-4" />
           </section>
         )}
@@ -254,7 +254,6 @@ function RoomPage() {
         {([
           ["inventaire", "Inventaire", Backpack],
           ["fiche", "Fiche", User],
-          ["journal", "Journal", BookOpen],
           ["chat", "Chat", MessageSquare],
           ["parametres", "Paramètres", Settings],
         ] as const).filter(([key]) => !isNarr || key !== "fiche").map(([key, label, Icon]) => (
@@ -271,7 +270,6 @@ function RoomPage() {
           <div className="px-4 pb-6">
             {panel === "inventaire" && <InventoryPanel d={d} settings={settings} />}
             {panel === "fiche" && !isNarr && <SheetPanel d={d} />}
-            {panel === "journal" && <JournalPanel d={d} />}
             {panel === "chat" && <ChatPanel d={d} dmTo={dmTo} setDmTo={setDmTo} />}
             {panel === "parametres" && (
               <SettingsPanel settings={settings} update={update} saving={saving} error={settingsError} game={game} players={players} me={me}
@@ -542,21 +540,6 @@ function SheetPanel({ d }: { d: any }) {
           <Button disabled={busy === "fiche"} className="min-h-11 rounded-none font-bold uppercase">{busy === "fiche" ? "Enregistrement…" : "Enregistrer la fiche"}</Button>
         </form>
       ) : <p className="text-sm text-muted-foreground">La fiche est figée depuis le lancement de la partie.</p>}
-    </div>
-  );
-}
-
-function JournalPanel({ d }: { d: any }) {
-  return (
-    <div>
-      <ReportButton gameId={d.game.id} className="mb-3 w-full" />
-      <ol className="space-y-1 text-sm">
-        {d.events.map((e: any) => (
-          <li key={e.id} className={`border-l-2 pl-2 ${e.important ? "border-primary font-bold" : "border-foreground/30"}`}>
-            <span className="text-muted-foreground">{new Date(e.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span> {e.message}
-          </li>
-        ))}
-      </ol>
     </div>
   );
 }
