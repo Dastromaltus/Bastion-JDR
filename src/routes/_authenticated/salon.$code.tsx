@@ -167,7 +167,7 @@ function RoomPage() {
           <section className="border-4 border-primary p-5 text-center">
             <p className="section-label">Fin de partie</p>
             <h1 className="mt-2 font-display text-3xl uppercase">{(game.result === "victoire" ? "Victoire" : "Défaite").split("").map((letter, i) => <span key={i} className="anim-enter inline-block" style={{ "--anim-delay": `${i * 40}ms` } as React.CSSProperties}>{letter}</span>)}</h1>
-            <p className="mt-2 text-sm text-muted-foreground">Le journal complet est disponible au format PDF.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Le rapport de partie est disponible au format PDF.</p>
             <ReportButton gameId={game.id} className="mt-4" />
           </section>
         )}
@@ -254,7 +254,6 @@ function RoomPage() {
         {([
           ["inventaire", "Inventaire", Backpack],
           ["fiche", "Fiche", User],
-          ["journal", "Journal", BookOpen],
           ["chat", "Chat", MessageSquare],
           ["parametres", "Paramètres", Settings],
         ] as const).filter(([key]) => !isNarr || key !== "fiche").map(([key, label, Icon]) => (
@@ -271,7 +270,6 @@ function RoomPage() {
           <div className="px-4 pb-6">
             {panel === "inventaire" && <InventoryPanel d={d} settings={settings} />}
             {panel === "fiche" && !isNarr && <SheetPanel d={d} />}
-            {panel === "journal" && <JournalPanel d={d} />}
             {panel === "chat" && <ChatPanel d={d} dmTo={dmTo} setDmTo={setDmTo} />}
             {panel === "parametres" && (
               <SettingsPanel settings={settings} update={update} saving={saving} error={settingsError} game={game} players={players} me={me}
