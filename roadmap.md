@@ -1,3 +1,4 @@
+- [x] Add uploaded movement sound for adventurers and enemies through the existing effects volume; live narrator mob movement plays the supplied MP3 and stops at rest, no playback errors; 13 focused tests pass, including adventurer movement and silent spawn/confirmation.
 - [x] Replace adventurer races with default Human and uploaded HumanTownsfolk artwork; saved profile/reload, existing salon race conversion, Human texture/directional walking and desktop/mobile rendering verified; 16 focused tests pass. Existing stats, HP and classes preserved.
 - [x] Add a top-down pixel-art environment to salon games and Operations.
 - [x] Add uploaded Slash on key 7: fixed server-authoritative 2 damage, nearest visible/last clicked target and synchronized effect. Verified Mage against shield, 10→8 HP persisted after reload, button attack, original frames and reduced-motion removal; 16 tests pass. Temporary salon removed.
