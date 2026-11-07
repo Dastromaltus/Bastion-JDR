@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getRoomPreview, joinRoom } from "@/lib/rooms.functions";
 import { RACE_NAMES } from "@/lib/races";
+import { CLASSES, CLASS_NAMES, type ClassName } from "@/lib/classes";
 import { roomAdmissionError } from "@/lib/room-admission";
 
 export const Route = createFileRoute("/_authenticated/rejoindre/$code")({
@@ -33,6 +34,7 @@ function JoinPage() {
   const room = useQuery({ queryKey: ["preview", code], queryFn: () => preview({ data: { code } }) });
   const [name, setName] = useState("");
   const [race, setRace] = useState<(typeof RACE_NAMES)[number]>("Humain");
+  const [cls, setCls] = useState<ClassName>("guerrier");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +60,7 @@ function JoinPage() {
     setLoading(true);
     setError(null);
     try {
-      const r = await join({ data: { code, displayName: name, race, password: password || undefined } });
+      const r = await join({ data: { code, displayName: name, race, cls, password: password || undefined } });
       if (r.ok) navigate({ to: "/salon/$code", params: { code: r.code } });
       else setError(r.error);
     } catch (err) {
@@ -94,6 +96,9 @@ function JoinPage() {
               <Input required maxLength={40} className="h-11 rounded-none" placeholder="Ton nom d'aventurier" value={name} onChange={(e) => setName(e.target.value)} />
               <select className="h-11 w-full border border-input bg-background px-2" value={race} onChange={(e) => setRace(e.target.value as any)}>
                 {RACE_NAMES.map((n) => <option key={n}>{n}</option>)}
+              </select>
+              <select aria-label="Classe" className="h-11 w-full border border-input bg-background px-2" value={cls} onChange={(e) => setCls(e.target.value as ClassName)}>
+                {CLASS_NAMES.map((c) => <option key={c} value={c}>{CLASSES[c].label} — {CLASSES[c].ability}</option>)}
               </select>
               </>)}
               {r.hasPassword && <Input type="password" required className="h-11 rounded-none" placeholder="Mot de passe du salon" value={password} onChange={(e) => setPassword(e.target.value)} />}

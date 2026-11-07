@@ -1,3 +1,4 @@
+import { CLASSES, CLASS_NAMES, classHp } from "@/lib/classes";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -156,6 +157,7 @@ export const joinRoom = createServerFn({ method: "POST" })
         password: z.string().max(64).optional(),
         displayName: nameSchema,
         race: z.enum(RACE_NAMES as [RaceName, ...RaceName[]]).default("Humain"),
+        cls: z.enum(CLASS_NAMES).default("guerrier"),
       })
       .parse(d),
   )
@@ -189,15 +191,16 @@ export const joinRoom = createServerFn({ method: "POST" })
       display_name: data.displayName,
       role: "adventurer",
       race,
+      class: data.cls,
       ...RACES[race],
-      hp: hpFor(race),
-      max_hp: hpFor(race),
+      hp: classHp(race, data.cls),
+      max_hp: classHp(race, data.cls),
       world_x: map.spawn.x,
       world_y: map.spawn.y,
       current_zone: companion?.current_zone ?? "entree",
     });
     if (error) return { ok: false as const, error: "Impossible de rejoindre le salon." };
-    await logEvent(game.id, context.userId, "systeme", `${data.displayName} (${race}) rejoint le salon.`);
+    await logEvent(game.id, context.userId, "systeme", `${data.displayName} (${race}, ${CLASSES[data.cls].label}) rejoint le salon.`);
     return { ok: true as const, code: game.code };
   });
 
@@ -374,7 +377,7 @@ export const leaveRoom = createServerFn({ method: "POST" })
 export const updateCharacter = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
-    z.object({ gameId: z.string().uuid(), race: z.enum(RACE_NAMES as [RaceName, ...RaceName[]]), displayName: nameSchema }).parse(d),
+    z.object({ gameId: z.string().uuid(), race: z.enum(RACE_NAMES as [RaceName, ...RaceName[]]), cls: z.enum(CLASS_NAMES).default("guerrier"), displayName: nameSchema }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const me = await membership(context, data.gameId);
@@ -384,7 +387,7 @@ export const updateCharacter = createServerFn({ method: "POST" })
     if (game?.status !== "waiting") throw new Error("La fiche ne peut plus changer une fois la partie lancée.");
     await db
       .from("game_players")
-      .update({ race: data.race, display_name: data.displayName, ...RACES[data.race], hp: hpFor(data.race), max_hp: hpFor(data.race) })
+      .update({ race: data.race, class: data.cls, display_name: data.displayName, ...RACES[data.race], hp: classHp(data.race, data.cls), max_hp: classHp(data.race, data.cls) })
       .eq("id", me.id);
     return { ok: true };
   });
@@ -568,7 +571,7 @@ export const getReportData = createServerFn({ method: "POST" })
     const sb = context.supabase;
     const [{ data: game }, { data: players }, { data: events }] = await Promise.all([
       sb.from("games").select("*").eq("id", data.gameId).single(),
-      sb.from("game_players").select("display_name, race, role, speed, strength, endurance, hp, max_hp").eq("game_id", data.gameId).order("joined_at"),
+      sb.from("game_players").select("display_name, race, class, role, speed, strength, endurance, hp, max_hp").eq("game_id", data.gameId).order("joined_at"),
       sb.from("game_events").select("kind, message, payload, important, created_at").eq("game_id", data.gameId).neq("kind", "reaction").neq("kind", "ping").order("created_at").limit(2000),
     ]);
     let notes: { body: string; created_at: string }[] = [];
