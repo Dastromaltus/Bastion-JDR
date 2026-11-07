@@ -6,7 +6,7 @@ export type WorldParticipant = {
   current_zone?: string | null; world_x?: number; world_y?: number; world_zone?: string | null; hp?: number; max_hp?: number;
 };
 export type MonsterSprite = "zombie" | "slime" | "yeti" | "wolf" | "orc" | "goblin" | "cyclops";
-export type WorldActor = { id: string; name: string; x: number; y: number; frame: number; hp?: number; maxHp?: number; sprite?: MonsterSprite | "treasure" | undefined; dead?: boolean };
+export type WorldActor = { id: string; name: string; x: number; y: number; frame: number; hp?: number; maxHp?: number; sprite?: MonsterSprite | "human" | "treasure" | undefined; dead?: boolean };
 /** Monsters named "Zombie…" use the animated zombie sprite sheet. */
 export const isZombie = (name: string) => /zombie/i.test(name);
 /** Monsters named "Slime…" use the animated green slime sprite sheet. */
@@ -18,7 +18,6 @@ export const isOrc = (name: string) => /\b(?:orcs?|orques?)\b|wildorc/i.test(nam
 export const isGoblin = (name: string) => /\b(?:gobelins?|goblins?)\b/i.test(name);
 export const isCyclops = (name: string) => /\bcyclop(?:es?|s)?\b/i.test(name);
 export const monsterSprite = (name: string): MonsterSprite | undefined => (isZombie(name) ? "zombie" : isSlime(name) ? "slime" : isYeti(name) ? "yeti" : isWolf(name) ? "wolf" : isOrc(name) ? "orc" : isGoblin(name) ? "goblin" : isCyclops(name) ? "cyclops" : undefined);
-const FRAMES: Record<string, number> = { Humain: 7, Insecte: 8, Reptile: 9, Crustacé: 10, Oiseau: 11 };
 
 /** The narrator is an observer, not a movable adventurer. */
 export function participantActors(players: WorldParticipant[], zone: string, ownId: string, map?: GridMap): WorldActor[] {
@@ -28,6 +27,8 @@ export function participantActors(players: WorldParticipant[], zone: string, own
     ...(p.hp !== undefined ? { hp: p.hp } : {}),
     ...(p.max_hp ? { maxHp: p.max_hp } : {}),
     ...(p.role === "narrator" ? { x: 12, y: 6 } : worldPosition(p, zone, map)),
-    frame: p.role === "narrator" ? 7 : FRAMES[p.race] ?? 7,
+    frame: 7,
+    sprite: "human",
+    ...(p.hp !== undefined && p.hp <= 0 ? { dead: true } : {}),
   }));
 }
