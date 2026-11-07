@@ -1,6 +1,7 @@
 import zombieIdle from "@/assets/zombie-Idle.gif.asset.json";
 import slimeIdle from "@/assets/slime-idle.gif.asset.json";
-import { isZombie, isSlime, isYeti, isWolf, isOrc } from "@/lib/world-actors";
+import { isZombie, isSlime, isYeti, isWolf, isOrc, isGoblin } from "@/lib/world-actors";
+import goblinIdle from "@/assets/goblin-idle.gif.asset.json";
 import orcIdle from "@/assets/orc-idle.gif.asset.json";
 import yetiIdle from "@/assets/yeti-idle.gif.asset.json";
 import wolfIdle from "@/assets/wolf-idle.gif.asset.json";
@@ -16,6 +17,9 @@ export function CatalogArtwork({ kind, item }: { kind: "mob" | "treasure"; item:
   const key = item.type === "cle";
   const weapon = item.type === "arme";
   const potion = item.type === "consommable";
+  if (kind === "mob" && isGoblin(item.name)) return <div role="img" aria-label={`Design de ${item.name}`} className="relative mx-auto size-24 shrink-0 overflow-hidden">
+    <img src={goblinIdle.url} alt="" className="absolute left-1/2 top-1/2 h-auto w-[12rem] max-w-none -translate-x-1/2 -translate-y-[12.5%] [image-rendering:pixelated]" />
+  </div>;
   if (kind === "mob" && isOrc(item.name)) return <div role="img" aria-label={`Design de ${item.name}`} className="relative mx-auto size-24 shrink-0 overflow-hidden">
     <img src={orcIdle.url} alt="" className="absolute left-1/2 top-1/2 h-auto w-[12rem] max-w-none -translate-x-1/2 -translate-y-[12.5%] [image-rendering:pixelated]" />
   </div>;
