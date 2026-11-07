@@ -21,7 +21,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const game = useRef<Phaser.Game | null>(null);
   const [ready, setReady] = useState(false);
   const [failure, setFailure] = useState(false);
-  const stepRef = useRef<(direction: WorldDirection) => Promise<void>>(async () => {});
+  const stepRef = useRef<(direction: WorldDirection) => void>(() => {});
   const [movingDirection, setMovingDirection] = useState<WorldDirection | null>(null);
   const [focused, setFocused] = useState(false);
   const [pressed, setPressed] = useState<WorldDirection | null>(null);
