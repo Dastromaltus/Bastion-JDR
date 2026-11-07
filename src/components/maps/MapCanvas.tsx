@@ -22,7 +22,7 @@ function useSheet() {
 export type MapMarker = { x: number; y: number; glyph: string; selected?: boolean; sprite?: "zombie" | "slime" | undefined };
 export function MapCanvas({ tiles, spawn, className, onCell, label, markers, brushSize }: {
   tiles: number[]; spawn?: { x: number; y: number }; className?: string; label: string; markers?: MapMarker[];
-  onCell?: (x: number, y: number, kind: "down" | "move") => void; brushSize?: number;
+  onCell?: (x: number, y: number, kind: "down" | "move") => void; brushSize?: number | undefined;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const img = useSheet();
