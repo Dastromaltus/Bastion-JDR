@@ -39,5 +39,5 @@
 - [x] Fix departure placement on blocked cells in both editors, preserving walkable textures; 15 tests pass and authenticated border placement/save/reopen succeeds, build OK.
 - [x] Allow arrivals in active salons, retaining explicit locks, passwords, capacity and current-map spawn; expose narrator lock/unlock during play and stop automatic locking on start.
 - [x] Test late-arrival rules (19 focused tests pass) and verify authenticated invitation-to-map arrival with persisted adventurer role and spawn (73,81); temporary salon removed, build OK.
-- [ ] Improve character nameplate clarity and diagnose/fix ZQSD movement without bypassing turn, role or collision rules.
-- [ ] Verify keyboard movement, persisted positions and readable labels in a real authenticated game.
+- [x] Improve nameplate font, size, rendering resolution and local overlap spacing; allow adventurer movement on their combat turn and show real control availability. Prevent adventurerless combat starts and deactivate existing enemy-only combats blocking late arrivals.
+- [x] Verify all four ZQSD moves through the authenticated UI with persisted coordinates; label screenshot reviewed, 25 focused tests pass, build OK and temporary salon removed. Multi-account combat movement remains unverified.
