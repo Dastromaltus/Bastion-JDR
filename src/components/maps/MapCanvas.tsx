@@ -30,7 +30,7 @@ function useSheet() {
 export type MapMarker = { x: number; y: number; glyph: string; selected?: boolean; sprite?: MonsterSprite | undefined };
 export function MapCanvas({ tiles, spawn, passage, className, onCell, label, markers, brushSize }: {
   tiles: number[]; spawn?: { x: number; y: number }; className?: string; label: string; markers?: MapMarker[];
-  onCell?: (x: number, y: number, kind: "down" | "move") => void; brushSize?: number | undefined; passage?: { x: number; y: number } | null;
+  onCell?: (x: number, y: number, kind: "down" | "move") => void; brushSize?: number | undefined; passage?: { x: number; y: number } | null | undefined;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const img = useSheet();
