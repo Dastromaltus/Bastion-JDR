@@ -1,6 +1,7 @@
 import zombieIdle from "@/assets/zombie-Idle.gif.asset.json";
 import slimeIdle from "@/assets/slime-idle.gif.asset.json";
-import { isZombie, isSlime } from "@/lib/world-actors";
+import { isZombie, isSlime, isYeti } from "@/lib/world-actors";
+import yetiIdle from "@/assets/yeti-idle.gif.asset.json";
 import { useEffect, useRef } from "react";
 import decor from "@/assets/zone-tiles.png.asset.json";
 import map from "@/data/salon-world.json";
@@ -13,6 +14,9 @@ export function CatalogArtwork({ kind, item }: { kind: "mob" | "treasure"; item:
   const key = item.type === "cle";
   const weapon = item.type === "arme";
   const potion = item.type === "consommable";
+  if (kind === "mob" && isYeti(item.name)) return <div role="img" aria-label={`Design de ${item.name}`} className="relative mx-auto size-24 shrink-0 overflow-hidden">
+    <img src={yetiIdle.url} alt="" className="absolute left-1/2 top-1/2 h-auto w-[12rem] max-w-none -translate-x-1/2 -translate-y-[45%] [image-rendering:pixelated]" />
+  </div>;
   if (kind === "mob" && isZombie(item.name)) return <div role="img" aria-label={`Design de ${item.name}`} className="relative mx-auto size-24 shrink-0 overflow-hidden">
     <img src={zombieIdle.url} alt="" className="absolute left-1/2 top-1/2 h-auto w-[12rem] max-w-none -translate-x-1/2 -translate-y-[45%] [image-rendering:pixelated]" />
   </div>;
