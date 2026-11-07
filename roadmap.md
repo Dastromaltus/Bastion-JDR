@@ -39,3 +39,5 @@
 - [x] Fix departure placement on blocked cells in both editors, preserving walkable textures; 15 tests pass and authenticated border placement/save/reopen succeeds, build OK.
 - [x] Allow arrivals in active salons, retaining explicit locks, passwords, capacity and current-map spawn; expose narrator lock/unlock during play and stop automatic locking on start.
 - [x] Test late-arrival rules (19 focused tests pass) and verify authenticated invitation-to-map arrival with persisted adventurer role and spawn (73,81); temporary salon removed, build OK.
+- [ ] Improve character nameplate clarity and diagnose/fix ZQSD movement without bypassing turn, role or collision rules.
+- [ ] Verify keyboard movement, persisted positions and readable labels in a real authenticated game.
