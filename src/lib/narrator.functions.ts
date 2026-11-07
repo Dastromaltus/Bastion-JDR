@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { ZONES, ZONE_KEYS, zoneLabel, inventoryCategory } from "./races";
+import { GRID } from "./map-grid";
 import { TRACK_KEYS, SFX_KEYS } from "./ambience-tracks";
 
 type Ctx = { userId: string; supabase: any };
@@ -132,7 +133,7 @@ export const createCustomTreasure = createServerFn({ method: "POST" })
 
 /* ---------------- Enemies ---------------- */
 
-/** Validates a narrator-chosen map cell against the salon's own 40×40 map. */
+/** Validates a narrator-chosen map cell against the salon's own 160×160 map. */
 async function checkedCell(context: any, gameId: string, x?: number, y?: number) {
   if (x === undefined || y === undefined) return null;
   const { salonGrid } = await import("./maps.functions");
@@ -148,7 +149,7 @@ export const placeEnemy = createServerFn({ method: "POST" })
       gameId: uuid, catalogId: uuid, zone,
       trigger: z.enum(["entree", "porte", "manuel"]),
       speed: stat, strength: stat, endurance: stat,
-      x: z.number().int().min(0).max(39).optional(), y: z.number().int().min(0).max(39).optional(),
+      x: z.number().int().min(0).max(GRID - 1).optional(), y: z.number().int().min(0).max(GRID - 1).optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -261,7 +262,7 @@ export const placeTreasure = createServerFn({ method: "POST" })
       gameId: uuid, catalogId: uuid,
       placement: z.enum(["zone", "coffre", "ennemi", "direct"]),
       zone: zone.optional(), enemyId: uuid.optional(), targetUserId: uuid.optional(),
-      x: z.number().int().min(0).max(39).optional(), y: z.number().int().min(0).max(39).optional(),
+      x: z.number().int().min(0).max(GRID - 1).optional(), y: z.number().int().min(0).max(GRID - 1).optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {

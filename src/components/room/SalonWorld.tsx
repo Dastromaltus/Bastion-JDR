@@ -74,7 +74,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     finally { lock.current = false; setBusy(false); setMovingDirection(null); }
   }
   return <section className="space-y-3" aria-label="Exploration en vue de dessus">
-    <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-pixel text-xl">{name ?? zoneLabel(here)}</h2><span className="text-xs text-muted-foreground">{grid.name} · 40 × 40 · {participants.length} participant(s)</span></div>
+    <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-pixel text-xl">{name ?? zoneLabel(here)}</h2><span className="text-xs text-muted-foreground">{grid.name} · 160 × 160 · {participants.length} participant(s)</span></div>
     <div ref={view} tabIndex={0} role="group" aria-label="Carte du salon, vue de dessus. Clique puis utilise Z, Q, S, D." onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onMouseDown={() => view.current?.focus()} className={`salon-world relative overflow-hidden border-2 bg-game outline-none ${focused ? "border-primary ring-4 ring-primary" : "border-foreground"}`} onKeyUp={() => setPressed(null)} onKeyDown={(event) => {
       const keys: Record<string, WorldDirection> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", z: "up", s: "down", q: "left", d: "right", Z: "up", S: "down", Q: "left", D: "right" };
       const direction = keys[event.key];

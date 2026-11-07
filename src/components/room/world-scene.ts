@@ -19,7 +19,7 @@ import { motionDisabled, MOTION_EVENT } from "@/lib/motion";
 
 export class WorldScene extends Phaser.Scene {
   private actors = new Map<string, Phaser.GameObjects.Container>();
-  private scenery: Phaser.GameObjects.Image[] = [];
+  private terrain: Phaser.Tilemaps.TilemapLayer | null = null;
   private prev = new Map<string, ZState>();
   constructor() { super("SalonWorld"); }
   preload() {
@@ -44,9 +44,13 @@ export class WorldScene extends Phaser.Scene {
     this.anims.create({ key: "s-dmg", frames: srow(2, 4), frameRate: 8 });
     this.anims.create({ key: "s-die", frames: srow(3, 9), frameRate: 8 });
     this.cameras.main.setBounds(0, 0, GRID * 16, GRID * 16).setBackgroundColor(bg);
-    for (let i = 0; i < GRID * GRID; i++) this.scenery.push(this.add.image((i % GRID) * 16 + 8, Math.floor(i / GRID) * 16 + 8, "map-sprites", 8).setVisible(false));
     this.events.on("map", (grid: GridMap) => {
-      grid.tiles.forEach((t, i) => { const img = this.scenery[i]; if (img) img.setVisible(t > 0).setFrame(Math.max(0, tileTexture(t) - 1)); });
+      this.terrain?.tilemap.destroy();
+      const data = Array.from({ length: GRID }, (_, y) => grid.tiles.slice(y * GRID, (y + 1) * GRID).map((t) => t > 0 ? tileTexture(t) - 1 : -1));
+      const tilemap = this.make.tilemap({ data, tileWidth: 16, tileHeight: 16 });
+      const tileset = tilemap.addTilesetImage("map-sprites", "map-sprites", 16, 16);
+      this.terrain = tileset ? tilemap.createLayer(0, tileset, 0, 0) : null;
+      this.terrain?.setDepth(-1);
     });
     this.events.on("focus", (p: { id?: string; x: number; y: number }) => {
       const target = p.id ? this.actors.get(p.id) : undefined;

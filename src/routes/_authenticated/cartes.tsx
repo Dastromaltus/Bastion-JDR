@@ -17,9 +17,9 @@ export const Route = createFileRoute("/_authenticated/cartes")({
   head: () => ({
     meta: [
       { title: "Mes cartes — Bastion" },
-      { name: "description", content: "Éditeur de cartes 40 × 40 du narrateur Bastion." },
+      { name: "description", content: "Éditeur de cartes 160 × 160 du narrateur Bastion." },
       { property: "og:title", content: "Mes cartes — Bastion" },
-      { property: "og:description", content: "Éditeur de cartes 40 × 40 du narrateur Bastion." },
+      { property: "og:description", content: "Éditeur de cartes 160 × 160 du narrateur Bastion." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -33,7 +33,7 @@ type Draft = GridMap & { id?: string; enemies?: MapEnemy[] };
 function blank(): Draft {
   const tiles = Array<number>(CELLS).fill(6);
   for (let i = 0; i < GRID; i++) { tiles[i] = 7; tiles[(GRID - 1) * GRID + i] = 7; tiles[i * GRID] = 7; tiles[i * GRID + GRID - 1] = 7; }
-  return { name: "Nouvelle carte", tiles, spawn: { x: 20, y: 20 } };
+  return { name: "Nouvelle carte", tiles, spawn: { x: GRID / 2, y: GRID / 2 } };
 }
 
 function MapsPage() {
@@ -126,7 +126,7 @@ function MapsPage() {
     <main className="mx-auto max-w-7xl px-4 py-8 md:px-10">
       <p className="section-label">Atelier du narrateur</p>
       <h1 data-motion-enter className="mt-2 font-display text-xl uppercase sm:text-2xl">Mes cartes</h1>
-      <p className="mt-2 text-sm text-muted-foreground">40 × 40 cases · Cartes personnelles</p>
+      <p className="mt-2 text-sm text-muted-foreground">160 × 160 cases · Cartes personnelles</p>
 
       {!draft ? (
         <section className="mt-8 space-y-6">
@@ -152,7 +152,7 @@ function MapsPage() {
         <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_18rem]">
           <div className="min-w-0">
             <div className="mx-auto max-w-[min(100%,44rem)] border-2 border-foreground">
-              <MapCanvas tiles={draft.tiles} spawn={draft.spawn} onCell={paint} markers={markers(draft.enemies)} brushSize={tool === "brush" || tool === "block" || tool === "erase" ? brushSize : undefined} label={`Éditeur de ${draft.name}, 40 × 40 cases`} className="cursor-crosshair" />
+              <MapCanvas tiles={draft.tiles} spawn={draft.spawn} onCell={paint} markers={markers(draft.enemies)} brushSize={tool === "brush" || tool === "block" || tool === "erase" ? brushSize : undefined} label={`Éditeur de ${draft.name}, 160 × 160 cases`} className="cursor-crosshair" />
             </div>
             <div className="mt-4 flex items-center justify-between border-b-2 border-foreground pb-2">
               <h2 className="font-display text-xs uppercase">Ennemis placés</h2><span className="text-sm">{draft.enemies?.length ?? 0}</span>
@@ -198,8 +198,8 @@ function MapsPage() {
               {catalog.isError && <p role="alert" className="text-xs">Catalogue inaccessible.</p>}
               {catalog.data?.find((c) => c.id === enemyId) && <CatalogArtwork kind="mob" item={catalog.data.find((c) => c.id === enemyId) ?? { name: "Ennemi" }} />}
               <div className="grid grid-cols-2 gap-2">
-                <label className="text-xs font-bold">Colonne<Input type="number" min={1} max={40} value={position.x} onChange={(e) => setPosition({ ...position, x: Number(e.target.value) })} className="mt-1 h-11" /></label>
-                <label className="text-xs font-bold">Ligne<Input type="number" min={1} max={40} value={position.y} onChange={(e) => setPosition({ ...position, y: Number(e.target.value) })} className="mt-1 h-11" /></label>
+                <label className="text-xs font-bold">Colonne<Input type="number" min={1} max={GRID} value={position.x} onChange={(e) => setPosition({ ...position, x: Number(e.target.value) })} className="mt-1 h-11" /></label>
+                <label className="text-xs font-bold">Ligne<Input type="number" min={1} max={GRID} value={position.y} onChange={(e) => setPosition({ ...position, y: Number(e.target.value) })} className="mt-1 h-11" /></label>
               </div>
               <Button variant="secondary" className="min-h-11 w-full rounded-none" disabled={!enemyId || busy} onClick={() => addEnemy(position.x - 1, position.y - 1)}><Plus />Placer l'ennemi</Button>
             </div>}

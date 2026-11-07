@@ -18,7 +18,7 @@ export function moveStep<T>(list: T[], i: number, dir: -1 | 1): T[] {
 
 /** Place a mob, or move mob `index` to (x, y). Returns an error string when refused. */
 export function putMob(step: ScenarioStep, x: number, y: number, catalogId: string | null, index?: number): ScenarioStep | string {
-  if (x < 0 || y < 0 || x >= GRID || y >= GRID) return "Case hors de la grille 40 × 40.";
+  if (x < 0 || y < 0 || x >= GRID || y >= GRID) return "Case hors de la grille 160 × 160.";
   if (!cellWalkable(step, x, y)) return "Un mob ne peut pas être posé sur un mur ou une barrière.";
   if (step.enemies.some((e, i) => i !== index && e.x === x && e.y === y)) return "Un mob occupe déjà cette case.";
   if (index !== undefined) return { ...step, enemies: step.enemies.map((e, i) => (i === index ? { ...e, x, y } : e)) };

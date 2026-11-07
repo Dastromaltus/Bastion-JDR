@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { Minus, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import mapSprites from "@/assets/map-sprites.png.asset.json";
 import zombieSheet from "@/assets/zombie-sheet.png.asset.json";
 import slimeSheet from "@/assets/slime-sheet.png.asset.json";
@@ -18,7 +20,7 @@ function useSheet() {
   return img;
 }
 
-/** Pixel-perfect 40×40 map drawing (16 px per cell), scaled by CSS. */
+/** Pixel-perfect 160×160 map drawing (16 px per cell), scaled by CSS. */
 export type MapMarker = { x: number; y: number; glyph: string; selected?: boolean; sprite?: "zombie" | "slime" | undefined };
 export function MapCanvas({ tiles, spawn, className, onCell, label, markers, brushSize }: {
   tiles: number[]; spawn?: { x: number; y: number }; className?: string; label: string; markers?: MapMarker[];
@@ -27,6 +29,7 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers, bru
   const ref = useRef<HTMLCanvasElement>(null);
   const img = useSheet();
   const drawing = useRef(false);
+  const [zoom, setZoom] = useState(1);
   const [ready, setReady] = useState(0);
   const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
   const needed = [...new Set((markers ?? []).map((m) => m.sprite).filter(Boolean))] as ("zombie" | "slime")[];
@@ -74,12 +77,22 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers, bru
     const r = e.currentTarget.getBoundingClientRect();
     return [Math.floor(((e.clientX - r.left) / r.width) * GRID), Math.floor(((e.clientY - r.top) / r.height) * GRID)] as const;
   }
-  return <canvas ref={ref} width={GRID * 16} height={GRID * 16} role="img" aria-label={label}
-    className={`block aspect-square w-full touch-none [image-rendering:pixelated] ${className ?? ""}`}
+  return <div>
+    {onCell && <div className="flex items-center justify-end gap-2 border-b border-border bg-background p-1">
+      <Button variant="ghost" size="icon" aria-label="Réduire la carte" disabled={zoom === 1} onClick={() => setZoom((z) => Math.max(1, z - 1))}><Minus /></Button>
+      <span className="w-12 text-center text-xs">{zoom}×</span>
+      <Button variant="ghost" size="icon" aria-label="Agrandir la carte" disabled={zoom === 8} onClick={() => setZoom((z) => Math.min(8, z + 1))}><Plus /></Button>
+    </div>}
+    <div className="aspect-square overflow-auto">
+    <canvas ref={ref} width={GRID * 16} height={GRID * 16} role="img" aria-label={label}
+    style={{ width: `${zoom * 100}%`, maxWidth: "none" }}
+    className={`block aspect-square touch-none [image-rendering:pixelated] ${className ?? ""}`}
     onPointerDown={onCell ? (e) => { drawing.current = true; e.currentTarget.setPointerCapture(e.pointerId); const [x, y] = cell(e); if (x >= 0 && y >= 0 && x < GRID && y < GRID) setHover({ x, y }); onCell(x, y, "down"); } : undefined}
     onPointerMove={onCell ? (e) => { const [x, y] = cell(e); if (x < 0 || y < 0 || x >= GRID || y >= GRID) { setHover(null); return; } setHover((h) => (h && h.x === x && h.y === y ? h : { x, y })); if (drawing.current) onCell(x, y, "move"); } : undefined}
     onPointerUp={() => { drawing.current = false; }} onPointerCancel={() => { drawing.current = false; }}
-    onPointerLeave={() => { drawing.current = false; setHover(null); }} />;
+    onPointerLeave={() => { drawing.current = false; setHover(null); }} />
+    </div>
+  </div>;
 }
 
 export function SpriteSwatch({ code, className }: { code: number; className?: string }) {

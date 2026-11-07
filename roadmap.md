@@ -34,3 +34,4 @@
 - [ ] Verify personal enemy creation, textured-barrier save/reload and salon install in a signed-in game — blocked until preview sign-in; self-session has no matching account.
 
 - [x] Remove prebuilt map/campaign offerings and keep personal map choices only; verified both retired URLs redirect to Mes cartes, the personal editor opens, 12 focused tests pass and build OK.
+- [x] Enlarge personal and salon maps to 160×160 with coordinate-preserving legacy expansion, compatible database bounds and zoom; 31 tests pass, authenticated personal save/reopen and legacy salon preview verified, build OK.

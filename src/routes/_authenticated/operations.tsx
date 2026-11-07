@@ -4,7 +4,7 @@ export const Route = createFileRoute("/_authenticated/operations")({
   staticData: { sitemap: false },
   head: () => ({ meta: [
     { title: "Bibliothèque personnelle — Bastion" },
-    { name: "description", content: "Retrouvez vos cartes personnelles Bastion de 40 × 40 cases." },
+    { name: "description", content: "Retrouvez vos cartes personnelles Bastion de 160 × 160 cases." },
     { property: "og:title", content: "Bibliothèque personnelle — Bastion" },
     { property: "og:description", content: "Vos cartes créées personnellement pour préparer vos salons Bastion." },
     { property: "og:type", content: "website" },

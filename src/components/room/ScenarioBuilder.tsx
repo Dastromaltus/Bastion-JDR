@@ -99,7 +99,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm">Construis le déroulement de ta partie : chaque étape est une carte 40 × 40, avec ses mobs, son décor et sa musique. Tu peux revenir sur n'importe quelle étape sans perdre les autres.</p>
+      <p className="text-sm">Construis le déroulement de ta partie : chaque étape est une carte 160 × 160, avec ses mobs, son décor et sa musique. Tu peux revenir sur n'importe quelle étape sans perdre les autres.</p>
 
       {/* Fil d'Ariane */}
       <nav aria-label="Étapes du parcours" className="border-2 border-foreground p-2">
@@ -142,7 +142,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_16rem]">
             <div className="border-2 border-foreground">
               <MapCanvas tiles={step.tiles} spawn={step.spawn} markers={markers} brushSize={section === "decor" ? brushSize : undefined} {...(section === "mobs" || section === "decor" ? { onCell } : {})}
-                label={`Carte de l'étape ${sel + 1}, ${step.name}, 40 × 40 cases`} className={section === "mobs" || section === "decor" ? "cursor-crosshair" : ""} />
+                label={`Carte de l'étape ${sel + 1}, ${step.name}, 160 × 160 cases`} className={section === "mobs" || section === "decor" ? "cursor-crosshair" : ""} />
             </div>
 
             <div className="min-w-0 space-y-3 text-sm">
@@ -198,7 +198,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
                     <button key={s} role="radio" aria-checked={brushSize === s} aria-label={`Pinceau ${s} sur ${s} cases`} onClick={() => setBrushSize(s)} className={`flex size-11 shrink-0 items-center justify-center border-2 ${brushSize === s ? "border-primary bg-secondary" : "border-foreground/40"}`}><span aria-hidden="true" className="block border-2 border-current bg-current/30" style={{ width: s * 5, height: s * 5 }} /></button>
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground">Glisse sur la carte pour peindre. La grille reste toujours de 40 × 40 cases ; un mob recouvert par un mur est retiré.</p>
+                <p className="text-xs text-muted-foreground">Glisse sur la carte pour peindre. La grille reste toujours de 160 × 160 cases ; un mob recouvert par un mur est retiré.</p>
               </>}
 
               {section === "musique" && <>
