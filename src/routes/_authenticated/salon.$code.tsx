@@ -179,6 +179,8 @@ function RoomPage() {
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-6">
         <TurnBanner d={d} onChange={() => room.refetch()} />
         {game.status === "playing" && <SoundGate unlocked={amb.unlocked} onUnlock={() => amb.unlock().catch(() => toast.error("Impossible d'activer le son sur ce navigateur."))} />}
+        {game.status === "playing" && !dungeonQ.isPending && !dungeonQ.data && <SalonWorld d={d} onChange={() => room.refetch()} />}
+        {game.status === "playing" && !isNarr && !dungeonQ.data && !game.solo && <ExplorePanel d={d} />}
         {game.status !== "waiting" && <PersonalAmbience row={amb.row} settings={settings} update={update} />}
         {game.status === "finished" && (
           <section className="border-4 border-primary p-5 text-center">
@@ -236,8 +238,6 @@ function RoomPage() {
         {game.status !== "waiting" && <HealthPanel gameId={game.id} players={players} />}
         <MobControl d={d} onChange={() => room.refetch()} />
         <OperationSection d={d} onChange={() => room.refetch()} />
-        {game.status === "playing" && !dungeonQ.isPending && !dungeonQ.data && <SalonWorld d={d} onChange={() => room.refetch()} />}
-        {game.status === "playing" && !isNarr && !dungeonQ.data && !game.solo && <ExplorePanel d={d} />}
 
         {isNarr && (
           <NarratorPanel d={d} narr={narr} busy={busy} refetch={() => room.refetch()} />
