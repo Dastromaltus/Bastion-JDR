@@ -12,7 +12,9 @@ import { zoneLabel } from "@/lib/races";
 import { salonTurn } from "@/lib/turn-order";
 import type Phaser from "phaser";
 import { motionDisabled } from "@/lib/motion";
-import { worldMovementAllowed } from "@/lib/world-movement";
+import { mobMovementAllowed, worldMovementAllowed } from "@/lib/world-movement";
+import { combatAction } from "@/lib/combat.functions";
+import { WORLD_DELTAS } from "@/lib/world-map";
 import { worldKeyDirection } from "@/lib/world-keys";
 
 export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string; name?: string; onChange: () => unknown | Promise<unknown> }) {
@@ -31,6 +33,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const previousZone = useRef<string | undefined>(undefined);
   const [message, setMessage] = useState("");
   const move = useServerFn(moveWorldPlayer);
+  const act = useServerFn(combatAction);
   const turn = salonTurn(d.game, d.players, d.me.user_id);
   const followed = turn.active?.role === "adventurer" ? d.players.find((p: any) => p.id === turn.active?.id) : d.players.find((p: any) => p.role === "adventurer");
   const here = zone ?? (d.me.role === "narrator" ? followed?.current_zone : d.me.current_zone) ?? "entree";
@@ -39,8 +42,11 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const fetchMap = useServerFn(getSalonMap);
   const mapQ = useQuery({ queryKey: ["salon-map", d.game.id, (d.events ?? []).filter((e: any) => e.kind === "carte").length], queryFn: () => fetchMap({ data: { gameId: d.game.id } }), staleTime: 30_000, placeholderData: (prev) => prev });
   const grid = mapQ.data ?? PREBUILT_MAPS[DEFAULT_MAP_KEY]!;
-  const controlsReady = enabled && ready && mapQ.isSuccess;
-  const controlLabel = d.me.role === "narrator" ? "Vue narrateur · observateur" : !ready || !mapQ.isSuccess ? "Chargement de la carte…" : !enabled ? d.combat?.label ?? turn.message : focused ? "▶ Contrôles actifs · Z Q S D" : "Clique sur la carte pour jouer";
+  const narrator = d.me.role === "narrator";
+  const mobRow = narrator && d.controlledEnemyId ? d.enemies.find((e: any) => e.id === d.controlledEnemyId) : undefined;
+  const mobEnabled = mobMovementAllowed({ status: d.game.status, role: d.me.role, controlledId: mobRow?.id, combat: d.combat });
+  const controlsReady = (enabled || mobEnabled) && ready && mapQ.isSuccess;
+  const controlLabel = narrator ? !mobRow ? "Vue narrateur · contrôle un mob pour le déplacer" : !mobEnabled ? `${mobRow.name} attend · ${d.combat?.label ?? "hors combat"}` : focused ? `▶ ${mobRow.name} · Z Q S D` : `${mobRow.name} · clique sur la carte puis Z Q S D` : !ready || !mapQ.isSuccess ? "Chargement de la carte…" : !enabled ? d.combat?.label ?? turn.message : focused ? "▶ Contrôles actifs · Z Q S D" : "Clique sur la carte pour jouer";
   const participants = participantActors(d.players, here, d.me.id, grid);
   const activeId = d.combat?.current?.id ?? turn.active?.id;
   const actors: WorldActor[] = participants.map((actor) => ({ ...actor, name: `${actor.id === activeId ? "▶ " : ""}${actor.name}`, hp: d.players.find((p: any) => p.id === actor.id)?.hp }));
@@ -76,11 +82,22 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     if (!controlsReady) { setMessage(controlLabel); return; }
     if (lock.current) { pending.current.push(direction); return; }
     lock.current = true; setBusy(true); setMovingDirection(direction);
-    try { const result = await move({ data: { gameId: d.game.id, direction } }); setMessage(result.message); await onChange(); }
+    try {
+      if (narrator) {
+        if (!mobRow) throw new Error("Aucun mob contrôlé.");
+        const [dx, dy] = WORLD_DELTAS[direction];
+        await act({ data: { gameId: d.game.id, revision: d.combat?.revision ?? 0, action: "move", enemyId: mobRow.id, x: mobRow.tile_x + dx, y: mobRow.tile_y + dy } });
+        setMessage("");
+      } else { const result = await move({ data: { gameId: d.game.id, direction } }); setMessage(result.message); }
+      await onChange();
+    }
     catch (e) { pending.current = []; setMessage(e instanceof Error ? e.message : "Déplacement impossible."); await onChange(); }
     finally { lock.current = false; setBusy(false); setMovingDirection(null); const next = pending.current.shift(); if (next) void stepRef.current(next); }
   }
   stepRef.current = step;
+  useEffect(() => {
+    if (controlsReady && (document.activeElement === document.body || !document.activeElement)) view.current?.focus({ preventScroll: true });
+  }, [controlsReady]);
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
       const target = event.target;
