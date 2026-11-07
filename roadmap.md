@@ -35,3 +35,4 @@
 
 - [x] Remove prebuilt map/campaign offerings and keep personal map choices only; verified both retired URLs redirect to Mes cartes, the personal editor opens, 12 focused tests pass and build OK.
 - [x] Enlarge personal and salon maps to 160×160 with coordinate-preserving legacy expansion, compatible database bounds and zoom; 31 tests pass, authenticated personal save/reopen and legacy salon preview verified, build OK.
+- [x] Add brushes up to 80×80 and confirmed whole-map texture fill in both editors; 11 tests pass, authenticated personal fill and mobile controls verified, build OK.

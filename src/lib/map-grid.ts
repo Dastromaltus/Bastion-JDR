@@ -56,7 +56,18 @@ export function expandLegacyTiles(tiles: number[]): number[] {
 
 // ---------- Brush sizes (map editors) ----------
 /** Square brush sizes offered by the map editors, in cells. */
-export const BRUSH_SIZES = [1, 2, 3, 4, 5] as const;
+export const BRUSH_SIZES = [1, 2, 3, 4, 5, 8, 10, 16, 20, 32, 40, 80] as const;
+
+/** Replace all terrain, preserving occupied cells only when the new texture blocks movement. */
+export function fillMapTiles(tiles: number[], value: number, occupied: { x: number; y: number }[] = []): number[] {
+  const next = Array<number>(CELLS).fill(value);
+  if (!tileWalkable(value)) {
+    for (const { x, y } of occupied) {
+      if (x >= 0 && y >= 0 && x < GRID && y < GRID) next[y * GRID + x] = tiles[y * GRID + x] ?? 6;
+    }
+  }
+  return next;
+}
 
 /** Cells covered by a size × size square brush centred on (x, y), clipped to the grid. */
 export function brushCells(x: number, y: number, size: number): { x: number; y: number }[] {
