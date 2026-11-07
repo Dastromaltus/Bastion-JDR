@@ -193,12 +193,11 @@ export function ScenarioBuilder({ d }: { d: any }) {
                   <button aria-pressed={brush === 0} onClick={() => setBrush(0)} className={`min-h-11 border-2 text-[10px] font-black uppercase ${brush === 0 ? "border-primary" : "border-foreground/40"}`}>Barrière</button>
                   <button aria-pressed={brush === "spawn"} onClick={() => setBrush("spawn")} className={`min-h-11 border-2 text-[10px] font-black uppercase ${brush === "spawn" ? "border-primary" : "border-foreground/40"}`}>Départ</button>
                 </div>
-                <p className="text-xs font-black uppercase">Taille du pinceau</p>
+                <p className="text-xs font-black uppercase">Taille du pinceau · {brushSize} × {brushSize}</p>
                 <div role="radiogroup" aria-label="Taille du pinceau" className="flex items-center gap-1">
                   {BRUSH_SIZES.map((s) => (
-                    <button key={s} role="radio" aria-checked={brushSize === s} aria-label={`Pinceau ${s} sur ${s} cases`} onClick={() => setBrushSize(s)} className={`flex size-11 items-center justify-center border-2 ${brushSize === s ? "border-primary bg-secondary" : "border-foreground/40"}`}><span aria-hidden="true" className="block border-2 border-current bg-current/30" style={{ width: s * 5, height: s * 5 }} /></button>
+                    <button key={s} role="radio" aria-checked={brushSize === s} aria-label={`Pinceau ${s} sur ${s} cases`} onClick={() => setBrushSize(s)} className={`flex size-11 shrink-0 items-center justify-center border-2 ${brushSize === s ? "border-primary bg-secondary" : "border-foreground/40"}`}><span aria-hidden="true" className="block border-2 border-current bg-current/30" style={{ width: s * 5, height: s * 5 }} /></button>
                   ))}
-                  <span className="ml-auto text-[10px] font-black uppercase">{brushSize} × {brushSize}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">Glisse sur la carte pour peindre. La grille reste toujours de 40 × 40 cases ; un mob recouvert par un mur est retiré.</p>
               </>}

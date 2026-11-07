@@ -181,10 +181,11 @@ function MapsPage() {
             <div role="radiogroup" aria-label="Outil" className="grid grid-cols-3 border-2 border-foreground sm:grid-cols-6 lg:grid-cols-3">
               {tools.map(([k, l, Icon]) => <Button key={k} role="radio" aria-label={l} aria-checked={tool === k} variant={tool === k ? "default" : "ghost"} onClick={() => setTool(k)} className="h-auto min-h-11 flex-col gap-1 rounded-none px-0 text-[10px] font-black uppercase"><Icon className="size-4" />{l}</Button>)}
             </div>
-            {(tool === "brush" || tool === "block" || tool === "erase") && <div role="radiogroup" aria-label="Taille du pinceau" className="flex items-center gap-1 border-2 border-foreground p-2">
-              <span className="mr-1 text-[10px] font-black uppercase">Taille</span>
-              {BRUSH_SIZES.map((s) => <Button key={s} role="radio" aria-checked={brushSize === s} aria-label={`Pinceau ${s} sur ${s} cases`} variant={brushSize === s ? "default" : "ghost"} onClick={() => setBrushSize(s)} className="size-11 min-h-11 shrink-0 rounded-none p-0"><span aria-hidden="true" className="block border-2 border-current bg-current/30" style={{ width: s * 5, height: s * 5 }} /></Button>)}
-              <span className="ml-auto text-[10px] font-black uppercase">{brushSize} × {brushSize}</span>
+            {(tool === "brush" || tool === "block" || tool === "erase") && <div className="border-2 border-foreground p-2">
+              <p className="text-[10px] font-black uppercase">Taille du pinceau · {brushSize} × {brushSize}</p>
+              <div role="radiogroup" aria-label="Taille du pinceau" className="mt-1 flex items-center gap-1">
+                {BRUSH_SIZES.map((s) => <Button key={s} role="radio" aria-checked={brushSize === s} aria-label={`Pinceau ${s} sur ${s} cases`} variant={brushSize === s ? "default" : "ghost"} onClick={() => setBrushSize(s)} className="size-11 min-h-11 shrink-0 rounded-none p-0"><span aria-hidden="true" className="block border-2 border-current bg-current/30" style={{ width: s * 5, height: s * 5 }} /></Button>)}
+              </div>
             </div>}
             <Button variant={tool === "enemy" ? "default" : "outline"} onClick={() => setTool("enemy")} className="min-h-11 w-full rounded-none"><Skull />Ennemis · {draft.enemies?.length ?? 0}</Button>
             {tool === "enemy" && <div className="space-y-2 border-2 border-foreground p-2">
