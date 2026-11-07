@@ -6,7 +6,7 @@ export type WorldParticipant = {
   current_zone?: string | null; world_x?: number; world_y?: number; world_zone?: string | null; hp?: number; max_hp?: number;
 };
 export type MonsterSprite = "zombie" | "slime" | "yeti" | "wolf" | "orc" | "goblin" | "cyclops";
-export type WorldActor = { id: string; name: string; x: number; y: number; frame: number; hp?: number; maxHp?: number; sprite?: MonsterSprite | "human" | "treasure" | undefined; dead?: boolean };
+export type WorldActor = { id: string; name: string; x: number; y: number; frame: number; hp?: number; maxHp?: number; sprite?: MonsterSprite | "human" | "dwarf" | "treasure" | undefined; dead?: boolean };
 /** Monsters named "Zombie…" use the animated zombie sprite sheet. */
 export const isZombie = (name: string) => /zombie/i.test(name);
 /** Monsters named "Slime…" use the animated green slime sprite sheet. */
@@ -28,7 +28,7 @@ export function participantActors(players: WorldParticipant[], zone: string, own
     ...(p.max_hp ? { maxHp: p.max_hp } : {}),
     ...(p.role === "narrator" ? { x: 12, y: 6 } : worldPosition(p, zone, map)),
     frame: 7,
-    sprite: "human",
+    sprite: p.race === "Nain" ? "dwarf" : "human",
     ...(p.hp !== undefined && p.hp <= 0 ? { dead: true } : {}),
   }));
 }
