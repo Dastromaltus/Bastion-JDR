@@ -5,17 +5,19 @@ import { readyMapStep } from "./ready-maps";
 import { TRACK_KEYS } from "./ambience-tracks";
 import { personalEnemySchema, usableMapEnemy } from "./map-catalog";
 import { blockedMapEnemies } from "./map-enemies";
+import { passageError, type MapPassage } from "./map-passages";
 import { expandLegacyTiles, cellWalkable, MAX_TILE_CODE, CELLS, DEFAULT_MAP_KEY, GRID, PREBUILT_MAPS, nearestWalkable, validateGrid, type GridMap } from "./map-grid";
 
 const tilesSchema = z.array(z.number().int().min(0).max(MAX_TILE_CODE)).length(CELLS);
 const coord = z.number().int().min(0).max(GRID - 1);
+const passageSchema = z.object({ x: coord, y: coord }).nullable().default(null);
 const mapEnemies = z.array(z.object({ catalogId: z.string().uuid(), x: coord, y: coord })).max(60).default([]);
 export type MapEnemy = { catalogId: string; x: number; y: number };
 
 /** Server helper: the salon's 160×160 map (loaded copy, else the Operation's prebuilt map, else default). */
 export async function salonGrid(supabase: any, gameId: string): Promise<GridMap> {
-  const { data } = await supabase.from("game_world_maps").select("name, tiles, spawn_x, spawn_y").eq("game_id", gameId).maybeSingle();
-  if (data) return { name: data.name, tiles: expandLegacyTiles(data.tiles), spawn: { x: data.spawn_x, y: data.spawn_y } };
+  const { data } = await supabase.from("game_world_maps").select("name, tiles, spawn_x, spawn_y, passage").eq("game_id", gameId).maybeSingle();
+  if (data) return { name: data.name, tiles: expandLegacyTiles(data.tiles), spawn: { x: data.spawn_x, y: data.spawn_y }, passage: data.passage };
   const { data: dg } = await supabase.from("game_dungeons").select("template_id").eq("game_id", gameId).maybeSingle();
   if (dg) {
     const { data: tpl } = await supabase.from("dungeon_templates").select("slug").eq("id", dg.template_id).maybeSingle();
@@ -36,17 +38,19 @@ export const getSalonMap = createServerFn({ method: "POST" })
 export const listMyMaps = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.from("custom_maps").select("id, name, tiles, spawn_x, spawn_y, enemies, updated_at").eq("owner_id", context.userId).order("updated_at", { ascending: false });
+    const { data, error } = await context.supabase.from("custom_maps").select("id, name, tiles, spawn_x, spawn_y, enemies, passage, updated_at").eq("owner_id", context.userId).order("updated_at", { ascending: false });
     if (error) throw new Error("Impossible de charger tes cartes.");
-    return (data ?? []).map((m: any) => ({ id: m.id as string, name: m.name as string, tiles: expandLegacyTiles(m.tiles as number[]), spawn: { x: m.spawn_x, y: m.spawn_y }, enemies: (m.enemies ?? []) as MapEnemy[], updated_at: m.updated_at as string }));
+    return (data ?? []).map((m: any) => ({ id: m.id as string, name: m.name as string, tiles: expandLegacyTiles(m.tiles as number[]), spawn: { x: m.spawn_x, y: m.spawn_y }, enemies: (m.enemies ?? []) as MapEnemy[], passage: (m.passage ?? null) as MapPassage | null, updated_at: m.updated_at as string }));
   });
 
 export const saveMyMap = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid().optional(), name: z.string().trim().min(1).max(60), tiles: tilesSchema, spawn: z.object({ x: coord, y: coord }), enemies: mapEnemies }).parse(d))
+  .inputValidator((d) => z.object({ id: z.string().uuid().optional(), name: z.string().trim().min(1).max(60), tiles: tilesSchema, spawn: z.object({ x: coord, y: coord }), enemies: mapEnemies, passage: passageSchema }).parse(d))
   .handler(async ({ data, context }) => {
     const err = validateGrid(data.tiles, data.spawn);
     if (err) throw new Error(err);
+    const passageErr = passageError(data, data.passage);
+    if (passageErr) throw new Error(passageErr);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const g = { name: data.name, tiles: expandLegacyTiles(data.tiles), spawn: data.spawn };
     if (blockedMapEnemies({ ...g, enemies: data.enemies }).length) throw new Error("Un ennemi est placé sur un mur ou une barrière.");
@@ -54,7 +58,7 @@ export const saveMyMap = createServerFn({ method: "POST" })
       const { data: cats, error } = await supabaseAdmin.from("enemy_catalog").select("id,owner_id,game_id").in("id", data.enemies.map((e) => e.catalogId));
       if (error || data.enemies.some((e) => !cats?.some((c) => c.id === e.catalogId && usableMapEnemy(c, context.userId)))) throw new Error("Un ennemi n'appartient pas à ton catalogue personnel.");
     }
-    const row = { enemies: data.enemies, name: data.name, tiles: expandLegacyTiles(data.tiles), spawn_x: data.spawn.x, spawn_y: data.spawn.y, updated_at: new Date().toISOString() };
+    const row = { passage: data.passage, enemies: data.enemies, name: data.name, tiles: expandLegacyTiles(data.tiles), spawn_x: data.spawn.x, spawn_y: data.spawn.y, updated_at: new Date().toISOString() };
     if (data.id) {
       const { data: upd, error } = await supabaseAdmin.from("custom_maps").update(row).eq("id", data.id).eq("owner_id", context.userId).select("id").maybeSingle();
       if (error || !upd) throw new Error("Enregistrement impossible.");
@@ -103,8 +107,8 @@ async function assertNarrator(supabase: any, gameId: string, userId: string) {
 async function resolveMap(supabase: any, userId: string, ref: { prebuilt?: string | undefined; mapId?: string | undefined }): Promise<{ map: GridMap; source: string; enemies: MapEnemy[]; treasures: MapEnemy[]; track: string | null }> {
   let map: GridMap | undefined; let source = ""; let enemies: MapEnemy[] = []; let treasures: MapEnemy[] = []; let track: string | null = null;
   if (ref.mapId) {
-    const { data: m } = await supabase.from("custom_maps").select("name, tiles, spawn_x, spawn_y, enemies").eq("id", ref.mapId).eq("owner_id", userId).maybeSingle();
-    if (m) { map = { name: m.name, tiles: expandLegacyTiles(m.tiles), spawn: { x: m.spawn_x, y: m.spawn_y } }; source = `custom:${ref.mapId}`; enemies = (m.enemies ?? []) as MapEnemy[]; }
+    const { data: m } = await supabase.from("custom_maps").select("name, tiles, spawn_x, spawn_y, enemies, passage").eq("id", ref.mapId).eq("owner_id", userId).maybeSingle();
+    if (m) { map = { name: m.name, tiles: expandLegacyTiles(m.tiles), spawn: { x: m.spawn_x, y: m.spawn_y }, passage: m.passage as MapPassage | null }; source = `custom:${ref.mapId}`; enemies = (m.enemies ?? []) as MapEnemy[]; }
   } else if (ref.prebuilt && PREBUILT_MAPS[ref.prebuilt]) { const ready = readyMapStep(ref.prebuilt); map = ready; source = ready.source; enemies = ready.enemies; treasures = ready.treasures ?? []; track = ready.track; }
   if (!map) throw new Error("Carte introuvable.");
   const err = validateGrid(map.tiles, map.spawn);
@@ -130,7 +134,7 @@ async function installMap(gameId: string, userId: string, map: GridMap, source: 
     await supabaseAdmin.from("game_enemies").delete().eq("game_id", gameId).not("map_source", "is", null);
   }
   // Publish terrain before inserting mobs: collision triggers check the salon's current copy.
-  const { error: mapError } = await supabaseAdmin.from("game_world_maps").upsert({ game_id: gameId, name: map.name, source, tiles: map.tiles, spawn_x: map.spawn.x, spawn_y: map.spawn.y, updated_at: new Date().toISOString() });
+  const { error: mapError } = await supabaseAdmin.from("game_world_maps").upsert({ game_id: gameId, name: map.name, source, tiles: map.tiles, spawn_x: map.spawn.x, spawn_y: map.spawn.y, passage: map.passage ?? null, updated_at: new Date().toISOString() });
   if (mapError) throw new Error("Chargement de la carte impossible.");
   if (treasures.length) {
     const { data: adv } = await supabaseAdmin.from("game_players").select("current_zone").eq("game_id", gameId).eq("role", "adventurer").limit(1);
@@ -193,17 +197,17 @@ export const getMapSequence = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ gameId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertNarrator(context.supabase, data.gameId, context.userId);
-    const { data: rows } = await context.supabase.from("game_map_sequence").select("position, name, source, tiles, spawn_x, spawn_y, enemies, treasures, track, intro_text").eq("game_id", data.gameId).order("position");
+    const { data: rows } = await context.supabase.from("game_map_sequence").select("position, name, source, tiles, spawn_x, spawn_y, enemies, treasures, track, intro_text, passage").eq("game_id", data.gameId).order("position");
     const { data: prog } = await context.supabase.from("game_map_progress").select("current_index").eq("game_id", data.gameId).maybeSingle();
     return {
-      items: (rows ?? []).map((r: any) => ({ name: r.name as string, source: r.source as string, tiles: expandLegacyTiles(r.tiles as number[]), spawn: { x: r.spawn_x as number, y: r.spawn_y as number }, enemies: (r.enemies ?? []) as MapEnemy[], treasures: (r.treasures ?? []) as MapEnemy[], track: (r.track ?? null) as string | null, intro: (r.intro_text ?? "") as string })),
+      items: (rows ?? []).map((r: any) => ({ name: r.name as string, source: r.source as string, tiles: expandLegacyTiles(r.tiles as number[]), spawn: { x: r.spawn_x as number, y: r.spawn_y as number }, passage: (r.passage ?? null) as MapPassage | null, enemies: (r.enemies ?? []) as MapEnemy[], treasures: (r.treasures ?? []) as MapEnemy[], track: (r.track ?? null) as string | null, intro: (r.intro_text ?? "") as string })),
       current: (prog?.current_index as number | undefined) ?? -1,
     };
   });
 
 const stepSchema = z.object({
   name: z.string().trim().min(1).max(60), source: z.string().max(80), tiles: tilesSchema, spawn: z.object({ x: coord, y: coord }),
-  enemies: mapEnemies, treasures: mapEnemies, track: z.enum(TRACK_KEYS).nullable(), intro: z.string().trim().max(1000),
+  enemies: mapEnemies, treasures: mapEnemies, track: z.enum(TRACK_KEYS).nullable(), intro: z.string().trim().max(1000), passage: passageSchema,
 });
 
 /** Narrator-only: save every step (map copy, mobs, music, intro) of the salon's scenario at once. */
@@ -215,6 +219,8 @@ export const saveScenario = createServerFn({ method: "POST" })
     data.steps.forEach((s, i) => {
       const err = validateGrid(s.tiles, s.spawn);
       if (err) throw new Error(`Étape ${i + 1} : ${err}`);
+      const passageErr = passageError(s, s.passage);
+      if (passageErr) throw new Error(`Étape ${i + 1} : ${passageErr}`);
       if ([...s.enemies, ...s.treasures].some((e) => !cellWalkable(s, e.x, e.y))) throw new Error(`Étape ${i + 1} : un mob est sur un mur ou une barrière.`);
     });
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -231,7 +237,7 @@ export const saveScenario = createServerFn({ method: "POST" })
     }
     await supabaseAdmin.from("game_map_sequence").delete().eq("game_id", data.gameId);
     if (data.steps.length) {
-      const { error } = await supabaseAdmin.from("game_map_sequence").insert(data.steps.map((s, i) => ({ game_id: data.gameId, position: i, name: s.name, source: s.source, tiles: s.tiles, spawn_x: s.spawn.x, spawn_y: s.spawn.y, enemies: s.enemies, treasures: s.treasures, track: s.track, intro_text: s.intro })));
+      const { error } = await supabaseAdmin.from("game_map_sequence").insert(data.steps.map((s, i) => ({ game_id: data.gameId, position: i, name: s.name, source: s.source, tiles: s.tiles, spawn_x: s.spawn.x, spawn_y: s.spawn.y, passage: s.passage, enemies: s.enemies, treasures: s.treasures, track: s.track, intro_text: s.intro })));
       if (error) throw new Error("Enregistrement du parcours impossible.");
     }
     const { data: prog } = await supabaseAdmin.from("game_map_progress").select("current_index").eq("game_id", data.gameId).maybeSingle();
@@ -254,7 +260,7 @@ export async function activateSequenceMap(gameId: string, userId: string, index:
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: row } = await supabaseAdmin.from("game_map_sequence").select("*").eq("game_id", gameId).eq("position", index).maybeSingle();
   if (!row) throw new Error("Aucune carte à cette étape.");
-  const map: GridMap = { name: row.name, tiles: expandLegacyTiles(row.tiles), spawn: { x: row.spawn_x, y: row.spawn_y } };
+  const map: GridMap = { name: row.name, tiles: expandLegacyTiles(row.tiles), spawn: { x: row.spawn_x, y: row.spawn_y }, passage: row.passage as MapPassage | null };
   await installMap(gameId, userId, map, row.source, `Étape ${index + 1}`, row.enemies as MapEnemy[], (row.treasures ?? []) as MapEnemy[]);
   await supabaseAdmin.from("game_map_progress").upsert({ game_id: gameId, current_index: index, updated_at: new Date().toISOString() });
   if (row.track) await supabaseAdmin.from("game_ambience").upsert({ game_id: gameId, track: row.track, state: "lecture", updated_at: new Date().toISOString() }, { onConflict: "game_id" });

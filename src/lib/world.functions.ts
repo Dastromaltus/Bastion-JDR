@@ -5,6 +5,15 @@ import { WORLD_DELTAS, worldPosition, worldWalkable } from "./world-map";
 
 const direction = z.enum(["up", "down", "left", "right"]);
 
+export const useMapPassage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ gameId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: result, error } = await context.supabase.rpc("use_map_passage", { p_game_id: data.gameId });
+    if (error) throw new Error(error.message);
+    return result as { name: string; index: number };
+  });
+
 // Free movement: adventurers move whenever the game is playing; turns only gate attacks and abilities.
 export const moveWorldPlayer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
