@@ -288,6 +288,13 @@
       "when": 1794082559665,
       "tag": "0040_free_visible_adventurer_attacks",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794082799432,
+      "tag": "0041_combat_random_bytes_namespace",
+      "breakpoints": true
     }
   ]
 }
