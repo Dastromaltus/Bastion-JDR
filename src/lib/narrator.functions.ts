@@ -80,7 +80,9 @@ export const getNarratorCatalog = createServerFn({ method: "POST" })
       sb.from("treasure_catalog").select("*").or(`game_id.is.null,game_id.eq.${data.gameId}`).order("value"),
     ]);
     if (e.error || t.error) throw new Error("Catalogue indisponible, réessaie.");
-    return { enemies: e.data ?? [], treasures: t.data ?? [] };
+    const { monsterSprite } = await import("./world-actors");
+    // Only zombies and slimes are placeable.
+    return { enemies: (e.data ?? []).filter((x: any) => monsterSprite(x.name)), treasures: t.data ?? [] };
   });
 
 export const createCustomEnemy = createServerFn({ method: "POST" })

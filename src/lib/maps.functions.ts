@@ -71,7 +71,9 @@ export const listMapEnemyCatalog = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase.from("enemy_catalog").select("id, name, icon, category, owner_id").or(`and(game_id.is.null,owner_id.is.null),owner_id.eq.${context.userId}`).order("name");
     if (error) throw new Error("Impossible de charger le catalogue d'ennemis.");
-    return (data ?? []) as { id: string; name: string; icon: string; category: string; owner_id: string | null }[];
+    const { monsterSprite } = await import("./world-actors");
+    // Only zombies and slimes are placeable.
+    return ((data ?? []) as { id: string; name: string; icon: string; category: string; owner_id: string | null }[]).filter((e) => monsterSprite(e.name));
   });
 
 export const createPersonalMapEnemy = createServerFn({ method: "POST" })
