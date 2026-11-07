@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Megaphone, User } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Megaphone, User, DoorOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { moveSalonMob, moveWorldPlayer } from "@/lib/world.functions";
+import { moveSalonMob, moveWorldPlayer, useMapPassage } from "@/lib/world.functions";
+import { onPassage } from "@/lib/map-passages";
 import { getSalonMap } from "@/lib/maps.functions";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PREBUILT_MAPS, DEFAULT_MAP_KEY, cellWalkable } from "@/lib/map-grid";
 import { type WorldDirection } from "@/lib/world-map";
 import { monsterSprite, participantActors, type WorldActor } from "@/lib/world-actors";
@@ -31,6 +32,9 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const previousZone = useRef<string | undefined>(undefined);
   const [message, setMessage] = useState("");
   const move = useServerFn(moveWorldPlayer);
+  const travel = useServerFn(useMapPassage);
+  const qc = useQueryClient();
+  const [travelling, setTravelling] = useState(false);
   const moveMob = useServerFn(moveSalonMob);
   const attack = useServerFn(combatAction);
   const attacking = useRef(false);
@@ -111,7 +115,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     previousZone.current = here;
   }, [here]);
   function step(direction: WorldDirection) {
-    if (!controlsReady || !movingId) { setMessage(controlLabel); return; }
+    if (travelling || !controlsReady || !movingId) { setMessage(controlLabel); return; }
     const from = optimisticRef.current?.id === movingId ? optimisticRef.current : baseMover;
     if (!from) return;
     const [dx, dy] = WORLD_DELTAS[direction];
@@ -135,6 +139,19 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     });
   }
   stepRef.current = step;
+  async function crossPassage() {
+    if (travelling) return;
+    setTravelling(true);
+    try {
+      await queue.current;
+      const result = await travel({ data: { gameId: d.game.id } });
+      optimisticRef.current = null; setOptimistic(null);
+      await qc.invalidateQueries({ queryKey: ["salon-map", d.game.id] });
+      await onChange();
+      setMessage(`Étape ${result.index + 1} · ${result.name}`);
+    } catch (e) { setMessage(e instanceof Error ? e.message : "Passage impossible."); }
+    finally { setTravelling(false); }
+  }
   useEffect(() => {
     if (controlsReady && (document.activeElement === document.body || !document.activeElement)) view.current?.focus({ preventScroll: true });
   }, [controlsReady]);
@@ -162,6 +179,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
       </div>}
       {!ready && <p role={failure ? "alert" : "status"} className="absolute inset-0 flex items-center justify-center bg-game">{failure ? "La carte n'a pas pu être affichée." : "Chargement de la carte…"}</p>}
     </div>
+    {!narrator && canMove && onPassage(optimistic ?? baseMover ?? { x: -1, y: -1 }, grid.passage) && <Button disabled={travelling} onClick={crossPassage} className="min-h-11 whitespace-normal"><DoorOpen />{travelling ? "Passage en cours…" : "Passer à l’étape suivante avec le groupe"}</Button>}
     <ul aria-label="Participants du salon" className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
       {d.players.map((p: any) => <li key={p.id} className="flex min-w-0 items-start gap-2 text-sm">
         {p.role === "narrator" ? <Megaphone className="mt-0.5 size-4 shrink-0 text-primary" /> : <User className="mt-0.5 size-4 shrink-0 text-primary" />}

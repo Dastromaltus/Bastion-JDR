@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Brush, Eraser, Flag, OctagonX, PaintBucket, Plus, Skull, Trash2 } from "lucide-react";
+import { Brush, Eraser, Flag, OctagonX, PaintBucket, Plus, Skull, Trash2, DoorOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
@@ -27,7 +27,9 @@ export const Route = createFileRoute("/_authenticated/cartes")({
   component: MapsPage,
 });
 
-type Tool = "brush" | "block" | "fill" | "erase" | "spawn" | "enemy";
+import { passageError } from "@/lib/map-passages";
+
+type Tool = "brush" | "block" | "fill" | "erase" | "spawn" | "enemy" | "passage";
 type Draft = GridMap & { id?: string; enemies?: MapEnemy[] };
 
 function blank(): Draft {
@@ -70,6 +72,7 @@ function MapsPage() {
 
   function paint(x: number, y: number, kind: "down" | "move") {
     if (!draft || x < 0 || y < 0 || x >= GRID || y >= GRID) return;
+    if (tool === "passage") { if (kind === "down") addPassage(x, y); return; }
     if (tool === "enemy") {
       if (kind !== "down") return;
       const list = draft.enemies ?? [];
@@ -103,10 +106,17 @@ function MapsPage() {
     setDraft(next); setPosition({ x: x + 1, y: y + 1 }); setMsg(null);
   }
 
+  function addPassage(x: number, y: number) {
+    if (!draft) return;
+    const err = passageError(draft, { x, y });
+    if (err) { setMsg(err); return; }
+    setDraft({ ...draft, passage: { x, y } }); setMsg(null);
+  }
+
   function fillWholeMap() {
     if (!draft || !confirm("Remplacer le décor de toute la carte par la texture choisie ? Les ennemis et le départ sont conservés.")) return;
     const value = tool === "block" ? barrierTile(sprite) : sprite;
-    setDraft({ ...draft, tiles: fillMapTiles(draft.tiles, value, [draft.spawn, ...(draft.enemies ?? [])]) });
+    setDraft({ ...draft, tiles: fillMapTiles(draft.tiles, value, [draft.spawn, ...(draft.enemies ?? []), ...(draft.passage ? [draft.passage] : [])]) });
     setMsg(tileWalkable(value) ? "Toute la carte a été remplie." : "Carte remplie ; les cases du départ et des ennemis sont conservées.");
   }
 
@@ -114,10 +124,12 @@ function MapsPage() {
     if (!draft) return;
     const err = validateGrid(draft.tiles, draft.spawn);
     if (err) { setMsg(err); return; }
+    const passageErr = passageError(draft, draft.passage);
+    if (passageErr) { setMsg(passageErr); return; }
     if (blockedMapEnemies(draft).length) { setMsg("Un ennemi est sur une case bloquée : déplace-le ou remets du sol avant d'enregistrer."); return; }
     setBusy(true); setMsg(null);
     try {
-      const r = await save({ data: { id: draft.id, name: draft.name, tiles: draft.tiles, spawn: draft.spawn, enemies: draft.enemies ?? [] } });
+      const r = await save({ data: { id: draft.id, name: draft.name, tiles: draft.tiles, spawn: draft.spawn, enemies: draft.enemies ?? [], passage: draft.passage ?? null } });
       setDraft({ ...draft, id: r.id }); setMsg("Carte enregistrée.");
       await qc.invalidateQueries({ queryKey: ["my-maps"] });
     } catch (e) { setMsg(e instanceof Error ? e.message : "Enregistrement impossible."); }
@@ -131,7 +143,7 @@ function MapsPage() {
     await qc.invalidateQueries({ queryKey: ["my-maps"] });
   }
 
-  const tools: [Tool, string, typeof Brush][] = [["brush", "Pinceau", Brush], ["block", "Barrière", OctagonX], ["fill", "Remplir", PaintBucket], ["erase", "Gomme", Eraser], ["spawn", "Départ", Flag], ["enemy", "Ennemi", Skull]];
+  const tools: [Tool, string, typeof Brush][] = [["brush", "Pinceau", Brush], ["block", "Barrière", OctagonX], ["fill", "Remplir", PaintBucket], ["erase", "Gomme", Eraser], ["spawn", "Départ", Flag], ["enemy", "Ennemi", Skull], ["passage", "Passage", DoorOpen]];
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 md:px-10">
@@ -151,7 +163,7 @@ function MapsPage() {
             {maps.data?.length === 0 && <p className="mt-2 text-sm text-muted-foreground">Aucune carte pour l'instant.</p>}
             <ul className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {maps.data?.map((m) => <li key={m.id} className="border-2 border-foreground p-2">
-                <MapCanvas tiles={m.tiles} spawn={m.spawn} markers={markers(m.enemies)} label={`Aperçu de ${m.name}`} />
+                <MapCanvas tiles={m.tiles} spawn={m.spawn} passage={m.passage} markers={markers(m.enemies)} label={`Aperçu de ${m.name}`} />
                 <p className="mt-2 font-bold">{m.name}</p>
                 <p className="text-xs text-muted-foreground">{m.enemies.length} ennemi(s)</p>
                 <div className="mt-2 flex gap-2"><Button variant="secondary" className="min-h-11 flex-1 rounded-none" onClick={() => setDraft({ ...m })}>Modifier</Button><Button variant="outline" size="icon" aria-label="Supprimer" className="size-11 rounded-none" onClick={() => del(m.id)}><Trash2 /></Button></div>
@@ -163,7 +175,7 @@ function MapsPage() {
         <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_18rem]">
           <div className="min-w-0">
             <div className="mx-auto max-w-[min(100%,44rem)] border-2 border-foreground">
-              <MapCanvas tiles={draft.tiles} spawn={draft.spawn} onCell={paint} markers={markers(draft.enemies)} brushSize={tool === "brush" || tool === "block" || tool === "erase" ? brushSize : undefined} label={`Éditeur de ${draft.name}, 160 × 160 cases`} className="cursor-crosshair" />
+              <MapCanvas tiles={draft.tiles} spawn={draft.spawn} passage={draft.passage} onCell={paint} markers={markers(draft.enemies)} brushSize={tool === "brush" || tool === "block" || tool === "erase" ? brushSize : undefined} label={`Éditeur de ${draft.name}, 160 × 160 cases`} className="cursor-crosshair" />
             </div>
             <div className="mt-4 flex items-center justify-between border-b-2 border-foreground pb-2">
               <h2 className="font-display text-xs uppercase">Ennemis placés</h2><span className="text-sm">{draft.enemies?.length ?? 0}</span>
@@ -189,6 +201,16 @@ function MapsPage() {
               </div>
             </div>}
             <Button variant={tool === "enemy" ? "default" : "outline"} onClick={() => setTool("enemy")} className="min-h-11 w-full rounded-none"><Skull />Ennemis · {draft.enemies?.length ?? 0}</Button>
+            {tool === "passage" && <div className="space-y-2 border-2 border-foreground p-2">
+              <p className="text-xs font-bold">Point de passage · Étape suivante</p>
+              {draft.passage && <p role="status" className="text-xs">Passage · Col. {draft.passage.x + 1}, lig. {draft.passage.y + 1}</p>}
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-xs font-bold">Colonne du passage<Input type="number" min={1} max={GRID} value={position.x} onChange={(e) => setPosition({ ...position, x: Number(e.target.value) })} className="mt-1 h-11" /></label>
+                <label className="text-xs font-bold">Ligne du passage<Input type="number" min={1} max={GRID} value={position.y} onChange={(e) => setPosition({ ...position, y: Number(e.target.value) })} className="mt-1 h-11" /></label>
+              </div>
+              <Button variant="secondary" className="min-h-11 w-full" onClick={() => addPassage(position.x - 1, position.y - 1)}><DoorOpen />Placer le passage</Button>
+              {draft.passage && <Button variant="outline" className="min-h-11 w-full" onClick={() => setDraft({ ...draft, passage: null })}><Trash2 />Retirer le passage</Button>}
+            </div>}
             {tool === "enemy" && <div className="space-y-2 border-2 border-foreground p-2">
               <label className="block text-xs font-black uppercase">Ennemi à poser
                 <select aria-label="Ennemi à poser" value={enemyId} onChange={(e) => setEnemyId(e.target.value)} className="mt-1 h-11 w-full border-2 border-foreground bg-background px-2 font-normal normal-case">
@@ -215,11 +237,11 @@ function MapsPage() {
               <Button variant="secondary" className="min-h-11 w-full rounded-none" disabled={!enemyId || busy} onClick={() => addEnemy(position.x - 1, position.y - 1)}><Plus />Placer l'ennemi</Button>
             </div>}
             <div role="radiogroup" aria-label="Décor" className="grid grid-cols-2 gap-2">
-              {tool !== "enemy" && SPRITES.map((s) => <Button variant="outline" key={s.code} role="radio" aria-checked={sprite === s.code} onClick={() => { setSprite(s.code); if (tool !== "brush" && tool !== "fill" && tool !== "block") setTool("brush"); }} className={`h-auto min-h-11 justify-start gap-2 rounded-none border-2 p-1 text-left text-xs ${sprite === s.code ? "border-primary bg-secondary" : "border-foreground/30"}`}>
+              {tool !== "enemy" && tool !== "passage" && SPRITES.map((s) => <Button variant="outline" key={s.code} role="radio" aria-checked={sprite === s.code} onClick={() => { setSprite(s.code); if (tool !== "brush" && tool !== "fill" && tool !== "block") setTool("brush"); }} className={`h-auto min-h-11 justify-start gap-2 rounded-none border-2 p-1 text-left text-xs ${sprite === s.code ? "border-primary bg-secondary" : "border-foreground/30"}`}>
                 <SpriteSwatch code={s.code} /><span className="min-w-0 whitespace-normal break-words"><b>{s.label}</b><br /><span className="opacity-70">{tool === "block" ? "Barrière" : s.walk ? "Praticable" : "Bloquant"}</span></span>
               </Button>)}
             </div>
-            {tool !== "enemy" && <Button variant="outline" disabled={busy} onClick={fillWholeMap} className="min-h-11 w-full whitespace-normal rounded-none"><PaintBucket />Remplir toute la carte</Button>}
+            {tool !== "enemy" && tool !== "passage" && <Button variant="outline" disabled={busy} onClick={fillWholeMap} className="min-h-11 w-full whitespace-normal rounded-none"><PaintBucket />Remplir toute la carte</Button>}
             {msg && <p role="status" className="anim-enter text-sm font-bold">{msg}</p>}
             <Button onClick={submit} disabled={busy} className="h-11 w-full rounded-none font-black uppercase">{busy ? <span className="anim-loading">Enregistrement…</span> : "Enregistrer"}</Button>
             <Button variant="outline" onClick={() => { setDraft(null); setMsg(null); }} className="h-11 w-full rounded-none">Retour à mes cartes</Button>

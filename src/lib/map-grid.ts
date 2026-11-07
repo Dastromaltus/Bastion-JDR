@@ -43,7 +43,7 @@ export const tileTexture = (code: number) => code > 0 && (code - 1) % 20 >= 10 ?
 export const tileFrame = (code: number) => { const texture = tileTexture(code); return texture - 1 - Math.floor((texture - 1) / 20) * 10; };
 export const tileWalkable = (t: number | undefined) => t !== undefined && WALK.has(t);
 
-export type GridMap = { name: string; tiles: number[]; spawn: { x: number; y: number } };
+export type GridMap = { name: string; tiles: number[]; spawn: { x: number; y: number }; passage?: { x: number; y: number } | null };
 
 /** Placing a departure opens just its cell, retaining an existing walkable texture. */
 export function placeMapSpawn<T extends GridMap>(map: T, x: number, y: number): T {

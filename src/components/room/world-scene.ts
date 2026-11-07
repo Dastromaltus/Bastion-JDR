@@ -29,6 +29,7 @@ import { motionDisabled, MOTION_EVENT } from "@/lib/motion";
 export class WorldScene extends Phaser.Scene {
   private actors = new Map<string, Phaser.GameObjects.Container>();
   private terrain: Phaser.Tilemaps.TilemapLayer | null = null;
+  private passage: Phaser.GameObjects.Text | null = null;
   private prev = new Map<string, ZState>();
   constructor() { super("SalonWorld"); }
   preload() {
@@ -109,6 +110,8 @@ export class WorldScene extends Phaser.Scene {
     this.anims.create({ key: "c-die", frames: crow(16, 14), frameRate: 10 });
     this.cameras.main.setBounds(0, 0, GRID * 16, GRID * 16).setBackgroundColor(bg);
     this.events.on("map", (grid: GridMap) => {
+      this.passage?.destroy();
+      this.passage = grid.passage ? this.add.text(grid.passage.x * 16 + 8, grid.passage.y * 16 + 8, "↑", { fontFamily: "monospace", fontSize: "16px", color: getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim(), backgroundColor: bg }).setOrigin(0.5).setDepth(1) : null;
       this.terrain?.tilemap.destroy();
       const data = Array.from({ length: GRID }, (_, y) => grid.tiles.slice(y * GRID, (y + 1) * GRID).map((t) => t > 0 ? tileFrame(t) : -1));
       const tilemap = this.make.tilemap({ data, tileWidth: 16, tileHeight: 16 });

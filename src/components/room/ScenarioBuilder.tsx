@@ -6,15 +6,16 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { MapCanvas, SpriteSwatch } from "@/components/maps/MapCanvas";
 import { BRUSH_SIZES, fillMapTiles, GRID, placeMapSpawn, SPRITES } from "@/lib/map-grid";
-import { PaintBucket } from "lucide-react";
+import { PaintBucket, DoorOpen, Trash2 } from "lucide-react";
+import { passageError } from "@/lib/map-passages";
 import { TRACKS } from "@/lib/ambience-tracks";
 import { getMapSequence, goToSequenceMap, listMapEnemyCatalog, listMyMaps, saveScenario } from "@/lib/maps.functions";
 import { MAX_STEPS, moveStep, paintTile, putMob, type ScenarioStep } from "@/lib/scenario-steps";
 import { monsterSprite } from "@/lib/world-actors";
 
 const SEL = "mt-1 h-11 w-full border-2 border-foreground bg-background px-2 font-normal normal-case";
-type Section = "carte" | "mobs" | "decor" | "musique";
-const SECTIONS: [Section, string][] = [["carte", "1. Carte"], ["mobs", "2. Mobs"], ["decor", "3. Décor"], ["musique", "4. Musique & texte"]];
+type Section = "carte" | "mobs" | "decor" | "musique" | "passage";
+const SECTIONS: [Section, string][] = [["carte", "1. Carte"], ["mobs", "2. Mobs"], ["decor", "3. Décor"], ["musique", "4. Musique & texte"], ["passage", "5. Passage"]];
 
 export function ScenarioBuilder({ d }: { d: any }) {
   const gameId = d.game.id as string;
@@ -37,12 +38,13 @@ export function ScenarioBuilder({ d }: { d: any }) {
   const [brush, setBrush] = useState<number | "spawn">(6);
   const [brushSize, setBrushSize] = useState(1);
   const [source, setSource] = useState("");
+  const [passageCoord, setPassageCoord] = useState({ x: 1, y: 1 });
   useEffect(() => { if (seq.data) setSteps(seq.data.items); }, [seq.data]);
   useEffect(() => { if (!mobId && cat.data?.[0]) setMobId(cat.data[0].id); }, [cat.data, mobId]);
   useEffect(() => setPicked(null), [sel]);
 
   const options = useMemo(() => [
-    ...(mine.data ?? []).map((m) => ({ key: `custom:${m.id}`, label: `${m.name} (ma carte)`, step: { name: m.name, tiles: m.tiles, spawn: m.spawn, source: `custom:${m.id}`, enemies: m.enemies, track: null, intro: "" } as ScenarioStep })),
+    ...(mine.data ?? []).map((m) => ({ key: `custom:${m.id}`, label: `${m.name} (ma carte)`, step: { name: m.name, tiles: m.tiles, spawn: m.spawn, passage: m.passage, source: `custom:${m.id}`, enemies: m.enemies, track: null, intro: "" } as ScenarioStep })),
   ], [mine.data]);
   const fresh = (key: string): ScenarioStep => { const entry = options.find((o) => o.key === key) ?? options[0]; if (!entry) throw new Error("Aucune carte disponible."); return structuredClone(entry.step); };
 
@@ -65,6 +67,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
 
   function onCell(x: number, y: number, kind: "down" | "move") {
     if (!step) return;
+    if (section === "passage") { if (kind === "down") placePassage(x, y); return; }
     if (section === "decor") {
       if (brush === "spawn") { if (kind === "down") patch(placeMapSpawn(step, x, y)); return; }
       patch(paintTile(step, x, y, brush, brushSize, SPRITES.find((s) => s.code === brush)?.walk ? undefined : [step.spawn])); return;
@@ -76,6 +79,11 @@ export function ScenarioBuilder({ d }: { d: any }) {
     const r = putMob(step, x, y, mobId, picked ?? undefined);
     if (typeof r === "string") { toast.error(r); return; }
     patch(r); setPicked(null);
+  }
+  function placePassage(x: number, y: number) {
+    if (!step) return;
+    const err = passageError(step, { x, y });
+    if (err) toast.error(err); else patch({ passage: { x, y } });
   }
   function setCoord(i: number, axis: "x" | "y", v: number) {
     if (!step || Number.isNaN(v)) return;
@@ -142,17 +150,27 @@ export function ScenarioBuilder({ d }: { d: any }) {
 
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_16rem]">
             <div className="border-2 border-foreground">
-              <MapCanvas tiles={step.tiles} spawn={step.spawn} markers={markers} brushSize={section === "decor" ? brushSize : undefined} {...(section === "mobs" || section === "decor" ? { onCell } : {})}
+              <MapCanvas tiles={step.tiles} spawn={step.spawn} passage={step.passage} markers={markers} brushSize={section === "decor" ? brushSize : undefined} {...(section === "mobs" || section === "decor" || section === "passage" ? { onCell } : {})}
                 label={`Carte de l'étape ${sel + 1}, ${step.name}, 160 × 160 cases`} className={section === "mobs" || section === "decor" ? "cursor-crosshair" : ""} />
             </div>
 
             <div className="min-w-0 space-y-3 text-sm">
+              {section === "passage" && <>
+                <p className="text-xs font-bold">{sel < steps.length - 1 ? `Destination : étape ${sel + 2} · ${steps[sel + 1]?.name}` : "Dernière étape · aucune destination suivante"}</p>
+                {step.passage && <p role="status" className="text-xs">Passage · Col. {step.passage.x + 1}, lig. {step.passage.y + 1}</p>}
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="text-xs">Colonne du passage<input type="number" min={1} max={GRID} value={passageCoord.x} onChange={(e) => setPassageCoord({ ...passageCoord, x: Number(e.target.value) })} className={SEL} /></label>
+                  <label className="text-xs">Ligne du passage<input type="number" min={1} max={GRID} value={passageCoord.y} onChange={(e) => setPassageCoord({ ...passageCoord, y: Number(e.target.value) })} className={SEL} /></label>
+                </div>
+                <Button variant="secondary" className="min-h-11 w-full" onClick={() => placePassage(passageCoord.x - 1, passageCoord.y - 1)}><DoorOpen />Placer le passage</Button>
+                {step.passage && <Button variant="outline" className="min-h-11 w-full" onClick={() => patch({ passage: null })}><Trash2 />Retirer le passage</Button>}
+              </>}
               {section === "carte" && <>
                 <label className="block text-xs font-black uppercase">Nom de l'étape
                   <input maxLength={60} value={step.name} onChange={(e) => patch({ name: e.target.value })} className={SEL} />
                 </label>
                 <label className="block text-xs font-black uppercase">Changer de carte
-                  <select value="" onChange={(e) => { if (!e.target.value) return; if (!confirm("Remplacer la carte, ses mobs, trésors, musique et texte ?")) return; const f = fresh(e.target.value); patch({ name: f.name, tiles: f.tiles, spawn: f.spawn, source: f.source, enemies: f.enemies, treasures: f.treasures ?? [], track: f.track, intro: f.intro }); }} className={SEL}>
+                  <select value="" onChange={(e) => { if (!e.target.value) return; if (!confirm("Remplacer la carte, ses mobs, trésors, musique et texte ?")) return; const f = fresh(e.target.value); patch({ name: f.name, tiles: f.tiles, spawn: f.spawn, passage: f.passage ?? null, source: f.source, enemies: f.enemies, treasures: f.treasures ?? [], track: f.track, intro: f.intro }); }} className={SEL}>
                     <option value="">Choisir…</option>
                     {options.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
                   </select>
@@ -201,7 +219,7 @@ export function ScenarioBuilder({ d }: { d: any }) {
                 </div>
                 <Button variant="outline" disabled={brush === "spawn" || busy} className="min-h-11 w-full whitespace-normal rounded-none" onClick={() => {
                   if (brush === "spawn" || !confirm("Remplacer le décor de toute cette carte par la texture choisie ? Les mobs, trésors et le départ sont conservés.")) return;
-                  patch({ tiles: fillMapTiles(step.tiles, brush, [step.spawn, ...step.enemies, ...(step.treasures ?? [])]) });
+                  patch({ tiles: fillMapTiles(step.tiles, brush, [step.spawn, ...step.enemies, ...(step.treasures ?? []), ...(step.passage ? [step.passage] : [])]) });
                   toast.success("Carte remplie ; les cases occupées restent praticables.");
                 }}><PaintBucket />Remplir toute la carte</Button>
                 <p className="text-xs text-muted-foreground">Glisse sur la carte pour peindre. La grille reste toujours de 160 × 160 cases ; un mob recouvert par un mur est retiré.</p>

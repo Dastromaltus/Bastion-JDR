@@ -28,9 +28,9 @@ function useSheet() {
 
 /** Pixel-perfect 160×160 map drawing (16 px per cell), scaled by CSS. */
 export type MapMarker = { x: number; y: number; glyph: string; selected?: boolean; sprite?: MonsterSprite | undefined };
-export function MapCanvas({ tiles, spawn, className, onCell, label, markers, brushSize }: {
+export function MapCanvas({ tiles, spawn, passage, className, onCell, label, markers, brushSize }: {
   tiles: number[]; spawn?: { x: number; y: number }; className?: string; label: string; markers?: MapMarker[];
-  onCell?: (x: number, y: number, kind: "down" | "move") => void; brushSize?: number | undefined;
+  onCell?: (x: number, y: number, kind: "down" | "move") => void; brushSize?: number | undefined; passage?: { x: number; y: number } | null | undefined;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const img = useSheet();
@@ -60,6 +60,13 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers, bru
       c.lineWidth = 3; c.strokeRect(spawn.x * 16 + 2, spawn.y * 16 + 2, 12, 12);
     }
     const css = getComputedStyle(document.documentElement);
+    if (passage) {
+      c.fillStyle = css.getPropertyValue("--world-label").trim();
+      c.fillRect(passage.x * 16 + 2, passage.y * 16 + 2, 12, 12);
+      c.fillStyle = css.getPropertyValue("--world-label-bg").trim();
+      c.font = "bold 14px monospace"; c.textAlign = "center"; c.textBaseline = "middle";
+      c.fillText("↑", passage.x * 16 + 8, passage.y * 16 + 8);
+    }
     for (const m of markers ?? []) {
       const mImg = m.sprite ? monsterImgs[m.sprite] : undefined;
       const mReady = mImg?.complete && mImg.naturalWidth > 0;
@@ -78,7 +85,7 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers, bru
       c.strokeStyle = css.getPropertyValue("--world-label").trim() || "#fff";
       c.lineWidth = 2; c.strokeRect(x0 + 1, y0 + 1, x1 - x0 - 2, y1 - y0 - 2);
     }
-  }, [tiles, spawn, img, JSON.stringify(markers ?? []), ready, brushSize, hover?.x, hover?.y]);
+  }, [tiles, spawn, passage, img, JSON.stringify(markers ?? []), ready, brushSize, hover?.x, hover?.y]);
   function cell(e: React.PointerEvent<HTMLCanvasElement>) {
     const r = e.currentTarget.getBoundingClientRect();
     return [Math.floor(((e.clientX - r.left) / r.width) * GRID), Math.floor(((e.clientY - r.top) / r.height) * GRID)] as const;
