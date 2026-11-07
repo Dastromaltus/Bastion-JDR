@@ -33,4 +33,4 @@
 - [x] Paint impassable barriers with all ten brush textures; 25 focused tests pass, including texture decoding, placement refusal and private catalog rules.
 - [ ] Verify personal enemy creation, textured-barrier save/reload and salon install in a signed-in game — blocked until preview sign-in; self-session has no matching account.
 
-- [ ] Remove prebuilt map/campaign offerings, keep personal maps only, and verify retired URLs and map creation.
+- [x] Remove prebuilt map/campaign offerings and keep personal map choices only; verified both retired URLs redirect to Mes cartes, the personal editor opens, 12 focused tests pass and build OK.
