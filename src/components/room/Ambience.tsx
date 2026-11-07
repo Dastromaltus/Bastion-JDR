@@ -6,6 +6,7 @@ import { Slider } from "@/components/ui/slider";
 import { trackLabel } from "@/lib/ambience-tracks";
 import type { GameSettings } from "./useSettings";
 import type { AmbienceEngine } from "./ambience-engine";
+import { MOVEMENT_SOUND_EVENT } from "@/lib/movement-sound";
 
 export type AmbienceRow = { track: string; state: string; volume: number; loop: boolean; sfx: string | null; sfx_at: string | null } | null;
 
@@ -38,6 +39,14 @@ export function useAmbience(gameId: string | undefined, initial: AmbienceRow, se
   }
 
   useEffect(() => () => engine.current?.dispose(), []);
+
+  useEffect(() => {
+    const step = () => { if (unlocked && settings.volume > 0 && settings.effects > 0) engine.current?.step(); };
+    const stop = () => { if (document.hidden) engine.current?.stopSteps(); };
+    window.addEventListener(MOVEMENT_SOUND_EVENT, step);
+    document.addEventListener("visibilitychange", stop);
+    return () => { window.removeEventListener(MOVEMENT_SOUND_EVENT, step); document.removeEventListener("visibilitychange", stop); engine.current?.stopSteps(); };
+  }, [unlocked, settings.volume, settings.effects]);
 
   // Levels
   useEffect(() => {

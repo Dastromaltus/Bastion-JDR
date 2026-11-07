@@ -1,4 +1,5 @@
 import { TRACKS, SFX, type SynthSpec } from "@/lib/ambience-tracks";
+import footsteps from "@/assets/character-footsteps.mp3.asset.json";
 
 const FADE = 2; // seconds of crossfade
 
@@ -11,6 +12,9 @@ export class AmbienceEngine {
   fx: GainNode;
   current: { key: string; voice: Voice } | null = null;
   private noiseBuf: AudioBuffer;
+  private footsteps: HTMLAudioElement;
+  private footstepsSource: MediaElementAudioSourceNode;
+  private stepTimer?: ReturnType<typeof setTimeout>;
 
   constructor() {
     const C = window.AudioContext || (window as any).webkitAudioContext;
@@ -19,6 +23,12 @@ export class AmbienceEngine {
     this.fx = this.ctx.createGain();
     this.music.connect(this.ctx.destination);
     this.fx.connect(this.ctx.destination);
+    this.footsteps = new Audio(footsteps.url);
+    this.footsteps.crossOrigin = "anonymous";
+    this.footsteps.preload = "auto";
+    this.footsteps.loop = true;
+    this.footstepsSource = this.ctx.createMediaElementSource(this.footsteps);
+    this.footstepsSource.connect(this.fx);
     const len = this.ctx.sampleRate * 2;
     this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     const ch = this.noiseBuf.getChannelData(0);
@@ -32,6 +42,20 @@ export class AmbienceEngine {
     const t = this.ctx.currentTime;
     this.music.gain.setTargetAtTime(music, t, 0.1);
     this.fx.gain.setTargetAtTime(fx, t, 0.05);
+    if (fx <= 0) this.stopSteps();
+  }
+
+  /** One shared loop avoids stacking a ten-second recording on every step. */
+  step() {
+    if (!this.unlocked || document.hidden) return;
+    clearTimeout(this.stepTimer);
+    if (this.footsteps.paused) void this.footsteps.play().catch(() => undefined);
+    this.stepTimer = setTimeout(() => this.stopSteps(), 240);
+  }
+
+  stopSteps() {
+    clearTimeout(this.stepTimer);
+    this.footsteps.pause();
   }
 
   /** Crossfade to `key` (or to silence). `loop=false` fades the track out after 30 s. */
@@ -130,5 +154,5 @@ export class AmbienceEngine {
     }
   }
 
-  dispose() { this.stop(); setTimeout(() => this.ctx.close().catch(() => undefined), FADE * 1000 + 200); }
+  dispose() { this.stopSteps(); this.footstepsSource.disconnect(); this.footsteps.removeAttribute("src"); this.footsteps.load(); this.stop(); setTimeout(() => this.ctx.close().catch(() => undefined), FADE * 1000 + 200); }
 }

@@ -27,6 +27,7 @@ import { GRID, tileFrame, type GridMap } from "@/lib/map-grid";
 const map = { width: GRID, height: GRID };
 import type { WorldActor } from "@/lib/world-actors";
 import { motionDisabled, MOTION_EVENT } from "@/lib/motion";
+import { characterStepped, MOVEMENT_SOUND_EVENT } from "@/lib/movement-sound";
 
 export class WorldScene extends Phaser.Scene {
   private actors = new Map<string, Phaser.GameObjects.Container>();
@@ -179,6 +180,9 @@ export class WorldScene extends Phaser.Scene {
     this.game.events.emit("world-ready");
   }
   sync(actors: WorldActor[]) {
+    const view = this.cameras.main.worldView;
+    if (actors.some((a) => characterStepped(a, this.prev.get(a.id)) &&
+      view.contains(a.x * 16 + 8, a.y * 16 + 8))) window.dispatchEvent(new Event(MOVEMENT_SOUND_EVENT));
     const ids = new Set(actors.map((a) => a.id));
     for (const [id, node] of this.actors) if (!ids.has(id)) { if ((this.cameras.main as any)._follow === node) this.cameras.main.stopFollow(); node.destroy(); this.actors.delete(id); }
     const reduced = motionDisabled();
