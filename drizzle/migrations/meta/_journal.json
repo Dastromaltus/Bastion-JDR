@@ -281,6 +281,13 @@
       "when": 1794081598101,
       "tag": "0039_adventurer_classes",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794082559665,
+      "tag": "0040_free_visible_adventurer_attacks",
+      "breakpoints": true
     }
   ]
 }
