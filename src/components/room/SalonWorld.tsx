@@ -53,6 +53,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
       setMessage(`Attaque sur ${enemy.name}…`);
       try {
         await queue.current;
+        game.current?.scene.getScene("SalonWorld").events.emit("human-attack", { id: d.me.id, x: enemy.tile_x, y: enemy.tile_y });
         const result = await attack({ data: { gameId: d.game.id, action: "attack", enemyId: enemy.id, revision: d.combat?.revision ?? 0 } });
         setMessage(`${enemy.name} : ${result.damage ?? 0} dégâts`);
         await onChange();
@@ -98,6 +99,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     // Render on keydown, before pending movement or the authenticated request.
     const prediction = { enemyId: enemy.id, after: Date.now() };
     localSlashes.current.push(prediction);
+    game.current?.scene.getScene("SalonWorld").events.emit("human-attack", { id: d.me.id, x: enemy.tile_x, y: enemy.tile_y });
     game.current?.scene.getScene("SalonWorld").events.emit("slash", enemy.id);
     setMessage("Slash…");
     try {
