@@ -8,6 +8,7 @@ import yetiSheet from "@/assets/yeti-sheet.png.asset.json";
 import wolfSheet from "@/assets/wolf-sheet.png.asset.json";
 import orcSheet from "@/assets/orc-sheet.png.asset.json";
 import goblinSheet from "@/assets/goblin-sheet.png.asset.json";
+import cyclopsSheet from "@/assets/cyclops-sheet.png.asset.json";
 import type { MonsterSprite } from "@/lib/world-actors";
 
 const monsterImgs: Partial<Record<MonsterSprite, HTMLImageElement>> = {};
@@ -42,7 +43,7 @@ export function MapCanvas({ tiles, spawn, className, onCell, label, markers, bru
     for (const kind of needed) {
       if (monsterImgs[kind]) continue;
       const image = new Image();
-      image.src = kind === "zombie" ? zombieSheet.url : kind === "yeti" ? yetiSheet.url : kind === "wolf" ? wolfSheet.url : kind === "orc" ? orcSheet.url : kind === "goblin" ? goblinSheet.url : slimeSheet.url;
+      image.src = kind === "zombie" ? zombieSheet.url : kind === "yeti" ? yetiSheet.url : kind === "wolf" ? wolfSheet.url : kind === "orc" ? orcSheet.url : kind === "goblin" ? goblinSheet.url : kind === "cyclops" ? cyclopsSheet.url : slimeSheet.url;
       monsterImgs[kind] = image;
       if (!image.complete) image.addEventListener("load", () => setReady((n) => n + 1), { once: true });
     }
