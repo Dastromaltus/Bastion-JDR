@@ -5,9 +5,9 @@ import { READY_CONTENT, readyMapStep } from "@/lib/ready-maps";
 
 describe("ready-to-play maps", () => {
   for (const key of Object.keys(READY_CONTENT)) {
-    it(`${key} has a 40×40 grid with reachable mobs and treasures and music`, () => {
+    it(`${key} has a 160×160 grid with reachable mobs and treasures and music`, () => {
       const step = readyMapStep(key);
-      expect(step.tiles).toHaveLength(40 * 40);
+      expect(step.tiles).toHaveLength(160 * 160);
       expect(validateGrid(step.tiles, step.spawn)).toBeNull();
       expect(step.enemies.length).toBeGreaterThan(0);
       expect(step.treasures?.length).toBeGreaterThan(0);
