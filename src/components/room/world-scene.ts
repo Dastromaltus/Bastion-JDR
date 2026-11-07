@@ -90,7 +90,7 @@ export class WorldScene extends Phaser.Scene {
           ? this.add.sprite(0, -9, "slime", actor.dead ? S_DIE_LAST : 0).setScale(1.5)
           : this.add.image(0, -2, "world-tiles", actor.frame);
         if (sprite instanceof Phaser.GameObjects.Sprite && !actor.dead && !reduced) sprite.play(actor.sprite === "slime" ? "s-idle" : "z-idle");
-        const label = this.add.text(0, -15, actor.name, { fontFamily: "VT323, monospace", fontSize: "8px", color: getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim(), backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim(), padding: { x: 2, y: 1 } }).setOrigin(0.5, 1).setVisible(false);
+        const label = this.add.text(0, -18, actor.name, { fontFamily: "monospace", fontSize: "10px", color: getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim(), backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim(), padding: { x: 4, y: 3 }, resolution: 3 }).setOrigin(0.5, 1).setVisible(false);
         node = this.add.container(x, y, [sprite, label]);
         if (actor.frame === 12) sprite.setInteractive().on("pointerdown", () => window.dispatchEvent(new CustomEvent("bastion-select-mob", { detail: actor.id })));
         this.actors.set(actor.id, node);
@@ -113,8 +113,8 @@ export class WorldScene extends Phaser.Scene {
       }
       const label = node.list[1];
       if (label instanceof Phaser.GameObjects.Text) {
-        const row = actors.filter((a) => a.y === actor.y).findIndex((a) => a.id === actor.id);
-        label.setVisible(true).setY(-15 - row * 11);
+        const row = actors.filter((a) => a.y === actor.y && Math.abs(a.x - actor.x) < 12).findIndex((a) => a.id === actor.id);
+        label.setVisible(true).setY(-18 - row * (label.height + 3));
         label.setX(Phaser.Math.Clamp(x, label.width / 2, map.width * 16 - label.width / 2) - x);
       }
       node.setDepth(100 + y);

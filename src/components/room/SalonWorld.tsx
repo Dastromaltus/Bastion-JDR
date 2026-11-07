@@ -12,6 +12,7 @@ import { zoneLabel } from "@/lib/races";
 import { salonTurn } from "@/lib/turn-order";
 import type Phaser from "phaser";
 import { motionDisabled } from "@/lib/motion";
+import { worldMovementAllowed } from "@/lib/world-movement";
 
 export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string; name?: string; onChange: () => void }) {
   const mount = useRef<HTMLDivElement>(null);
@@ -31,10 +32,12 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const followed = turn.active?.role === "adventurer" ? d.players.find((p: any) => p.id === turn.active?.id) : d.players.find((p: any) => p.role === "adventurer");
   const here = zone ?? (d.me.role === "narrator" ? followed?.current_zone : d.me.current_zone) ?? "entree";
   const canMove = d.game.status === "playing" && d.me.role === "adventurer" && d.me.hp > 0 && here === (d.me.current_zone ?? "entree");
-  const enabled = canMove && !d.combat && turn.isMine;
+  const enabled = worldMovementAllowed({ status: d.game.status, role: d.me.role, hp: d.me.hp, sameZone: here === (d.me.current_zone ?? "entree"), explorationTurn: turn.isMine, combat: d.combat });
   const fetchMap = useServerFn(getSalonMap);
   const mapQ = useQuery({ queryKey: ["salon-map", d.game.id, (d.events ?? []).filter((e: any) => e.kind === "carte").length], queryFn: () => fetchMap({ data: { gameId: d.game.id } }), staleTime: 30_000, placeholderData: (prev) => prev });
   const grid = mapQ.data ?? PREBUILT_MAPS[DEFAULT_MAP_KEY]!;
+  const controlsReady = enabled && ready && mapQ.isSuccess;
+  const controlLabel = d.me.role === "narrator" ? "Vue narrateur · observateur" : !ready || !mapQ.isSuccess ? "Chargement de la carte…" : !enabled ? d.combat?.label ?? turn.message : focused ? "▶ Contrôles actifs · Z Q S D" : "Clique sur la carte pour jouer";
   const participants = participantActors(d.players, here, d.me.id, grid);
   const activeId = d.combat?.current?.id ?? turn.active?.id;
   const actors: WorldActor[] = participants.map((actor) => ({ ...actor, name: `${actor.id === activeId ? "▶ " : ""}${actor.name}`, hp: d.players.find((p: any) => p.id === actor.id)?.hp }));
@@ -67,7 +70,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     previousZone.current = here;
   }, [here]);
   async function step(direction: WorldDirection) {
-    if (!enabled || lock.current || !ready) return;
+    if (!controlsReady || lock.current) return;
     lock.current = true; setBusy(true); setMovingDirection(direction);
     try { const result = await move({ data: { gameId: d.game.id, direction } }); setMessage(result.message); onChange(); }
     catch (e) { setMessage(e instanceof Error ? e.message : "Déplacement impossible."); onChange(); }
@@ -78,10 +81,10 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     <div ref={view} tabIndex={0} role="group" aria-label="Carte du salon, vue de dessus. Clique puis utilise Z, Q, S, D." onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onMouseDown={() => view.current?.focus()} className={`salon-world relative overflow-hidden border-2 bg-game outline-none ${focused ? "border-primary ring-4 ring-primary" : "border-foreground"}`} onKeyUp={() => setPressed(null)} onKeyDown={(event) => {
       const keys: Record<string, WorldDirection> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", z: "up", s: "down", q: "left", d: "right", Z: "up", S: "down", Q: "left", D: "right" };
       const direction = keys[event.key];
-      if (direction) { event.preventDefault(); setPressed(direction); if (enabled) void step(direction); }
+      if (direction) { event.preventDefault(); setPressed(direction); if (controlsReady) void step(direction); else setMessage(controlLabel); }
     }}>
       <div ref={mount} className="salon-world-canvas" />
-      <p aria-live="polite" className={`pointer-events-none absolute left-2 top-2 border-2 px-2 py-1 font-pixel text-[10px] uppercase ${focused ? "border-primary bg-primary text-primary-foreground" : "border-foreground bg-background text-foreground"}`}>{focused ? "▶ Contrôles actifs · Z Q S D" : "Clique sur la carte pour jouer"}</p>
+      <p aria-live="polite" className={`pointer-events-none absolute left-2 top-2 max-w-[calc(100%-1rem)] border-2 px-2 py-1 font-pixel text-[10px] uppercase ${focused && controlsReady ? "border-primary bg-primary text-primary-foreground" : "border-foreground bg-background text-foreground"}`}>{controlLabel}</p>
       {focused && <div aria-hidden="true" className="pointer-events-none absolute bottom-2 right-2 grid grid-cols-3 gap-1">
         {([["up", "Z", "col-start-2"], ["left", "Q", "col-start-1 row-start-2"], ["down", "S", "col-start-2 row-start-2"], ["right", "D", "col-start-3 row-start-2"]] as const).map(([dir, k, cls]) => <span key={dir} className={`flex h-8 w-8 items-center justify-center border-2 font-pixel text-xs ${cls} ${pressed === dir ? "anim-pop border-foreground bg-primary text-primary-foreground translate-y-0.5" : "border-foreground bg-background text-foreground"}`}>{k}</span>)}
       </div>}
@@ -93,7 +96,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
         <div className="min-w-0"><p className="break-words font-bold">{p.display_name}{p.id === d.me.id ? " · toi" : ""}</p><p className="text-xs text-muted-foreground">{p.role === "narrator" ? "Narrateur · observe la carte" : `${p.race} · ${zoneLabel(p.current_zone ?? "entree")}${(p.current_zone ?? "entree") === here ? " · ici" : ""}`}</p></div>
       </li>)}
     </ul>
-    {canMove && <div className="flex items-center justify-between gap-3"><p key={`${turn.active?.id}-${message}`} role="status" className="anim-enter min-w-0 text-sm text-muted-foreground">{!turn.isMine ? turn.message : busy ? "Déplacement…" : message || "C’est à ton tour !"}</p><div className="grid shrink-0 grid-cols-3 grid-rows-3 gap-1 lg:hidden">
+    {canMove && <div className="flex items-center justify-between gap-3"><p key={`${turn.active?.id}-${message}`} role="status" className="anim-enter min-w-0 text-sm text-muted-foreground">{!enabled ? d.combat?.label ?? turn.message : busy ? "Déplacement…" : message || "C’est à ton tour !"}</p><div className="grid shrink-0 grid-cols-3 grid-rows-3 gap-1 lg:hidden">
       {([["up", "Monter", ChevronUp, "col-start-2"], ["left", "Gauche", ChevronLeft, "col-start-1 row-start-2"], ["right", "Droite", ChevronRight, "col-start-3 row-start-2"], ["down", "Descendre", ChevronDown, "col-start-2 row-start-3"]] as const).map(([dir, label, Icon, cls]) => <Button key={dir} variant={movingDirection === dir ? "default" : "secondary"} size="icon" aria-label={label} title={label} disabled={busy || !ready || !enabled} className={`h-11 w-11 ${cls} ${movingDirection === dir ? "anim-pop" : ""}`} onClick={() => void step(dir)}><Icon /></Button>)}
     </div></div>}
   </section>;

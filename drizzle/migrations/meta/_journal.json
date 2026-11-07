@@ -225,6 +225,13 @@
       "when": 1794075755349,
       "tag": "0031_maps_160_grid_compatibility",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794077924605,
+      "tag": "0032_avoid_adventurerless_combat",
+      "breakpoints": true
     }
   ]
 }
