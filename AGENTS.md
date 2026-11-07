@@ -39,3 +39,4 @@
 - Tile codes 11–20 encode impassable variants of brush textures 1–10; decode only when rendering and keep server walkability restricted to the original walkable codes so textured barriers survive map copies.
 
 - Expand legacy 40×40 tile arrays row-by-row on reads, preserving coordinates and filling new cells with blocked tile 0; save only 160×160 arrays while database constraints accept both sizes for live-version compatibility.
+- Adventurer classes live in game_players.class; HP bonuses come from src/lib/classes.ts while damage and ability effects are applied in salon_combat_action, so combat stays server-authoritative.
