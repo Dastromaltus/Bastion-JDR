@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Backpack, BookOpen, MessageSquare, Settings, User, Dices, Copy, Megaphone } from "lucide-react";
+import { Backpack, MessageSquare, Settings, User, Dices, Copy, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -540,21 +540,6 @@ function SheetPanel({ d }: { d: any }) {
           <Button disabled={busy === "fiche"} className="min-h-11 rounded-none font-bold uppercase">{busy === "fiche" ? "Enregistrement…" : "Enregistrer la fiche"}</Button>
         </form>
       ) : <p className="text-sm text-muted-foreground">La fiche est figée depuis le lancement de la partie.</p>}
-    </div>
-  );
-}
-
-function JournalPanel({ d }: { d: any }) {
-  return (
-    <div>
-      <ReportButton gameId={d.game.id} className="mb-3 w-full" />
-      <ol className="space-y-1 text-sm">
-        {d.events.map((e: any) => (
-          <li key={e.id} className={`border-l-2 pl-2 ${e.important ? "border-primary font-bold" : "border-foreground/30"}`}>
-            <span className="text-muted-foreground">{new Date(e.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span> {e.message}
-          </li>
-        ))}
-      </ol>
     </div>
   );
 }
