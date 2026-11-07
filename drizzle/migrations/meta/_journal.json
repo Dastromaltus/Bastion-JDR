@@ -239,6 +239,13 @@
       "when": 1794078346886,
       "tag": "0033_adventurer_enemy_line_of_sight",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794078381198,
+      "tag": "0034_late_adventurer_combat_turns",
+      "breakpoints": true
     }
   ]
 }
