@@ -48,9 +48,9 @@ const mapFeatures = [
 ];
 
 const phases = [
-  { number: "01", title: "Préparation", text: "Choisissez votre rôle, votre peuple et vos compétences. Composez une équipe capable de survivre au Bastion." },
-  { number: "02", title: "Affrontement", text: "Déclarez vos actions, lancez les dés et résolvez les effets. Chaque décision laisse une trace sur le plateau." },
-  { number: "03", title: "Exploration", text: "Traversez les cartes préparées par le narrateur, une étape après l'autre." },
+  { number: "01", title: "Préparation", text: "Choisissez votre peuple et votre classe, personnalisez votre aventurier et composez une équipe capable de survivre au Bastion." },
+  { number: "02", title: "Affrontement", text: "Déplacez-vous librement au clavier (Z, Q, S, D) ; attaques et capacités se résolvent en tour par tour, avec des dés lancés côté serveur." },
+  { number: "03", title: "Exploration", text: "Traversez les immenses cartes préparées par le narrateur, une étape après l’autre, en atteignant les points de passage." },
 ];
 
 function Index() {
