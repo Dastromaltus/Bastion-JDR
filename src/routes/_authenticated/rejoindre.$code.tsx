@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getRoomPreview, joinRoom } from "@/lib/rooms.functions";
 import { RACE_NAMES } from "@/lib/races";
+import { roomAdmissionError } from "@/lib/room-admission";
 
 export const Route = createFileRoute("/_authenticated/rejoindre/$code")({
   staticData: { sitemap: false },
@@ -43,7 +44,7 @@ function JoinPage() {
   useEffect(() => {
     const d = room.data;
     if (autoTried || !hasCharacter || !d || !name || d.hasPassword) return;
-    if (d.status !== "waiting" || d.locked || d.players >= d.maxPlayers) return;
+    if (roomAdmissionError(d)) return;
     setAutoTried(true);
     void doJoin();
   }, [autoTried, hasCharacter, room.data, name]);
@@ -68,7 +69,7 @@ function JoinPage() {
   }
 
   const r = room.data;
-  const closed = r && (r.status !== "waiting" || r.locked || r.players >= r.maxPlayers);
+  const closed = r ? roomAdmissionError(r) : null;
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
@@ -82,7 +83,7 @@ function JoinPage() {
             <p className="text-sm text-muted-foreground">{r.players}/{r.maxPlayers} joueurs</p>
             {closed ? (
               <p role="alert" className="mt-6 font-bold text-primary">
-                {r.status !== "waiting" ? "La partie a déjà commencé : les nouvelles arrivées sont refusées." : r.locked ? "Le narrateur a verrouillé ce salon." : "Ce salon est complet."}
+                {closed}
               </p>
             ) : null}
             {loading && !r.hasPassword && hasCharacter && <p className="mt-6 anim-loading font-bold">Entrée sur la carte avec {name}…</p>}
@@ -97,7 +98,7 @@ function JoinPage() {
               </>)}
               {r.hasPassword && <Input type="password" required className="h-11 rounded-none" placeholder="Mot de passe du salon" value={password} onChange={(e) => setPassword(e.target.value)} />}
               {error && <p role="alert" className="text-sm font-bold text-primary">{error}</p>}
-              <Button disabled={loading} className="min-h-11 w-full rounded-none font-black uppercase">{loading ? "Connexion…" : "Rejoindre le salon"}</Button>
+              <Button disabled={loading || !!closed} className="min-h-11 w-full rounded-none font-black uppercase">{loading ? "Connexion…" : "Rejoindre le salon"}</Button>
             </form>
           </>
         )}
