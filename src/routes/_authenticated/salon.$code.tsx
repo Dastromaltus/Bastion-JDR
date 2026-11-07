@@ -15,6 +15,7 @@ import {
   getRoom, narratorAction, leaveRoom, updateCharacter, rollCheck, inventoryAction, narratorAddItem, sendSignal,
 } from "@/lib/rooms.functions";
 import { RACE_NAMES, ROLE_LABEL, STATUS_LABEL } from "@/lib/races";
+import { CLASSES, CLASS_NAMES, classOf } from "@/lib/classes";
 import { ReportButton } from "@/components/ReportButton";
 import { useSettings, vibrate, type GameSettings } from "@/components/room/useSettings";
 import { useAmbience, SoundGate, PersonalAmbience } from "@/components/room/Ambience";
@@ -196,7 +197,7 @@ function RoomPage() {
                   className={`w-full min-h-11 border-2 p-3 text-left transition-colors ${p.role === "narrator" ? "border-primary" : "border-foreground/50"} ${p.user_id === me.user_id ? "bg-secondary" : "hover:border-primary"}`}
                 >
                   <p className="truncate font-bold">{p.display_name}{p.user_id === me.user_id ? " (toi)" : ""}</p>
-                  <p className="text-[11px] uppercase text-muted-foreground">{ROLE_LABEL[p.role]} · {p.race}</p>
+                  <p className="text-[11px] uppercase text-muted-foreground">{ROLE_LABEL[p.role]} · {p.race}{p.role === "adventurer" ? ` · ${CLASSES[classOf(p.class)].label} · ${p.max_hp} PV · +${CLASSES[classOf(p.class)].damageBonus} dégâts · ${CLASSES[classOf(p.class)].ability}` : ""}</p>
                   {p.role !== "narrator" && (
                     <div className="mt-2 h-2 w-full bg-muted" aria-label={`PV ${p.hp}/${p.max_hp}`}>
                       <HealthFill hp={p.hp} maxHp={p.max_hp} className="hp-bar bg-primary" />
@@ -520,6 +521,8 @@ function SheetPanel({ d }: { d: any }) {
   const upd = useServerFn(updateCharacter);
   const me = d.me;
   const [race, setRace] = useState(me.race);
+  const [cls, setCls] = useState(classOf(me.class));
+  const info = CLASSES[classOf(me.class)];
   const [name, setName] = useState(me.display_name);
   const { busy, run } = useAction();
   const editable = d.game.status === "waiting";
@@ -530,12 +533,20 @@ function SheetPanel({ d }: { d: any }) {
           <div key={k} className="border-2 border-foreground p-2"><p className="text-[6.0px] font-black uppercase">{k}</p><p className="font-display text-lg">{v}</p></div>
         ))}
       </div>
+      <div className="border-2 border-foreground p-2 text-sm">
+        <p className="font-bold uppercase">{info.icon} Classe : {info.label}</p>
+        <p>PV max : {me.max_hp} · Dégâts : +{info.damageBonus} par attaque réussie</p>
+        <p>Capacité — <b>{info.ability}</b> : {info.abilityText}</p>
+      </div>
       <p className="text-sm">Rôle dans ce salon : <b>{ROLE_LABEL[me.role]}</b></p>
       {editable ? (
-        <form className="grid gap-2" onSubmit={(e) => { e.preventDefault(); run("fiche", () => upd({ data: { gameId: d.game.id, race, displayName: name } }), "Fiche mise à jour"); }}>
+        <form className="grid gap-2" onSubmit={(e) => { e.preventDefault(); run("fiche", () => upd({ data: { gameId: d.game.id, race, cls, displayName: name } }), "Fiche mise à jour"); }}>
           <Input required maxLength={40} className="h-11 rounded-none" value={name} onChange={(e) => setName(e.target.value)} />
           <select className="h-11 border border-input bg-background px-2" value={race} onChange={(e) => setRace(e.target.value)}>
             {RACE_NAMES.map((r) => <option key={r}>{r}</option>)}
+          </select>
+          <select aria-label="Classe" className="h-11 border border-input bg-background px-2" value={cls} onChange={(e) => setCls(classOf(e.target.value))}>
+            {CLASS_NAMES.map((c) => <option key={c} value={c}>{CLASSES[c].label} — {CLASSES[c].hpBonus >= 0 ? "+" : ""}{CLASSES[c].hpBonus} PV, +{CLASSES[c].damageBonus} dégâts, {CLASSES[c].ability}</option>)}
           </select>
           <Button disabled={busy === "fiche"} className="min-h-11 rounded-none font-bold uppercase">{busy === "fiche" ? "Enregistrement…" : "Enregistrer la fiche"}</Button>
         </form>
