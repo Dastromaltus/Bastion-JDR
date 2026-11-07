@@ -164,6 +164,10 @@ export class WorldScene extends Phaser.Scene {
     this.events.on("actors", (actors: WorldActor[]) => this.sync(actors));
     const stop = () => {
       if (motionDisabled()) {
+        for (const [id, node] of this.actors) {
+          const sprite = node.list[0], state = this.prev.get(id);
+          if (sprite instanceof Phaser.GameObjects.Sprite && sprite.texture.key === "human") sprite.stop().setFrame(state?.dead ? O_DIE_LAST : (state?.dir ?? 0) * O_COLS);
+        }
         this.children.list.filter((child) => child.name === "slash-effect").forEach((child) => child.destroy());
         this.tweens.getTweens().forEach((tween) => { tween.complete(); });
       }
