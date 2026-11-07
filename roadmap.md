@@ -1,4 +1,4 @@
-- [ ] Add Nain as the second adventurer race using uploaded YellowBear artwork; preserve Humain default and existing classes, verify save/reload and animations.
+- [x] Add Nain as the second adventurer race with uploaded YellowBear directional animations; Humain stays default. Authenticated profile save/reload and mobile preview verified; Phaser dwarf texture and walk/attack/death animations checked, 18 tests pass. Race stats temporarily match Humain; existing characters and classes unchanged.
 - [x] Add uploaded movement sound for adventurers and enemies through the existing effects volume; live narrator mob movement plays the supplied MP3 and stops at rest, no playback errors; 13 focused tests pass, including adventurer movement and silent spawn/confirmation.
 - [x] Replace adventurer races with default Human and uploaded HumanTownsfolk artwork; saved profile/reload, existing salon race conversion, Human texture/directional walking and desktop/mobile rendering verified; 16 focused tests pass. Existing stats, HP and classes preserved.
 - [x] Add a top-down pixel-art environment to salon games and Operations.

@@ -66,7 +66,7 @@ function Index() {
       </section>
 
       <nav aria-label="Sommaire des règles" className="flex flex-wrap gap-2 border-b border-border px-5 py-4 md:px-10">
-        {[{ id: "concept", label: "Le jeu" }, { id: "salons", label: "Les salons" }, { id: "cartes", label: "Les cartes" }, { id: "peuples", label: "L’Humain" }, { id: "classes", label: "Les classes" }, { id: "partie", label: "Les phases" }].map(({ id, label }) => <Button key={id} asChild variant="ghost" className="min-h-11 rounded-none font-bold"><a href={`#${id}`}>{label}</a></Button>)}
+        {[{ id: "concept", label: "Le jeu" }, { id: "salons", label: "Les salons" }, { id: "cartes", label: "Les cartes" }, { id: "peuples", label: "Les races" }, { id: "classes", label: "Les classes" }, { id: "partie", label: "Les phases" }].map(({ id, label }) => <Button key={id} asChild variant="ghost" className="min-h-11 rounded-none font-bold"><a href={`#${id}`}>{label}</a></Button>)}
       </nav>
 
       <section id="concept" data-motion-stagger className="grid border-b border-border lg:grid-cols-2">
