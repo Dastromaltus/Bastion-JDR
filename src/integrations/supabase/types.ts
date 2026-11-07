@@ -1782,6 +1782,19 @@ export type Database = {
         Returns: Json
       }
       salon_d6: { Args: never; Returns: number }
+      salon_move_mob: {
+        Args: {
+          p_dx: number
+          p_dy: number
+          p_enemy_id: string
+          p_game_id: string
+        }
+        Returns: Json
+      }
+      salon_move_player: {
+        Args: { p_dx: number; p_dy: number; p_game_id: string }
+        Returns: Json
+      }
       save_private_campaign: {
         Args: { p_document: Json; p_publish?: boolean }
         Returns: Json

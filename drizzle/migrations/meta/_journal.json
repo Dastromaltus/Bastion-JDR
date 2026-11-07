@@ -267,6 +267,13 @@
       "when": 1794079824606,
       "tag": "0037_mob_move_keeps_turn",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794080366395,
+      "tag": "0038_free_world_movement",
+      "breakpoints": true
     }
   ]
 }
