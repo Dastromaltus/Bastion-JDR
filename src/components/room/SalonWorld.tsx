@@ -49,7 +49,6 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const mobPos = useRef<{ id: string; x: number; y: number } | null>(null);
   useEffect(() => { mobPos.current = mobRow ? { id: mobRow.id, x: mobRow.tile_x, y: mobRow.tile_y } : null; }, [mobRow?.id, mobRow?.tile_x, mobRow?.tile_y]);
   const mobEnabled = mobMovementAllowed({ status: d.game.status, role: d.me.role, controlledId: mobRow?.id, combat: d.combat });
-  if (narrator) console.log("DBG", JSON.stringify({ c: d.combat?.current, a: d.combat?.active, m: mobRow?.id, s: d.game.status }));
   const controlsReady = (enabled || mobEnabled) && ready && mapQ.isSuccess;
   const controlLabel = narrator ? !mobRow ? "Vue narrateur · contrôle un mob pour le déplacer" : !mobEnabled ? `${mobRow.name} attend · ${d.combat?.label ?? "hors combat"}` : focused ? `▶ ${mobRow.name} · Z Q S D` : `${mobRow.name} · clique sur la carte puis Z Q S D` : !ready || !mapQ.isSuccess ? "Chargement de la carte…" : !enabled ? d.combat?.label ?? turn.message : focused ? "▶ Contrôles actifs · Z Q S D" : "Clique sur la carte pour jouer";
   const participants = participantActors(d.players, here, d.me.id, grid);
