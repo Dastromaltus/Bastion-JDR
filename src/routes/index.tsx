@@ -30,14 +30,27 @@ const races = [
 
 const salonSteps = [
   { icon: <Users size={28} />, title: "01 · Monte ton salon", text: "Choisis un nom, le nombre de joueurs (3 à 5) et prépare tes cartes. Un mot de passe optionnel protège l’entrée, et le salon peut rester en attente jusqu’à la partie." },
-  { icon: <KeyRound size={28} />, title: "02 · Invite la table", text: "Partage le code à six caractères ou le lien d’invitation. Chaque aventurier rejoint en un clic, depuis son téléphone ou son ordinateur." },
-  { icon: <Crown size={28} />, title: "03 · Incarne le narrateur", text: "Le créateur devient narrateur de son salon : il place ennemis, trésors et ambiance sonore, lance la partie — et peut transmettre sa couronne." },
+  { icon: <KeyRound size={28} />, title: "02 · Invite la table", text: "Partage le code à six caractères ou le lien d’invitation. Chaque aventurier rejoint en un clic, même si la partie a déjà commencé." },
+  { icon: <Crown size={28} />, title: "03 · Incarne le narrateur", text: "Le créateur devient narrateur : il enchaîne ses cartes en parcours, place ennemis et trésors, choisit la musique et le texte de chaque étape, puis contrôle les mobs en jeu." },
+];
+
+const classes = [
+  { name: "Guerrier", trait: "Frappe lourde", detail: "Le plus solide du groupe. Ses coups font mal et il encaisse sans broncher." },
+  { name: "Mage", trait: "Trait arcanique", detail: "Fragile mais dévastateur. Sa magie perce les défenses les plus épaisses." },
+  { name: "Voleur", trait: "Coup sournois", detail: "Rapide et opportuniste. Il frappe là où personne ne l’attend." },
+];
+
+const mapFeatures = [
+  { title: "Cartes 160 × 160", text: "De vastes plateaux en pixel art, dessinés case par case avec des pinceaux de toutes tailles — ou remplis d’une texture en un clic." },
+  { title: "Textures et barrières", text: "Trente textures de sol et de mur, plus des barrières infranchissables qui gardent leur apparence pour piéger le regard." },
+  { title: "Ennemis plaçables", text: "Zombie, slime vert, yéti, loup, orc, gobelin et cyclope : pose-les sur tes cartes, le narrateur les révèle et les contrôle en jeu." },
+  { title: "Passages entre étapes", text: "Place un point de passage sur chaque carte : quand un aventurier l’atteint, tout le groupe bascule vers l’étape suivante du parcours." },
 ];
 
 const phases = [
-  { number: "01", title: "Préparation", text: "Choisissez votre rôle, votre peuple et vos compétences. Composez une équipe capable de survivre au Bastion." },
-  { number: "02", title: "Affrontement", text: "Déclarez vos actions, lancez les dés et résolvez les effets. Chaque décision laisse une trace sur le plateau." },
-  { number: "03", title: "Exploration", text: "Traversez les cartes préparées par le narrateur, une étape après l'autre." },
+  { number: "01", title: "Préparation", text: "Choisissez votre peuple et votre classe, personnalisez votre aventurier et composez une équipe capable de survivre au Bastion." },
+  { number: "02", title: "Affrontement", text: "Déplacez-vous librement au clavier (Z, Q, S, D) ; attaques et capacités se résolvent en tour par tour, avec des dés lancés côté serveur." },
+  { number: "03", title: "Exploration", text: "Traversez les immenses cartes préparées par le narrateur, une étape après l’autre, en atteignant les points de passage." },
 ];
 
 function Index() {
@@ -65,7 +78,7 @@ function Index() {
       </section>
 
       <nav aria-label="Sommaire des règles" className="flex flex-wrap gap-2 border-b border-border px-5 py-4 md:px-10">
-        {[{ id: "concept", label: "Le jeu" }, { id: "salons", label: "Les salons" }, { id: "peuples", label: "Les peuples" }, { id: "partie", label: "Les phases" }, { id: "exploration", label: "Démo 2D" }].map(({ id, label }) => <Button key={id} asChild variant="ghost" className="min-h-11 rounded-none font-bold"><a href={`#${id}`}>{label}</a></Button>)}
+        {[{ id: "concept", label: "Le jeu" }, { id: "salons", label: "Les salons" }, { id: "cartes", label: "Les cartes" }, { id: "peuples", label: "Les peuples" }, { id: "classes", label: "Les classes" }, { id: "partie", label: "Les phases" }].map(({ id, label }) => <Button key={id} asChild variant="ghost" className="min-h-11 rounded-none font-bold"><a href={`#${id}`}>{label}</a></Button>)}
       </nav>
 
       <section id="concept" data-motion-stagger className="grid border-b border-border lg:grid-cols-2">
@@ -105,6 +118,24 @@ function Index() {
         </div>
       </section>
 
+      <section id="cartes" className="border-b border-border px-5 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div data-motion-enter className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div><p className="section-label">Atelier du narrateur</p><h2 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Dessine tes<br /><span className="text-primary">propres cartes.</span></h2></div>
+            <p className="max-w-sm text-sm text-muted-foreground">L’éditeur de cartes te donne les clés du Bastion : terrain, monstres, trésors, musique et passages, tout se prépare avant le lancement.</p>
+          </div>
+          <div data-motion-stagger className="grid border border-border sm:grid-cols-2 lg:grid-cols-4">
+            {mapFeatures.map((feature) => (
+              <article key={feature.title} className="border-b border-border p-7 last:border-b-0 sm:border-r sm:[&:nth-child(2n)]:border-r-0 sm:[&:nth-last-child(-n+2)]:border-b-0 lg:[&:nth-child(2n)]:border-r lg:[&:nth-last-child(-n+2)]:border-b-0 lg:last:border-r-0">
+                <h3 className="font-display text-base font-black uppercase tracking-normal">{feature.title}</h3>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{feature.text}</p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-10"><Button asChild variant="outline" className="h-auto min-h-12 rounded-none px-5 py-3 font-bold"><Link to="/cartes"><Swords />Ouvrir l’éditeur de cartes</Link></Button></div>
+        </div>
+      </section>
+
       <section id="peuples" className="px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
           <div data-motion-enter className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
@@ -129,7 +160,25 @@ function Index() {
         </div>
       </section>
 
-      <section id="partie" className="border-y border-border bg-secondary px-5 py-20 md:px-10 md:py-28">
+      <section id="classes" className="border-y border-border bg-secondary px-5 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div data-motion-enter className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div><p className="section-label">Choisir sa voie</p><h2 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-normal md:text-5xl">Trois classes</h2></div>
+            <p className="max-w-sm text-sm text-muted-foreground">Chaque aventurier combine un peuple et une classe : points de vie, dégâts et capacité propre, visibles par toute la table.</p>
+          </div>
+          <div data-motion-stagger className="grid border border-border bg-background md:grid-cols-3">
+            {classes.map((item) => (
+              <article key={item.name} className="border-b border-border p-7 last:border-b-0 md:border-b-0 md:border-r md:p-9 md:last:border-r-0">
+                <span className="text-xs font-black uppercase text-primary">Capacité / {item.trait}</span>
+                <h3 className="mt-3 font-display text-base font-black uppercase tracking-normal">{item.name}</h3>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="partie" className="border-b border-border px-5 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-7xl">
           <p className="section-label">Structure de partie</p><h2 className="mt-4 font-display text-3xl font-black uppercase tracking-normal md:text-5xl">Trois temps.<br />Une mission.</h2>
           <div data-motion-stagger className="mt-14 grid border-t border-border md:grid-cols-3">
