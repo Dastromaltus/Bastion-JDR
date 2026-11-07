@@ -42,6 +42,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const selectedEnemy = useRef<string | null>(null);
   const slashRef = useRef<() => void>(() => {});
   const seenSlash = useRef<Set<string> | null>(null);
+  const localSlashes = useRef<Array<{ enemyId: string; after: number }>>([]);
   useEffect(() => {
     const clickEnemy = async (event: Event) => {
       if (!(event instanceof CustomEvent) || typeof event.detail !== "string") return;
@@ -91,16 +92,23 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
   const baseMover = baseActors.find((a) => a.id === movingId);
   async function slash() {
     const enemy = slashTarget(d.enemies, selectedEnemy.current, here, optimisticRef.current ?? baseMover ?? grid.spawn);
-    if (!enemy) { setMessage("Aucun ennemi visible pour Slash."); return; }
+    if (!enemy) { setMessage("Aucun ennemi à portée : Slash atteint une case autour de toi."); return; }
     if (!worldAttackAllowed({ status: d.game.status, role: d.me.role, hp: d.me.hp, enemyVisible: true, enemyAlive: enemy.hp > 0, busy: attacking.current })) return;
     attacking.current = true;
+    // Render on keydown, before pending movement or the authenticated request.
+    const prediction = { enemyId: enemy.id, after: Date.now() };
+    localSlashes.current.push(prediction);
+    game.current?.scene.getScene("SalonWorld").events.emit("slash", enemy.id);
     setMessage("Slash…");
     try {
       await queue.current;
       const result = await attack({ data: { gameId: d.game.id, action: "slash", enemyId: enemy.id, revision: d.combat?.revision ?? 0 } });
       setMessage(`Slash · ${d.enemies.find((e: any) => e.id === enemy.id)?.name} : ${result.damage ?? 0} dégâts`);
       await onChange();
-    } catch (error) { setMessage(error instanceof Error ? error.message : "Slash impossible."); }
+    } catch (error) {
+      localSlashes.current = localSlashes.current.filter((entry) => entry !== prediction);
+      setMessage(error instanceof Error ? error.message : "Slash impossible.");
+    }
     finally { attacking.current = false; }
   }
   slashRef.current = () => { void slash(); };
@@ -111,9 +119,11 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
     for (const event of events) {
       if (seenSlash.current.has(event.id)) continue;
       seenSlash.current.add(event.id);
+      const localIndex = localSlashes.current.findIndex((entry) => entry.enemyId === event.payload.enemyId && event.actor_id === d.me.user_id && Date.parse(event.created_at) >= entry.after - 2000);
+      if (localIndex >= 0) { localSlashes.current.splice(localIndex, 1); continue; }
       if (d.enemies.some((e: any) => e.id === event.payload.enemyId && e.zone === here)) game.current?.scene.getScene("SalonWorld").events.emit("slash", event.payload.enemyId);
     }
-  }, [ready, d.events, d.enemies, here]);
+  }, [ready, d.events, d.enemies, here, d.me.id]);
   // Drop the local prediction once the server state has caught up and nothing is pending.
   useEffect(() => {
     if (optimistic && inFlight.current === 0 && baseMover && baseMover.x === optimistic.x && baseMover.y === optimistic.y) { optimisticRef.current = null; setOptimistic(null); }
@@ -213,7 +223,7 @@ export function SalonWorld({ d, zone, name, onChange }: { d: any; zone?: string;
       {!ready && <p role={failure ? "alert" : "status"} className="absolute inset-0 flex items-center justify-center bg-game">{failure ? "La carte n'a pas pu être affichée." : "Chargement de la carte…"}</p>}
     </div>
     {!narrator && canMove && onPassage(optimistic ?? baseMover ?? { x: -1, y: -1 }, grid.passage) && <Button disabled={travelling} onClick={crossPassage} className="min-h-11 whitespace-normal"><DoorOpen />{travelling ? "Passage en cours…" : "Passer à l’étape suivante avec le groupe"}</Button>}
-    {!narrator && canMove && <Button variant="secondary" disabled={!ready} onClick={() => slashRef.current()} className="min-h-11">Slash · 7 · 2 dégâts</Button>}
+    {!narrator && canMove && <Button variant="secondary" disabled={!ready} onClick={() => slashRef.current()} className="min-h-11">Slash · 7 · 2 dégâts · portée 1 case</Button>}
     <ul aria-label="Participants du salon" className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
       {d.players.map((p: any) => <li key={p.id} className="flex min-w-0 items-start gap-2 text-sm">
         {p.role === "narrator" ? <Megaphone className="mt-0.5 size-4 shrink-0 text-primary" /> : <User className="mt-0.5 size-4 shrink-0 text-primary" />}
