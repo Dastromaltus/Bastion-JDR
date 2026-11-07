@@ -17,7 +17,7 @@ export function CatalogArtwork({ kind, item }: { kind: "mob" | "treasure"; item:
   const weapon = item.type === "arme";
   const potion = item.type === "consommable";
   if (kind === "mob" && isOrc(item.name)) return <div role="img" aria-label={`Design de ${item.name}`} className="relative mx-auto size-24 shrink-0 overflow-hidden">
-    <img src={orcIdle.url} alt="" className="absolute left-1/2 top-1/2 h-auto w-[12rem] max-w-none -translate-x-1/2 -translate-y-[45%] [image-rendering:pixelated]" />
+    <img src={orcIdle.url} alt="" className="absolute left-1/2 top-1/2 h-auto w-[12rem] max-w-none -translate-x-1/2 -translate-y-[12.5%] [image-rendering:pixelated]" />
   </div>;
   if (kind === "mob" && isWolf(item.name)) return <div role="img" aria-label={`Design de ${item.name}`} className="relative mx-auto size-24 shrink-0 overflow-hidden">
     <img src={wolfIdle.url} alt="" className="absolute left-1/2 top-1/2 h-auto w-[12rem] max-w-none -translate-x-1/2 -translate-y-[45%] [image-rendering:pixelated]" />
