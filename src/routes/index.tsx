@@ -30,8 +30,21 @@ const races = [
 
 const salonSteps = [
   { icon: <Users size={28} />, title: "01 · Monte ton salon", text: "Choisis un nom, le nombre de joueurs (3 à 5) et prépare tes cartes. Un mot de passe optionnel protège l’entrée, et le salon peut rester en attente jusqu’à la partie." },
-  { icon: <KeyRound size={28} />, title: "02 · Invite la table", text: "Partage le code à six caractères ou le lien d’invitation. Chaque aventurier rejoint en un clic, depuis son téléphone ou son ordinateur." },
-  { icon: <Crown size={28} />, title: "03 · Incarne le narrateur", text: "Le créateur devient narrateur de son salon : il place ennemis, trésors et ambiance sonore, lance la partie — et peut transmettre sa couronne." },
+  { icon: <KeyRound size={28} />, title: "02 · Invite la table", text: "Partage le code à six caractères ou le lien d’invitation. Chaque aventurier rejoint en un clic, même si la partie a déjà commencé." },
+  { icon: <Crown size={28} />, title: "03 · Incarne le narrateur", text: "Le créateur devient narrateur : il enchaîne ses cartes en parcours, place ennemis et trésors, choisit la musique et le texte de chaque étape, puis contrôle les mobs en jeu." },
+];
+
+const classes = [
+  { name: "Guerrier", trait: "Frappe lourde", detail: "Le plus solide du groupe. Ses coups font mal et il encaisse sans broncher." },
+  { name: "Mage", trait: "Trait arcanique", detail: "Fragile mais dévastateur. Sa magie perce les défenses les plus épaisses." },
+  { name: "Voleur", trait: "Coup sournois", detail: "Rapide et opportuniste. Il frappe là où personne ne l’attend." },
+];
+
+const mapFeatures = [
+  { title: "Cartes 160 × 160", text: "De vastes plateaux en pixel art, dessinés case par case avec des pinceaux de toutes tailles — ou remplis d’une texture en un clic." },
+  { title: "Textures et barrières", text: "Trente textures de sol et de mur, plus des barrières infranchissables qui gardent leur apparence pour piéger le regard." },
+  { title: "Ennemis plaçables", text: "Zombie, slime vert, yéti, loup, orc, gobelin et cyclope : pose-les sur tes cartes, le narrateur les révèle et les contrôle en jeu." },
+  { title: "Passages entre étapes", text: "Place un point de passage sur chaque carte : quand un aventurier l’atteint, tout le groupe bascule vers l’étape suivante du parcours." },
 ];
 
 const phases = [
