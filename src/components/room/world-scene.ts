@@ -3,6 +3,7 @@ import tiles from "@/assets/world-tiles.png";
 import mapSprites from "@/assets/map-textures-complete.png.asset.json";
 import zombieSheet from "@/assets/zombie-sheet.png.asset.json";
 import slimeSheet from "@/assets/slime-sheet.png.asset.json";
+import yetiSheet from "@/assets/yeti-sheet.png.asset.json";
 
 /** Zombie sheet: 32px frames, 19 cols. Rows: idle, walk×4, attack×4, damage×4, death. Directions: bas, gauche, haut, droite. */
 const Z_COLS = 19, DIRS = ["down", "left", "up", "right"] as const;
@@ -10,6 +11,8 @@ const Z_DIE_LAST = 13 * Z_COLS + 10;
 /** Slime sheet: 32px frames, 9 cols. Rows: idle (4), attack (4), damage (4), death (9). No directions. */
 const S_COLS = 9;
 const S_DIE_LAST = 3 * S_COLS + 8;
+const Y_COLS = 16, Y_DIE_LAST = 16 * Y_COLS + 13;
+const animated = (sprite: WorldActor["sprite"]) => sprite === "zombie" || sprite === "slime" || sprite === "yeti";
 type ZState = { x: number; y: number; hp?: number; dead?: boolean; dir: number };
 function dirOf(dx: number, dy: number, fallback: number) { if (!dx && !dy) return fallback; return Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 1 : 3) : (dy < 0 ? 2 : 0); }
 import { GRID, tileFrame, type GridMap } from "@/lib/map-grid";
@@ -27,6 +30,7 @@ export class WorldScene extends Phaser.Scene {
     this.load.spritesheet("map-sprites", mapSprites.url, { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet("zombie", zombieSheet.url, { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("slime", slimeSheet.url, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("yeti", yetiSheet.url, { frameWidth: 32, frameHeight: 32 });
   }
   create() {
     const bg = getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim() || "#111";
@@ -43,6 +47,15 @@ export class WorldScene extends Phaser.Scene {
     this.anims.create({ key: "s-attack", frames: srow(1, 4), frameRate: 8 });
     this.anims.create({ key: "s-dmg", frames: srow(2, 4), frameRate: 8 });
     this.anims.create({ key: "s-die", frames: srow(3, 9), frameRate: 8 });
+    const yrow = (r: number, n: number) => this.anims.generateFrameNumbers("yeti", { start: r * Y_COLS, end: r * Y_COLS + n - 1 });
+    DIRS.forEach((_, i) => {
+      this.anims.create({ key: `y-idle-${i}`, frames: yrow(i, 16), frameRate: 5, repeat: -1 });
+      this.anims.create({ key: `y-walk-${i}`, frames: yrow(4 + i, 6), frameRate: 5 });
+      this.anims.create({ key: `y-attack-${i}`, frames: yrow(8 + i, 4), frameRate: 10 });
+      this.anims.create({ key: `y-dmg-${i}`, frames: yrow(12 + i, 4), frameRate: 10 });
+      this.anims.create({ key: `y-jump-${i}`, frames: yrow(17 + i, 6), frameRate: 10 });
+    });
+    this.anims.create({ key: "y-die", frames: yrow(16, 14), frameRate: 10 });
     this.cameras.main.setBounds(0, 0, GRID * 16, GRID * 16).setBackgroundColor(bg);
     this.events.on("map", (grid: GridMap) => {
       this.terrain?.tilemap.destroy();
@@ -81,7 +94,7 @@ export class WorldScene extends Phaser.Scene {
     const ids = new Set(actors.map((a) => a.id));
     for (const [id, node] of this.actors) if (!ids.has(id)) { if ((this.cameras.main as any)._follow === node) this.cameras.main.stopFollow(); node.destroy(); this.actors.delete(id); }
     const reduced = motionDisabled();
-    const hurt = actors.filter((a) => a.sprite !== "zombie" && a.sprite !== "slime" && a.hp !== undefined && (this.prev.get(a.id)?.hp ?? a.hp) > a.hp);
+    const hurt = actors.filter((a) => !animated(a.sprite) && a.hp !== undefined && (this.prev.get(a.id)?.hp ?? a.hp) > a.hp);
     for (const actor of actors) {
       let node = this.actors.get(actor.id);
       const sharing = actors.filter((a) => a.x === actor.x && a.y === actor.y);
@@ -94,13 +107,15 @@ export class WorldScene extends Phaser.Scene {
           ? this.add.sprite(0, -9, "zombie", actor.dead ? Z_DIE_LAST : 0).setScale(1.5)
           : actor.sprite === "slime"
           ? this.add.sprite(0, -9, "slime", actor.dead ? S_DIE_LAST : 0).setScale(1.5)
+          : actor.sprite === "yeti"
+          ? this.add.sprite(0, -9, "yeti", actor.dead ? Y_DIE_LAST : 0).setScale(1.5)
           : this.add.image(0, -2, "world-tiles", actor.frame);
-        if (sprite instanceof Phaser.GameObjects.Sprite && !actor.dead && !reduced) sprite.play(actor.sprite === "slime" ? "s-idle" : "z-idle");
+        if (sprite instanceof Phaser.GameObjects.Sprite && !actor.dead && !reduced) sprite.play(actor.sprite === "slime" ? "s-idle" : actor.sprite === "yeti" ? "y-idle-0" : "z-idle");
         const label = this.add.text(0, -18, actor.name, { fontFamily: "monospace", fontSize: "10px", color: getComputedStyle(document.documentElement).getPropertyValue("--world-label").trim(), backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--world-label-bg").trim(), padding: { x: 4, y: 3 }, resolution: 3 }).setOrigin(0.5, 1).setVisible(false);
         node = this.add.container(x, y, [sprite, label, this.add.graphics()]);
         if (actor.frame === 12) sprite.setInteractive({ useHandCursor: true }).on("pointerdown", () => window.dispatchEvent(new CustomEvent("bastion-select-mob", { detail: actor.id })));
         this.actors.set(actor.id, node);
-        if (!reduced) this.tweens.add({ targets: sprite, alpha: { from: 0, to: 1 }, scale: actor.sprite === "zombie" || actor.sprite === "slime" ? { from: 1.3, to: 1.5 } : { from: 0.88, to: 1 }, duration: actor.frame === 12 ? 200 : 160, ease: "Linear" });
+        if (!reduced) this.tweens.add({ targets: sprite, alpha: { from: 0, to: 1 }, scale: animated(actor.sprite) ? { from: 1.3, to: 1.5 } : { from: 0.88, to: 1 }, duration: actor.frame === 12 ? 200 : 160, ease: "Linear" });
       } else {
         const sprite = node.list[0];
         if (sprite instanceof Phaser.GameObjects.Image && !actor.sprite) sprite.setFrame(actor.frame);
@@ -128,25 +143,26 @@ export class WorldScene extends Phaser.Scene {
         bar.clear();
         // Health bar under every character and living mob.
         if (actor.hp !== undefined && actor.maxHp && !actor.dead) {
-          const ratio = Phaser.Math.Clamp(actor.hp / actor.maxHp, 0, 1), w = 16, by = actor.sprite === "zombie" || actor.sprite === "slime" ? 3 : 7;
+          const ratio = Phaser.Math.Clamp(actor.hp / actor.maxHp, 0, 1), w = 16, by = animated(actor.sprite) ? 3 : 7;
           bar.fillStyle(0x1b1b1b, 1).fillRect(-w / 2 - 1, by - 1, w + 2, 4);
           bar.fillStyle(ratio > 0.5 ? 0x4ade55 : ratio > 0.25 ? 0xffd84a : 0xff4d4d, 1).fillRect(-w / 2, by, Math.round(w * ratio), 2);
         }
       }
       node.setDepth(100 + y);
-      if (actor.sprite === "zombie" || actor.sprite === "slime") this.animateMonster(node, actor, reduced);
+      if (animated(actor.sprite)) this.animateMonster(node, actor, reduced);
       else this.prev.set(actor.id, { x: actor.x, y: actor.y, ...(actor.hp !== undefined ? { hp: actor.hp } : {}), dir: 0 });
     }
     for (const id of [...this.prev.keys()]) if (!ids.has(id)) this.prev.delete(id);
     if (!hurt.length) return;
     // An adventurer lost HP: the adjacent living monster plays its attack toward them.
     for (const t of hurt) {
-      const z = actors.find((a) => (a.sprite === "zombie" || a.sprite === "slime") && !a.dead && Math.abs(a.x - t.x) <= 1 && Math.abs(a.y - t.y) <= 1);
+      const z = actors.find((a) => animated(a.sprite) && !a.dead && Math.abs(a.x - t.x) <= 1 && Math.abs(a.y - t.y) <= 1);
       const zs = z && this.actors.get(z.id)?.list[0];
       if (!z || !(zs instanceof Phaser.GameObjects.Sprite)) continue;
       const dir = dirOf(t.x - z.x, t.y - z.y, this.prev.get(z.id)?.dir ?? 0);
       const st = this.prev.get(z.id); if (st) st.dir = dir;
       if (z.sprite === "slime") { if (reduced) zs.setFrame(S_COLS + 1); else zs.play("s-attack").chain("s-idle"); continue; }
+      if (z.sprite === "yeti") { if (reduced) zs.setFrame((8 + dir) * Y_COLS + 1); else zs.play(`y-attack-${dir}`).chain(`y-idle-${dir}`); continue; }
       if (reduced) zs.setFrame((5 + dir) * Z_COLS + 2); else zs.play(`z-attack-${dir}`).chain("z-idle");
     }
   }
@@ -157,16 +173,17 @@ export class WorldScene extends Phaser.Scene {
     const dir = before ? dirOf(actor.x - before.x, actor.y - before.y, before.dir) : 0;
     this.prev.set(actor.id, { x: actor.x, y: actor.y, ...(actor.hp !== undefined ? { hp: actor.hp } : {}), ...(actor.dead ? { dead: true } : {}), dir });
     if (!(sprite instanceof Phaser.GameObjects.Sprite) || !before) return;
-    const slime = actor.sprite === "slime";
+    const slime = actor.sprite === "slime", yeti = actor.sprite === "yeti";
+    const idle = slime ? "s-idle" : yeti ? `y-idle-${dir}` : "z-idle";
     if (actor.dead) {
       if (label instanceof Phaser.GameObjects.Text) label.setVisible(false);
       if (before.dead) return;
-      if (reduced) sprite.stop().setFrame(slime ? S_DIE_LAST : Z_DIE_LAST); else sprite.play(slime ? "s-die" : "z-die");
+      if (reduced) sprite.stop().setFrame(slime ? S_DIE_LAST : yeti ? Y_DIE_LAST : Z_DIE_LAST); else sprite.play(slime ? "s-die" : yeti ? "y-die" : "z-die");
       return;
     }
     if (reduced) { sprite.stop().setFrame(0); return; }
-    if (actor.hp !== undefined && before.hp !== undefined && actor.hp < before.hp) sprite.play(slime ? "s-dmg" : `z-dmg-${dir}`).chain(slime ? "s-idle" : "z-idle");
-    else if (actor.x !== before.x || actor.y !== before.y) sprite.play(slime ? "s-idle" : `z-walk-${dir}`).chain(slime ? "s-idle" : "z-idle");
+    if (actor.hp !== undefined && before.hp !== undefined && actor.hp < before.hp) sprite.play(slime ? "s-dmg" : yeti ? `y-dmg-${dir}` : `z-dmg-${dir}`).chain(idle);
+    else if (actor.x !== before.x || actor.y !== before.y) sprite.play(slime ? "s-idle" : yeti ? `y-walk-${dir}` : `z-walk-${dir}`).chain(idle);
   }
 }
 export function createWorldGame(parent: HTMLDivElement, ready: () => void) {
